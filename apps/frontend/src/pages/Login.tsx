@@ -93,6 +93,20 @@ const Login: React.FC = () => {
         padding: '40px 36px',
         zIndex: 2,
       }}>
+        {/* Demo Badge */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+          <span style={{
+            fontSize: '11.5px',
+            fontWeight: 800,
+            color: '#D97706',
+            backgroundColor: '#FEF3C7',
+            padding: '4px 10px',
+            borderRadius: 'var(--r-sm)',
+            border: '1px solid #FDE68A',
+            letterSpacing: '0.3px'
+          }}>시범 데모 운영 버전 (Demo Sandbox)</span>
+        </div>
+
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
           <span style={{ fontSize: '24px', fontWeight: 900, color: 'var(--brand-orange)' }}>i-Scream</span>

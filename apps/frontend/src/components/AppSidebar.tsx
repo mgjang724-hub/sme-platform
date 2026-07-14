@@ -117,6 +117,21 @@ const AppSidebar: React.FC = () => {
           color: 'var(--fg-4)',
           marginTop: '2px',
         }}>강사 원고 소통 플랫폼</div>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '5px',
+          marginTop: '10px',
+          fontSize: '10px',
+          fontWeight: 800,
+          color: '#D97706',
+          backgroundColor: '#FEF3C7',
+          padding: '2px 7px',
+          borderRadius: '4px',
+          border: '1px solid #FDE68A'
+        }}>
+          시범 데모 버전
+        </div>
       </div>
 
       {/* Navigation menu */}
