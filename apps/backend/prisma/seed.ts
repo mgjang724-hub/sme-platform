@@ -4,6 +4,12 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
+  const userCount = await prisma.user.count();
+  if (userCount > 0) {
+    console.log('Database already contains users. Skipping seeding.');
+    return;
+  }
+
   console.log('Seeding database...');
 
   // Clean existing data
