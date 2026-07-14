@@ -38,6 +38,15 @@ async function main() {
   }
 
   // 2. Build Backend
+  console.log('\n>>> Generating Prisma Client...');
+  try {
+    execSync('npx prisma generate --schema=apps/backend/prisma/schema.prisma', { stdio: 'inherit' });
+    console.log('✔ Prisma client generated.');
+  } catch (err) {
+    console.error('❌ Prisma generation failed.');
+    process.exit(1);
+  }
+
   console.log('\n>>> Building Backend (NestJS)...');
   try {
     execSync('npm run build --workspace=apps/backend', { stdio: 'inherit' });
