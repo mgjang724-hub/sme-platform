@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    .tcard{transition:box-shadow .15s,border-color .15s,transform .12s}
+    .tcard:hover{box-shadow:var(--shadow-md);border-color:var(--border-strong);transform:translateY(-2px)}
+    input{font-family:var(--font-sans)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="SME" active="tasks" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:18px">
+      <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-size:20px;font-weight:700">내 작업</div></div>
+      <div style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;width:260px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card)">
+        <x-ic name="search" s="17" style="color:var(--fg-4)"></x-ic>
+        <input placeholder="원고 검색" style="flex:1;border:none;outline:none;background:none;font-size:13.5px">
+      </div>
+      <a href="S14-Notifications.dc.html" style="position:relative;width:40px;height:40px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-card);display:inline-flex;align-items:center;justify-content:center" style-hover="border-color:var(--border-strong)">
+        <x-ic name="bell" s="18" style="color:var(--fg-2)"></x-ic>
+        <span style="position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--primary)"></span>
+      </a>
+    </header>
+
+    <div style="flex:1;overflow-y:auto;padding:26px 32px 40px">
+      <div style="margin-bottom:18px">
+        <div style="font-family:var(--font-display);font-size:23px;font-weight:700">서연님, <span style="color:var(--primary)">2건</span>의 원고에 새 피드백이 있어요</div>
+        <div style="font-size:13px;color:var(--fg-3);margin-top:4px">배정된 원고 5개 · 수정요청 1 · 검수중 2</div>
+      </div>
+
+      <!-- KPI -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
+        <div style="position:relative;overflow:hidden;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:20px 22px">
+          <span style="position:absolute;right:-24px;top:-24px;width:96px;height:96px;border-radius:50%;background:var(--success-bg)"></span>
+          <div style="position:relative;display:flex;align-items:center;gap:8px;color:var(--success-fg)"><x-ic name="circle-check" s="18"></x-ic><span style="font-size:13px;font-weight:700">작성 완료 차시</span></div>
+          <div style="position:relative;font-family:var(--font-num);font-size:38px;font-weight:700;margin-top:10px;color:var(--fg-1)">3<span style="font-size:15px;color:var(--fg-3);font-weight:600;margin-left:3px">차시</span></div>
+          <div style="position:relative;font-size:12.5px;color:var(--fg-3);margin-top:2px">전체 5차시 중 확정 완료</div>
+        </div>
+        <a href="S07-ScriptManage.dc.html" class="tcard" style="position:relative;overflow:hidden;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:20px 22px;display:block;text-decoration:none;color:inherit">
+          <span style="position:absolute;right:-24px;top:-24px;width:96px;height:96px;border-radius:50%;background:var(--info-bg)"></span>
+          <div style="position:relative;display:flex;align-items:center;gap:8px;color:var(--info-fg)"><x-ic name="message-square" s="18"></x-ic><span style="font-size:13px;font-weight:700">피드백 확인 원고</span></div>
+          <div style="position:relative;font-family:var(--font-num);font-size:38px;font-weight:700;margin-top:10px;color:var(--fg-1)">2<span style="font-size:15px;color:var(--fg-3);font-weight:600;margin-left:3px">건</span></div>
+          <div style="position:relative;font-size:12.5px;color:var(--fg-3);margin-top:2px">새 피드백·수정요청 확인</div>
+        </a>
+        <a href="S15-Calendar.dc.html" class="tcard" style="position:relative;overflow:hidden;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:20px 22px;display:block;text-decoration:none;color:inherit">
+          <span style="position:absolute;right:-24px;top:-24px;width:96px;height:96px;border-radius:50%;background:var(--stage-film-bg)"></span>
+          <div style="position:relative;display:flex;align-items:center;gap:8px;color:var(--stage-film-fg)"><x-ic name="clapperboard" s="18"></x-ic><span style="font-size:13px;font-weight:700">촬영날까지</span></div>
+          <div style="position:relative;font-family:var(--font-num);font-size:38px;font-weight:700;margin-top:10px;color:var(--fg-1)">D-22</div>
+          <div style="position:relative;font-size:12.5px;color:var(--fg-3);margin-top:2px">3차시 역할극 촬영 · 7.30 (목)</div>
+        </a>
+      </div>
+
+      <!-- filter chips -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+        <button style="padding:8px 15px;border-radius:999px;border:none;background:var(--fg-1);color:#fff;font-size:13px;font-weight:700;cursor:pointer">전체 5</button>
+        <button style="padding:8px 15px;border-radius:999px;border:1px solid var(--border-strong);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)">진행중 1</button>
+        <button style="padding:8px 15px;border-radius:999px;border:1px solid var(--border-strong);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)">수정요청 1</button>
+        <button style="padding:8px 15px;border-radius:999px;border:1px solid var(--border-strong);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)">검수중 2</button>
+        <button style="padding:8px 15px;border-radius:999px;border:1px solid var(--border-strong);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)">승인 1</button>
+        <div style="flex:1"></div>
+        <button style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:var(--r-md);border:1px solid var(--border-strong);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:600;cursor:pointer"><x-ic name="sliders" s="15"></x-ic> 과정별</button>
+      </div>
+
+      <!-- cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+        <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="4">
+          <a href="S07-ScriptManage.dc.html" class="tcard" style="display:block;background:var(--bg-card);border:1px solid var(--border);border-left:4px solid {{ t.accent }};border-radius:var(--r-xl);box-shadow:var(--shadow-sm);padding:18px 20px;text-decoration:none;color:inherit">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <span style="font-size:12px;color:var(--fg-4);font-weight:700">{{ t.course }}</span>
+              <dc-import name="StatusChip" status="{{ t.status }}" hint-size="80px,26px"></dc-import>
+            </div>
+            <div style="font-size:16px;font-weight:700;margin-top:10px;line-height:1.4">{{ t.title }}</div>
+
+            <sc-if value="{{ t.feedback }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:7px;margin-top:12px;padding:8px 11px;border-radius:var(--r-sm);background:var(--error-bg);color:var(--error-fg);font-size:12.5px;font-weight:700">
+                <x-ic name="message-square" s="15"></x-ic> {{ t.feedback }}
+              </div>
+            </sc-if>
+
+            <div style="display:flex;align-items:center;gap:14px;margin-top:14px;font-size:12.5px;color:var(--fg-3)">
+              <span style="display:inline-flex;align-items:center;gap:5px"><x-ic name="git-branch" s="14"></x-ic> {{ t.version }}</span>
+              <span style="display:inline-flex;align-items:center;gap:5px;color:{{ t.dueColor }}"><x-ic name="clock" s="14"></x-ic> {{ t.due }}</span>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+              <span style="font-size:12px;color:var(--fg-4)">최근 업데이트 {{ t.updated }}</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r-md);background:{{ t.ctaBg }};color:{{ t.ctaFg }};font-size:13px;font-weight:700">{{ t.cta }} <x-ic name="arrow-right" s="15"></x-ic></span>
+            </div>
+          </a>
+        </sc-for>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){try{localStorage.setItem("cdh-role","SME")}catch(e){}}
+  renderVals() {
+    const pri = { ctaBg: "var(--primary)", ctaFg: "#fff" };
+    const sec = { ctaBg: "var(--bg-sunken)", ctaFg: "var(--fg-2)" };
+    return {
+      tasks: [
+        { course: "직장 내 괴롭힘 예방", title: "3차시 — 역할극 시나리오 원고", status: "revise", accent: "#EF4444", feedback: "미반영 피드백 3건", version: "v2", due: "7.9 (목) 마감", dueColor: "var(--error-fg)", updated: "3시간 전", cta: "수정본 제출", ...pri },
+        { course: "성희롱 예방 교육", title: "2차시 — 개념 정리 원고", status: "review", accent: "#F59E0B", feedback: "", version: "v1", due: "검수중", dueColor: "var(--fg-3)", updated: "어제", cta: "진행 보기", ...sec },
+        { course: "성희롱 예방 교육", title: "4차시 — 마무리 정리 대본", status: "review", accent: "#F59E0B", feedback: "", version: "v3", due: "검수중", dueColor: "var(--fg-3)", updated: "2일 전", cta: "진행 보기", ...sec },
+        { course: "직장 내 괴롭힘 예방", title: "6차시 — 마무리 퀴즈 스크립트", status: "progress", accent: "#3B82F6", feedback: "", version: "작성 중", due: "7.14 (화) 마감", dueColor: "var(--fg-2)", updated: "5일 전", cta: "이어서 작성", ...pri },
+        { course: "개인정보보호 실무", title: "1차시 — 오프닝 스크립트", status: "done", accent: "#10B981", feedback: "", version: "v2 · 최종확정", due: "확정 완료", dueColor: "var(--success-fg)", updated: "1주 전", cta: "원고 보기", ...sec },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

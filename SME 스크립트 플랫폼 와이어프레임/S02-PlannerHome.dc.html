@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    .kpi:hover{box-shadow:var(--shadow-md);border-color:var(--border-strong)}
+    .row:hover{background:var(--bg-sunken)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="PLANNER" active="dashboard" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:18px">
+      <div style="flex:1;min-width:0">
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:700">기획자 홈</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;width:280px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card)">
+        <x-ic name="search" s="17" style="color:var(--fg-4)"></x-ic>
+        <input placeholder="과정·강사·원고 검색" style="flex:1;border:none;outline:none;background:none;font-size:13.5px;font-family:var(--font-sans)">
+      </div>
+      <a href="S14-Notifications.dc.html" style="position:relative;width:40px;height:40px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-card);display:inline-flex;align-items:center;justify-content:center" style-hover="border-color:var(--border-strong)">
+        <x-ic name="bell" s="18" style="color:var(--fg-2)"></x-ic>
+        <span style="position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--primary)"></span>
+      </a>
+    </header>
+
+    <div style="flex:1;overflow-y:auto;padding:26px 32px 40px">
+      <!-- greeting -->
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px">
+        <div>
+          <div style="font-family:var(--font-display);font-size:24px;font-weight:700">정수님, 오늘 처리할 일이 <span style="color:var(--primary)">5건</span> 있어요</div>
+          <div style="font-size:13px;color:var(--fg-3);margin-top:4px">2026.07.07 (화) · 진행 중 과정 6개</div>
+        </div>
+        <a href="S04-CourseList.dc.html" style="display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:14px;font-weight:700" style-hover="border-color:var(--primary);background:var(--primary-tint-2);color:var(--primary-hover)">
+          <x-ic name="book-open" s="17"></x-ic> 과정 관리로
+        </a>
+      </div>
+
+      <!-- KPI -->
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:26px">
+        <a href="S12-ReviewQueue.dc.html" class="kpi" style="position:relative;overflow:hidden;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:20px 22px;display:block;transition:box-shadow .15s,border-color .15s">
+          <span style="position:absolute;right:-24px;top:-24px;width:96px;height:96px;border-radius:50%;background:var(--warning-bg)"></span>
+          <div style="position:relative;display:flex;align-items:center;gap:8px;color:var(--warning-fg)"><x-ic name="clipboard-check" s="18"></x-ic><span style="font-size:13px;font-weight:700">검수 필요 원고</span></div>
+          <div style="position:relative;font-family:var(--font-num);font-size:38px;font-weight:700;margin-top:10px;color:var(--fg-1)">4<span style="font-size:15px;color:var(--fg-3);font-weight:600;margin-left:3px">건</span></div>
+          <div style="position:relative;font-size:12.5px;color:var(--fg-3);margin-top:2px">강사가 제출한 새 원고</div>
+        </a>
+        <a href="S15-Calendar.dc.html" class="kpi" style="position:relative;overflow:hidden;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:20px 22px;display:block;transition:box-shadow .15s,border-color .15s">
+          <span style="position:absolute;right:-24px;top:-24px;width:96px;height:96px;border-radius:50%;background:var(--stage-film-bg)"></span>
+          <div style="position:relative;display:flex;align-items:center;gap:8px;color:var(--stage-film-fg)"><x-ic name="clapperboard" s="18"></x-ic><span style="font-size:13px;font-weight:700">촬영날까지</span></div>
+          <div style="position:relative;font-family:var(--font-num);font-size:38px;font-weight:700;margin-top:10px;color:var(--fg-1)">D-20</div>
+          <div style="position:relative;font-size:12.5px;color:var(--fg-3);margin-top:2px">직장 내 괴롭힘 예방 · 7.28 (화)</div>
+        </a>
+      </div>
+
+      <!-- priority tasks -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:700">우선 처리할 작업</div>
+        <div style="font-size:12.5px;color:var(--fg-4)">마감·상태 기준 정렬</div>
+      </div>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);overflow:hidden">
+        <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="5">
+          <a href="S07-ScriptManage.dc.html" class="row" style="display:flex;align-items:center;gap:16px;padding:16px 22px;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;transition:background .12s">
+            <span style="width:40px;height:40px;flex:none;border-radius:var(--r-md);background:var(--primary-tint-2);display:inline-flex;align-items:center;justify-content:center;color:var(--primary-hover)"><x-ic name="file-text" s="19"></x-ic></span>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:14.5px;font-weight:700;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+              </div>
+              <div style="font-size:12.5px;color:var(--fg-3);margin-top:3px">{{ t.course }} · {{ t.sme }}</div>
+            </div>
+            <dc-import name="StatusChip" status="{{ t.status }}" hint-size="80px,26px"></dc-import>
+            <div style="width:120px;flex:none;text-align:right;font-size:12.5px;color:{{ t.dueColor }}">{{ t.due }}</div>
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13px;font-weight:700;flex:none">{{ t.action }} <x-ic name="arrow-right" s="15"></x-ic></span>
+          </a>
+        </sc-for>
+        <div style="padding:14px 22px;text-align:center"><a href="S07-ScriptManage.dc.html" style="font-size:13px;font-weight:700">모든 검수 작업 보기 →</a></div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){try{localStorage.setItem("cdh-role","PLANNER")}catch(e){}}
+  renderVals() {
+    return {
+      tasks: [
+        { title: "3차시 — 역할극 시나리오 원고", course: "직장 내 괴롭힘 예방", sme: "이서연 강사", status: "review", due: "오늘 마감", dueColor: "var(--error-fg)", action: "검수 시작" },
+        { title: "5차시 — 사례 분석 대본", course: "직장 내 괴롭힘 예방", sme: "박도현 강사", status: "review", due: "내일", dueColor: "var(--fg-2)", action: "검수 시작" },
+        { title: "2차시 — 개념 정리 원고", course: "성희롱 예방 교육", sme: "이서연 강사", status: "revise", due: "7.9 (목)", dueColor: "var(--fg-2)", action: "답변 확인" },
+        { title: "1차시 — 오프닝 스크립트", course: "개인정보보호 실무", sme: "최민아 강사", status: "review", due: "7.10 (금)", dueColor: "var(--fg-2)", action: "검수 시작" },
+        { title: "4차시 — 마무리 정리", course: "성희롱 예방 교육", sme: "박도현 강사", status: "progress", due: "7.11 (토)", dueColor: "var(--fg-3)", action: "진행 보기" },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

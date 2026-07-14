@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    input,textarea,select{font-family:var(--font-sans)}
+    .row:hover{background:var(--bg-sunken)}
+    .tool:hover{background:var(--bg-sunken);color:var(--fg-1)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="PLANNER" active="guide" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px">
+      <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg-4)">
+        <a href="S09-GuideCenter.dc.html" style="color:var(--fg-4)" style-hover="color:var(--primary)">안내센터</a>
+        <x-ic name="chevron-right" s="14"></x-ic><span style="color:var(--fg-2);font-weight:700">안내 관리</span>
+      </div>
+      <button onClick="{{ newDoc }}" style="display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:14px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)"><x-ic name="plus" s="17"></x-ic> 새 안내 작성</button>
+    </header>
+
+    <div style="flex:1;display:flex;min-height:0;overflow:hidden">
+
+      <!-- list -->
+      <div style="width:380px;flex:none;border-right:1px solid var(--border);background:var(--bg-card);overflow-y:auto">
+        <div style="padding:16px 18px 8px;font-size:12px;font-weight:700;color:var(--fg-4)">안내 콘텐츠 · 5</div>
+        <sc-for list="{{ docs }}" as="d" hint-placeholder-count="5">
+          <div onClick="{{ d.select }}" class="row" style="display:flex;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;background:{{ d.bg }};border-left:3px solid {{ d.bar }};transition:background .12s">
+            <span style="width:36px;height:36px;flex:none;border-radius:var(--r-md);background:{{ d.iconBg }};color:{{ d.iconFg }};display:inline-flex;align-items:center;justify-content:center"><x-ic name="{{ d.icon }}" s="18"></x-ic></span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.title }}</div>
+              <div style="font-size:11.5px;color:var(--fg-4);margin-top:3px">{{ d.cat }} · 수정 {{ d.updated }}</div>
+            </div>
+            <span style="align-self:flex-start;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px;background:{{ d.stBg }};color:{{ d.stFg }}">{{ d.stLabel }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- editor -->
+      <div style="flex:1;min-width:0;overflow-y:auto;background:var(--bg-page)">
+        <div style="max-width:760px;margin:0 auto;padding:24px 28px 44px">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-family:var(--font-display);font-size:17px;font-weight:700">안내 편집</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <span style="font-size:12.5px;font-weight:700;color:{{ pubFg }}">{{ pubLabel }}</span>
+                <button onClick="{{ togglePub }}" style="width:42px;height:24px;border:none;border-radius:999px;cursor:pointer;padding:0;position:relative;background:{{ pubTrack }}">
+                  <span style="position:absolute;top:3px;left:{{ pubKnob }};width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s"></span>
+                </button>
+              </label>
+              <button style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)"><x-ic name="check" s="15"></x-ic> 저장</button>
+            </div>
+          </div>
+
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);padding:22px 24px">
+            <div style="display:grid;grid-template-columns:1fr 200px;gap:14px;margin-bottom:16px">
+              <div><div style="font-size:12px;font-weight:700;color:var(--fg-3);margin-bottom:6px">제목</div><input value="촬영 안내" style="width:100%;height:44px;padding:0 13px;border:1px solid var(--border-strong);border-radius:var(--r-md);font-size:15px;font-weight:700;outline:none"></div>
+              <div><div style="font-size:12px;font-weight:700;color:var(--fg-3);margin-bottom:6px">카테고리</div><select style="width:100%;height:44px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--r-md);font-size:13.5px;outline:none"><option>촬영 안내</option><option>원고 작성 안내</option><option>강사의 역할 안내</option><option>계약 안내</option><option>비용 지급 안내</option></select></div>
+            </div>
+
+            <!-- markdown toolbar -->
+            <div style="font-size:12px;font-weight:700;color:var(--fg-3);margin-bottom:6px">본문 (마크다운)</div>
+            <div style="border:1px solid var(--border-strong);border-radius:var(--r-md);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:2px;padding:6px 8px;border-bottom:1px solid var(--border);background:var(--bg-page-2)">
+                <button class="tool" style="width:32px;height:30px;border:none;background:none;border-radius:var(--r-sm);color:var(--fg-3);font-weight:800;font-size:14px;cursor:pointer">H</button>
+                <button class="tool" style="width:32px;height:30px;border:none;background:none;border-radius:var(--r-sm);color:var(--fg-3);font-weight:800;font-size:14px;cursor:pointer">B</button>
+                <button class="tool" style="width:32px;height:30px;border:none;background:none;border-radius:var(--r-sm);color:var(--fg-3);font-style:italic;font-size:14px;cursor:pointer">I</button>
+                <span style="width:1px;height:18px;background:var(--border);margin:0 4px"></span>
+                <button class="tool" style="width:32px;height:30px;border:none;background:none;border-radius:var(--r-sm);color:var(--fg-3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><x-ic name="list" s="16"></x-ic></button>
+                <button class="tool" style="width:32px;height:30px;border:none;background:none;border-radius:var(--r-sm);color:var(--fg-3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><x-ic name="link" s="16"></x-ic></button>
+                <button class="tool" style="width:32px;height:30px;border:none;background:none;border-radius:var(--r-sm);color:var(--fg-3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><x-ic name="file-text" s="16"></x-ic></button>
+              </div>
+              <textarea rows="12" style="width:100%;padding:14px 15px;border:none;outline:none;resize:vertical;font-size:13.5px;line-height:1.8;font-family:var(--font-sans)">## 1. 촬영 개요
+모든 이러닝 콘텐츠는 원고 최종 확정 이후 스튜디오 촬영으로 진행됩니다.
+
+## 2. 촬영 전 준비
+- 단색 계열 상의 권장
+- 확정 원고 인쇄본 지참
+
+## 3. 당일 진행 순서
+1. 스튜디오 도착 및 출입 등록
+2. 메이크업 · 마이크 세팅
+3. 리허설 1회
+4. 본 촬영</textarea>
+            </div>
+
+            <!-- attachments -->
+            <div style="font-size:12px;font-weight:700;color:var(--fg-3);margin:18px 0 8px">첨부파일 (양식 다운로드)</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-page-2)">
+                <x-ic name="file-text" s="16" style="color:var(--fg-3)"></x-ic>
+                <span style="flex:1;font-size:13px;font-weight:600">촬영 준비물 체크리스트.pdf</span>
+                <span style="font-size:11.5px;color:var(--fg-4)">124 KB</span>
+                <x-ic name="x" s="15" style="color:var(--fg-4);cursor:pointer"></x-ic>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-page-2)">
+                <x-ic name="file-text" s="16" style="color:var(--fg-3)"></x-ic>
+                <span style="flex:1;font-size:13px;font-weight:600">초상권·촬영 동의서 양식.docx</span>
+                <span style="font-size:11.5px;color:var(--fg-4)">38 KB</span>
+                <x-ic name="x" s="15" style="color:var(--fg-4);cursor:pointer"></x-ic>
+              </div>
+              <button style="display:inline-flex;align-items:center;gap:7px;align-self:flex-start;padding:9px 14px;border:1px dashed var(--border-strong);border-radius:var(--r-md);background:none;color:var(--fg-3);font-size:13px;font-weight:700;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)"><x-ic name="upload" s="15"></x-ic> 파일 업로드</button>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;font-size:12px;color:var(--fg-4);display:flex;align-items:center;gap:6px"><x-ic name="clock" s="13"></x-ic> 마지막 저장 2026.07.01 14:22 · 운영팀</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){try{localStorage.setItem("cdh-role","PLANNER")}catch(e){}}
+  state = { sel: 4, published: true };
+  renderVals() {
+    const raw = [
+      { title: "원고 작성 안내", cat: "원고", icon: "file-text", iconBg: "#E8F1FB", iconFg: "#245C92", updated: "06.28", pub: true },
+      { title: "강사의 역할 안내", cat: "역할", icon: "users-round", iconBg: "#EFEBFB", iconFg: "#5B45A8", updated: "05.12", pub: true },
+      { title: "계약 안내", cat: "계약", icon: "file-signature", iconBg: "#FFF0E8", iconFg: "#B7521F", updated: "04.30", pub: true },
+      { title: "비용 지급 안내", cat: "비용", icon: "dollar-sign", iconBg: "#E7F6EF", iconFg: "#1B6B4A", updated: "06.02", pub: false },
+      { title: "촬영 안내", cat: "촬영", icon: "clapperboard", iconBg: "#FCEEF4", iconFg: "#9C3A6B", updated: "07.01", pub: true },
+    ];
+    const docs = raw.map((d, i) => {
+      const on = i === this.state.sel;
+      return {
+        ...d,
+        select: () => this.setState({ sel: i, published: d.pub }),
+        bg: on ? "var(--primary-tint-2)" : "transparent",
+        bar: on ? "var(--primary)" : "transparent",
+        stLabel: d.pub ? "게시" : "비공개",
+        stBg: d.pub ? "var(--success-bg)" : "var(--neutral-bg)",
+        stFg: d.pub ? "var(--success-fg)" : "var(--neutral-fg)",
+      };
+    });
+    const pub = this.state.published;
+    return {
+      docs,
+      newDoc: () => {},
+      published: pub,
+      togglePub: () => this.setState(s => ({ published: !s.published })),
+      pubLabel: pub ? "게시됨" : "비공개",
+      pubFg: pub ? "var(--success-fg)" : "var(--fg-4)",
+      pubTrack: pub ? "var(--success)" : "var(--border-strong)",
+      pubKnob: pub ? "21px" : "3px",
+    };
+  }
+}
+</script>
+</body>
+</html>

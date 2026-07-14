@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    input{font-family:var(--font-sans)}
+    .ccard{transition:box-shadow .15s,border-color .15s,transform .12s}
+    .ccard:hover{box-shadow:var(--shadow-md);border-color:var(--border-strong);transform:translateY(-2px)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="SME" active="courses" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:18px">
+      <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-size:20px;font-weight:700">과정 관리</div></div>
+      <div style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;width:260px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card)">
+        <x-ic name="search" s="17" style="color:var(--fg-4)"></x-ic>
+        <input placeholder="과정 검색" style="flex:1;border:none;outline:none;background:none;font-size:13.5px">
+      </div>
+      <a href="S14-Notifications.dc.html" style="position:relative;width:40px;height:40px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-card);display:inline-flex;align-items:center;justify-content:center" style-hover="border-color:var(--border-strong)">
+        <x-ic name="bell" s="18" style="color:var(--fg-2)"></x-ic>
+        <span style="position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--primary)"></span>
+      </a>
+    </header>
+
+    <div style="flex:1;overflow-y:auto;padding:26px 32px 40px">
+      <div style="margin-bottom:20px">
+        <div style="font-family:var(--font-display);font-size:23px;font-weight:700">서연님이 참여 중인 과정 <span style="color:var(--primary)">2개</span></div>
+        <div style="font-size:13px;color:var(--fg-3);margin-top:4px">과정을 선택하면 진행 로드맵과 차시별 현황을 볼 수 있어요</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:18px">
+        <sc-for list="{{ courses }}" as="c" hint-placeholder-count="2">
+          <a href="S06-CourseDetail.dc.html" class="ccard" style="display:block;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);padding:22px 24px;text-decoration:none;color:inherit">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+              <div style="min-width:0">
+                <div style="font-size:12px;color:var(--fg-4);font-weight:700">{{ c.category }}</div>
+                <div style="font-size:17px;font-weight:700;margin-top:5px;line-height:1.4">{{ c.title }}</div>
+              </div>
+              <dc-import name="StatusChip" status="{{ c.status }}" label="{{ c.statusLabel }}" hint-size="80px,26px"></dc-import>
+            </div>
+
+            <!-- mini 로드맵 -->
+            <div style="display:flex;align-items:flex-start;margin-top:20px">
+              <sc-for list="{{ c.stages }}" as="s" hint-placeholder-count="5">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative">
+                  <div style="position:absolute;top:11px;left:-50%;right:50%;height:2px;background:{{ s.lineBg }};display:{{ s.lineShow }}"></div>
+                  <div style="position:relative;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:{{ s.dotBg }};color:{{ s.dotFg }};border:2px solid {{ s.dotBorder }}"><x-ic name="{{ s.icon }}" s="13"></x-ic></div>
+                  <div style="font-size:10.5px;font-weight:{{ s.weight }};color:{{ s.labelFg }};margin-top:6px;text-align:center">{{ s.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;margin-top:18px;padding:9px 12px;border-radius:var(--r-md);background:var(--primary-tint-2)">
+              <x-ic name="circle-dot" s="15" style="color:var(--primary-hover)"></x-ic>
+              <span style="font-size:12.5px;font-weight:700;color:var(--primary-hover)">현재 단계 · {{ c.stageLabel }}</span>
+            </div>
+
+            <sc-if value="{{ c.risk }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:7px;margin-top:10px;padding:8px 11px;border-radius:var(--r-sm);background:var(--error-bg);color:var(--error-fg);font-size:12.5px;font-weight:700"><x-ic name="alert-triangle" s="15"></x-ic> {{ c.risk }}</div>
+            </sc-if>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+              <span style="font-size:12.5px;color:var(--fg-3)">내 담당 <b style="color:var(--fg-1)">{{ c.chapters }}</b></span>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--primary-hover)">로드맵 열기 <x-ic name="arrow-right" s="15"></x-ic></span>
+            </div>
+          </a>
+        </sc-for>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){try{localStorage.setItem("cdh-role","SME")}catch(e){}}
+  renderVals() {
+    const STAGES = [
+      { key: "plan",   label: "킥오프", icon: "check" },
+      { key: "script", label: "원고",   icon: "pencil" },
+      { key: "review", label: "검수",   icon: "clipboard-check" },
+      { key: "final",  label: "확정",   icon: "flag" },
+      { key: "film",   label: "촬영",   icon: "clapperboard" },
+    ];
+    const buildStages = cur => STAGES.map((s, i) => {
+      const done = i < cur, isCur = i === cur;
+      return {
+        ...s,
+        icon: done ? "check" : s.icon,
+        dotBg: done ? "var(--success)" : isCur ? "var(--primary)" : "var(--bg-card)",
+        dotFg: done || isCur ? "#fff" : "var(--fg-4)",
+        dotBorder: done ? "var(--success)" : isCur ? "var(--primary)" : "var(--border-strong)",
+        labelFg: isCur ? "var(--primary-hover)" : done ? "var(--fg-2)" : "var(--fg-4)",
+        weight: isCur ? 700 : 500,
+        lineShow: i === 0 ? "none" : "block",
+        lineBg: (done || isCur) ? "var(--success)" : "var(--border-strong)",
+      };
+    });
+    return {
+      courses: [
+        { category: "법정의무교육", title: "직장 내 괴롭힘 예방", status: "progress", statusLabel: "진행중", stages: buildStages(1), stageLabel: "원고 작성", chapters: "1·3·5차시", risk: "3차시 원고 오늘 마감", },
+        { category: "법정의무교육", title: "장애인 인식개선", status: "done", statusLabel: "완료", stages: buildStages(5), stageLabel: "촬영 완료", chapters: "4차시", risk: "", },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

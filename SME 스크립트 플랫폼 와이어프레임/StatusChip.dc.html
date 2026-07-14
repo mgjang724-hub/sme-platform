@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+</helmet>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 9px;border-radius:999px;font-family:var(--font-sans);font-size:12px;font-weight:700;line-height:1.2;white-space:nowrap;background:{{ bg }};color:{{ fg }}">
+  <span style="width:7px;height:7px;border-radius:50%;flex:none;background:{{ dot }}"></span>
+  {{ label }}
+</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:90,&quot;height&quot;:30},&quot;status&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;wait&quot;,&quot;progress&quot;,&quot;review&quot;,&quot;revise&quot;,&quot;done&quot;,&quot;final&quot;],&quot;default&quot;:&quot;progress&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const MAP = {
+      wait:    { label: "대기",    dot: "#9CA3AF", bg: "#F3F4F6", fg: "#6B7280" },
+      progress:{ label: "진행중",  dot: "#3B82F6", bg: "#EAF1FE", fg: "#2563EB" },
+      review:  { label: "검수중",  dot: "#F59E0B", bg: "#FEF6E7", fg: "#B45309" },
+      revise:  { label: "수정요청", dot: "#EF4444", bg: "#FDECEC", fg: "#DC2626" },
+      done:    { label: "승인",    dot: "#10B981", bg: "#E7F7F0", fg: "#059669" },
+      final:   { label: "최종확정", dot: "#10B981", bg: "#E7F7F0", fg: "#059669" },
+    };
+    const m = MAP[this.props.status] || MAP.wait;
+    return { ...m, label: this.props.label ?? m.label };
+  }
+}
+</script>
+</body>
+</html>

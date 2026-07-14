@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    .row:hover{background:var(--bg-sunken)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="PLANNER" active="members" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+      <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg-4)">
+        <a href="S08-Members.dc.html" style="color:var(--fg-4)" style-hover="color:var(--primary)">참여자</a>
+        <x-ic name="chevron-right" s="14"></x-ic>
+        <span style="color:var(--fg-2);font-weight:700">이서연 강사</span>
+      </div>
+      <a href="S13-Inbox.dc.html" style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:700" style-hover="border-color:var(--primary);color:var(--primary-hover)"><x-ic name="message-square" s="16"></x-ic> 문의 보내기</a>
+      <a href="S07-ScriptManage.dc.html" style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13px;font-weight:700" style-hover="background:var(--primary-hover)"><x-ic name="file-text" s="16"></x-ic> 담당 원고 보기</a>
+    </header>
+
+    <div style="flex:1;overflow-y:auto;padding:26px 32px 44px">
+      <div style="max-width:1000px;margin:0 auto">
+
+        <!-- profile -->
+        <div style="display:flex;gap:20px;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);padding:24px 26px;margin-bottom:20px">
+          <span style="width:72px;height:72px;flex:none;border-radius:50%;background:#D5E3F2;color:#245C92;display:inline-flex;align-items:center;justify-content:center;font-size:28px;font-weight:800">이</span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="font-family:var(--font-display);font-size:22px;font-weight:700">이서연</div>
+              <span style="font-size:11.5px;font-weight:800;letter-spacing:.03em;padding:4px 9px;border-radius:6px;background:#E8F1FB;color:#245C92">SME</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--success-bg);color:var(--success-fg)"><span style="width:6px;height:6px;border-radius:50%;background:#10B981"></span>활성</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;margin-top:8px;font-size:12.5px;color:var(--fg-3);flex-wrap:wrap">
+              <span style="display:inline-flex;align-items:center;gap:6px"><x-ic name="mail" s="15" style="color:var(--fg-4)"></x-ic> seoyeon@email.com</span>
+              <span style="display:inline-flex;align-items:center;gap:6px"><x-ic name="phone" s="15" style="color:var(--fg-4)"></x-ic> 010-2314-5xxx</span>
+              <span style="display:inline-flex;align-items:center;gap:6px"><x-ic name="calendar" s="15" style="color:var(--fg-4)"></x-ic> 2026.06.20 참여</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
+              <span style="font-size:12px;font-weight:700;color:var(--fg-4)">참여 과정 2</span>
+              <span style="font-size:12.5px;font-weight:700;padding:4px 11px;border-radius:999px;background:var(--stage-story-bg);color:var(--stage-story-fg)">직장 내 괴롭힘 예방</span>
+              <span style="font-size:12.5px;font-weight:700;padding:4px 11px;border-radius:999px;background:var(--stage-done-bg);color:var(--stage-done-fg)">장애인 인식개선</span>
+            </div>
+          </div>
+          <div style="flex:none;text-align:center;padding:0 8px">
+            <div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--stage-film-fg)"><x-ic name="clapperboard" s="16"></x-ic> 촬영날까지</div>
+            <div style="font-family:var(--font-num);font-size:30px;font-weight:800;margin-top:4px">D-22</div>
+            <div style="font-size:11.5px;color:var(--fg-4)">7.30 (목) · 역할극</div>
+          </div>
+        </div>
+
+        <!-- workload stats -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
+          <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-xs);padding:16px 18px">
+              <div style="display:flex;align-items:center;gap:7px;color:{{ s.fg }}"><x-ic name="{{ s.icon }}" s="16"></x-ic><span style="font-size:12px;font-weight:700">{{ s.label }}</span></div>
+              <div style="font-family:var(--font-num);font-size:26px;font-weight:800;margin-top:8px;color:var(--fg-1)">{{ s.value }}<span style="font-size:13px;color:var(--fg-4);font-weight:600;margin-left:2px">{{ s.unit }}</span></div>
+              <div style="font-size:11.5px;color:var(--fg-4);margin-top:2px">{{ s.sub }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- 참여 과정 -->
+        <div style="margin-bottom:24px">
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px">참여 과정 <span style="font-size:13px;color:var(--fg-4);font-weight:600">2개</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <sc-for list="{{ courses }}" as="c" hint-placeholder-count="2">
+              <a href="S06-CourseDetail.dc.html" style="display:block;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-xs);padding:18px 20px;text-decoration:none;color:inherit;transition:box-shadow .15s,border-color .15s" style-hover="box-shadow:var(--shadow-md);border-color:var(--border-strong)">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+                  <div style="min-width:0"><div style="font-size:11.5px;color:var(--fg-4);font-weight:700">{{ c.category }}</div><div style="font-size:15px;font-weight:700;margin-top:3px">{{ c.title }}</div></div>
+                  <dc-import name="StatusChip" status="{{ c.status }}" label="{{ c.statusLabel }}" hint-size="70px,26px"></dc-import>
+                </div>
+                <div style="font-size:12px;color:var(--fg-3);margin-top:12px">담당 {{ c.chapters }}</div>
+                <div style="height:6px;border-radius:999px;background:var(--bg-sunken);overflow:hidden;margin-top:8px"><div style="height:100%;border-radius:999px;background:{{ c.barColor }};width:{{ c.pctW }}"></div></div>
+                <div style="font-size:11.5px;color:var(--fg-4);margin-top:6px">진행 {{ c.pct }}% · 마감 {{ c.due }}</div>
+              </a>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start">
+
+          <!-- assigned scripts -->
+          <div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px">배정 원고 <span style="font-size:13px;color:var(--fg-4);font-weight:600">3건</span></div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden">
+              <sc-for list="{{ scripts }}" as="s" hint-placeholder-count="3">
+                <a href="S07-ScriptManage.dc.html" class="row" style="display:flex;align-items:center;gap:14px;padding:15px 20px;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;transition:background .12s">
+                  <span style="width:36px;height:36px;flex:none;border-radius:var(--r-md);background:var(--primary-tint-2);display:inline-flex;align-items:center;justify-content:center;color:var(--primary-hover)"><x-ic name="file-text" s="17"></x-ic></span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.title }}</div>
+                    <div style="font-size:12px;color:var(--fg-4);margin-top:2px">{{ s.meta }}</div>
+                  </div>
+                  <dc-import name="StatusChip" status="{{ s.status }}" hint-size="80px,26px"></dc-import>
+                  <span style="width:78px;flex:none;text-align:right;font-size:12px;color:{{ s.dueColor }}">{{ s.due }}</span>
+                </a>
+              </sc-for>
+              <div style="padding:14px 20px;text-align:center"><a href="S06-CourseDetail.dc.html" style="font-size:12.5px;font-weight:700">과정 현황에서 보기 →</a></div>
+            </div>
+          </div>
+
+          <!-- activity -->
+          <div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px">최근 활동</div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);padding:6px 20px 14px">
+              <sc-for list="{{ activity }}" as="a" hint-placeholder-count="4">
+                <div style="display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--border)">
+                  <span style="width:30px;height:30px;flex:none;border-radius:50%;background:{{ a.iconBg }};color:{{ a.iconFg }};display:inline-flex;align-items:center;justify-content:center"><x-ic name="{{ a.icon }}" s="15"></x-ic></span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:12.5px;color:var(--fg-2);line-height:1.5">{{ a.text }}</div>
+                    <div style="font-size:11px;color:var(--fg-4);margin-top:3px">{{ a.time }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){try{localStorage.setItem("cdh-role","PLANNER")}catch(e){}}
+  renderVals() {
+    return {
+      courses: [
+        { category: "법정의무교육", title: "직장 내 괴롭힘 예방", status: "progress", statusLabel: "진행중", chapters: "1·3·5차시", pct: 60, pctW: "60%", barColor: "var(--primary)", due: "7.20" },
+        { category: "법정의무교육", title: "장애인 인식개선", status: "done", statusLabel: "완료", chapters: "4차시", pct: 100, pctW: "100%", barColor: "var(--success)", due: "확정 완료" },
+      ],
+      stats: [
+        { icon: "layers",         label: "배정 차시",   value: "3", unit: "차시", sub: "1·3·5차시", fg: "var(--fg-3)" },
+        { icon: "circle-check",   label: "확정 완료",   value: "1", unit: "차시", sub: "1차시 최종확정", fg: "var(--success-fg)" },
+        { icon: "clock",          label: "평균 응답",   value: "4", unit: "시간", sub: "피드백 회신 속도", fg: "var(--info-fg)" },
+        { icon: "flag",           label: "마감 준수율", value: "92", unit: "%", sub: "최근 3개월", fg: "var(--primary-hover)" },
+      ],
+      scripts: [
+        { title: "1차시 — 오프닝 스크립트", meta: "v2 · 이서연 제출", status: "final", due: "확정 완료", dueColor: "var(--success-fg)" },
+        { title: "3차시 — 역할극 시나리오", meta: "v2 · 미반영 피드백 1", status: "revise", due: "오늘 마감", dueColor: "var(--error-fg)" },
+        { title: "5차시 — 사례 분석 2", meta: "v1 · 검수 대기", status: "review", due: "7.16 (목)", dueColor: "var(--fg-2)" },
+      ],
+      activity: [
+        { icon: "upload",         iconBg: "var(--primary-tint)", iconFg: "var(--primary-hover)", text: "3차시 역할극 시나리오 v2를 제출했어요", time: "3시간 전" },
+        { icon: "message-square", iconBg: "var(--info-bg)",      iconFg: "var(--info-fg)",       text: "‘Google Docs 링크 제출 방법’ 문의를 남겼어요", time: "어제" },
+        { icon: "circle-check",   iconBg: "var(--success-bg)",   iconFg: "var(--success-fg)",    text: "1차시 오프닝 스크립트가 최종확정 되었어요", time: "3일 전" },
+        { icon: "corner-down-right", iconBg: "var(--bg-sunken)", iconFg: "var(--fg-3)",          text: "3차시 v1 수정요청에 회신했어요", time: "5일 전" },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

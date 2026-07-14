@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    .row:hover{background:var(--bg-sunken)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="{{ sidebarRole }}" active="courses" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;padding:14px 32px 0;background:var(--bg-card);border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--fg-4)">
+        <a href="S04-CourseList.dc.html" style="color:var(--fg-4)" style-hover="color:var(--primary)">과정 관리</a>
+        <x-ic name="chevron-right" s="13"></x-ic><span style="color:var(--fg-2);font-weight:700">직장 내 괴롭힘 예방</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:16px;margin-top:10px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:10px">
+            <h1 style="font-family:var(--font-display);font-size:22px;font-weight:700;margin:0">직장 내 괴롭힘 예방</h1>
+            <dc-import name="StatusChip" status="progress" hint-size="80px,26px"></dc-import>
+            <span style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--fg-4);padding:4px 10px;border:1px solid var(--border);border-radius:999px"><x-ic name="eye" s="13"></x-ic> 보기 전용</span>
+          </div>
+          <div style="font-size:12.5px;color:var(--fg-3);margin-top:5px">법정의무교육 · 전체 6차시 · 담당 강사 이서연·박도현 · 제출 마감 2026.07.20</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--bg-sunken)">
+          <button onClick="{{ setPlanner }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ plannerBtnBg }};color:{{ plannerBtnFg }}">기획자</button>
+          <button onClick="{{ setSme }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ smeBtnBg }};color:{{ smeBtnFg }}">강사</button>
+        </div>
+        <a href="S07-ScriptManage.dc.html" style="display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13.5px;font-weight:700" style-hover="background:var(--primary-hover)"><x-ic name="file-text" s="16"></x-ic> 원고 상세관리 열기</a>
+      </div>
+      <!-- tabs -->
+      <div style="display:flex;gap:4px;margin-top:14px">
+        <button onClick="{{ tabScripts }}" style="padding:11px 16px;border:none;background:none;font-size:14px;font-weight:700;cursor:pointer;color:{{ t1Fg }};border-bottom:2.5px solid {{ t1Bar }}">원고 진행상황</button>
+        <button onClick="{{ tabIssues }}" style="padding:11px 16px;border:none;background:none;font-size:14px;font-weight:700;cursor:pointer;color:{{ t2Fg }};border-bottom:2.5px solid {{ t2Bar }}">이슈 · 특징사항</button>
+      </div>
+    </header>
+
+    <div style="flex:1;overflow-y:auto;padding:24px 32px 44px">
+
+      <!-- roadmap (always) -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);padding:22px 24px;margin-bottom:22px">
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:700;margin-bottom:18px">진행 로드맵</div>
+        <div style="display:flex;align-items:flex-start">
+          <sc-for list="{{ roadmap }}" as="m" hint-placeholder-count="5">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative">
+              <div style="position:absolute;top:15px;left:-50%;right:50%;height:2px;background:{{ m.lineBg }};display:{{ m.lineShow }}"></div>
+              <div style="position:relative;width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:{{ m.dotBg }};color:{{ m.dotFg }};border:2px solid {{ m.dotBorder }}"><x-ic name="{{ m.icon }}" s="16"></x-ic></div>
+              <div style="font-size:12.5px;font-weight:700;color:{{ m.labelFg }};margin-top:8px;text-align:center">{{ m.label }}</div>
+              <div style="font-size:11px;color:var(--fg-4);margin-top:2px">{{ m.date }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- TAB: scripts -->
+      <sc-if value="{{ showScripts }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:700">차시별 원고 진행상황</div>
+          <div style="font-size:12px;color:var(--fg-4)">항목을 누르면 원고 상세관리로 이동</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden">
+          <div style="display:flex;align-items:center;gap:16px;padding:12px 22px;border-bottom:1px solid var(--border);font-size:11.5px;font-weight:700;color:var(--fg-4)">
+            <span style="flex:1">차시 / 원고</span><span style="width:96px">상태</span><span style="width:60px">버전</span><span style="width:110px">담당 강사</span><span style="width:110px;text-align:right">제출 마감</span>
+          </div>
+          <sc-for list="{{ scripts }}" as="s" hint-placeholder-count="6">
+            <a href="S07-ScriptManage.dc.html" class="row" style="display:flex;align-items:center;gap:16px;padding:15px 22px;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;transition:background .12s">
+              <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">{{ s.title }}</div></div>
+              <div style="width:96px"><dc-import name="StatusChip" status="{{ s.status }}" hint-size="80px,26px"></dc-import></div>
+              <div style="width:60px;font-family:var(--font-num);font-size:13px;color:var(--fg-2)">{{ s.ver }}</div>
+              <div style="width:110px;font-size:12.5px;color:var(--fg-3)">{{ s.sme }}</div>
+              <div style="width:110px;text-align:right;font-size:12.5px;color:{{ s.dueColor }}">{{ s.due }}</div>
+            </a>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- TAB: issues + 특징사항 -->
+      <sc-if value="{{ showIssues }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:18px">
+          <div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px">이슈사항</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <sc-for list="{{ issues }}" as="i" hint-placeholder-count="3">
+                <div style="display:flex;gap:12px;padding:16px 18px;background:var(--bg-card);border:1px solid var(--border);border-left:4px solid {{ i.accent }};border-radius:var(--r-lg);box-shadow:var(--shadow-xs)">
+                  <x-ic name="{{ i.icon }}" s="18" style="color:{{ i.accent }}"></x-ic>
+                  <div style="flex:1"><div style="font-size:13.5px;font-weight:700">{{ i.title }}</div><div style="font-size:12.5px;color:var(--fg-3);margin-top:3px;line-height:1.6">{{ i.desc }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px">특징사항 &amp; 관련 안내</div>
+            <div style="padding:18px 20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-xs)">
+              <div style="font-size:13px;color:var(--fg-2);line-height:1.75">이 과정은 <b>3차시 역할극 별도 촬영</b>이 필요하며, 출연 강사 2인 일정 조율이 요구됩니다.</div>
+              <div style="font-size:11.5px;font-weight:700;color:var(--fg-4);margin:16px 0 8px">관련 안내 바로가기</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <a href="S10-GuideDetail.dc.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--r-md);background:var(--primary-tint);color:var(--primary-hover);font-size:13px;font-weight:700" style-hover="background:var(--primary-tint-2)"><x-ic name="clapperboard" s="16"></x-ic> 촬영 안내 보기 <x-ic name="arrow-right" s="14"></x-ic></a>
+                <a href="S10-GuideDetail.dc.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--r-md);background:var(--bg-sunken);color:var(--fg-2);font-size:13px;font-weight:700" style-hover="background:var(--primary-tint-2);color:var(--primary-hover)"><x-ic name="file-text" s="16"></x-ic> 원고 작성 안내 보기 <x-ic name="arrow-right" s="14"></x-ic></a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  __pr(r){try{localStorage.setItem("cdh-role",r)}catch(e){}return r;}
+  state = { tab: "scripts", role: (function(){try{return localStorage.getItem("cdh-role")||"PLANNER";}catch(e){return "PLANNER";}})() };
+  renderVals() {
+    const tab = this.state.tab;
+    const isPlanner = this.state.role === "PLANNER";
+    const seg = on => ({ bg: on ? "var(--bg-card)" : "transparent", fg: on ? "var(--primary-hover)" : "var(--fg-3)" });
+    const rp = seg(isPlanner), rs = seg(!isPlanner);
+    const on = "var(--fg-1)", off = "var(--fg-4)";
+    const roadmap = [
+      { label: "기획 · 킥오프", date: "6.20 완료", icon: "check", st: "done", first: true },
+      { label: "원고 작성", date: "진행중", icon: "pencil", st: "cur" },
+      { label: "원고 검수", date: "~7.20", icon: "clipboard-check", st: "todo" },
+      { label: "최종 확정", date: "~7.25", icon: "flag", st: "todo" },
+      { label: "촬영 (별도)", date: "협의", icon: "clapperboard", st: "todo" },
+    ];
+    const rm = roadmap.map((m, i) => {
+      const done = m.st === "done", cur = m.st === "cur";
+      return {
+        ...m,
+        icon: m.icon,
+        dotBg: done ? "var(--success)" : cur ? "var(--primary)" : "var(--bg-card)",
+        dotFg: done || cur ? "#fff" : "var(--fg-4)",
+        dotBorder: done ? "var(--success)" : cur ? "var(--primary)" : "var(--border-strong)",
+        labelFg: cur ? "var(--primary-hover)" : "var(--fg-2)",
+        lineShow: i === 0 ? "none" : "block",
+        lineBg: (done || cur) ? "var(--success)" : "var(--border-strong)",
+      };
+    });
+    return {
+      sidebarRole: this.state.role,
+      setPlanner: () => this.setState({ role: this.__pr("PLANNER") }),
+      setSme: () => this.setState({ role: this.__pr("SME") }),
+      plannerBtnBg: rp.bg, plannerBtnFg: rp.fg, smeBtnBg: rs.bg, smeBtnFg: rs.fg,
+      tabScripts: () => this.setState({ tab: "scripts" }),
+      tabIssues: () => this.setState({ tab: "issues" }),
+      showScripts: tab === "scripts", showIssues: tab === "issues",
+      t1Fg: tab === "scripts" ? on : off, t1Bar: tab === "scripts" ? "var(--primary)" : "transparent",
+      t2Fg: tab === "issues" ? on : off, t2Bar: tab === "issues" ? "var(--primary)" : "transparent",
+      roadmap: rm,
+      scripts: [
+        { title: "1차시 — 오프닝", status: "final", ver: "v2", sme: "이서연", due: "확정 완료", dueColor: "var(--success-fg)" },
+        { title: "2차시 — 개념 정리", status: "review", ver: "v1", sme: "박도현", due: "7.12 (일)", dueColor: "var(--fg-2)" },
+        { title: "3차시 — 역할극 시나리오", status: "review", ver: "v2", sme: "이서연", due: "오늘 마감", dueColor: "var(--error-fg)" },
+        { title: "4차시 — 사례 분석", status: "progress", ver: "작성 중", sme: "박도현", due: "7.15 (수)", dueColor: "var(--fg-2)" },
+        { title: "5차시 — 사례 분석 2", status: "review", ver: "v1", sme: "이서연", due: "7.16 (목)", dueColor: "var(--fg-2)" },
+        { title: "6차시 — 마무리 퀴즈", status: "wait", ver: "—", sme: "박도현", due: "7.18 (토)", dueColor: "var(--fg-3)" },
+      ],
+      issues: [
+        { icon: "alert-triangle", accent: "#EF4444", title: "3차시 원고 마감 2일 지연", desc: "역할극 지문 수정으로 재제출 진행 중. 강사 일정 재확인 필요." },
+        { icon: "message-square", accent: "#F59E0B", title: "2차시 검수 답변 대기", desc: "박도현 강사 답변 대기 · 2일 경과" },
+        { icon: "clapperboard", accent: "#9C3A6B", title: "촬영 일정 미확정", desc: "3차시 역할극 별도 촬영 — 출연 2인 일정 조율 필요" },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

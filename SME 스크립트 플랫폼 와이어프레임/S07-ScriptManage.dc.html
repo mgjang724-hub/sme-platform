@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    input,textarea{font-family:var(--font-sans)}
+    .chap:hover{background:var(--bg-sunken)}
+    .lnk:hover{border-color:var(--primary);background:var(--primary-tint-2)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="{{ sidebarRole }}" active="{{ sidebarActive }}" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <!-- header -->
+    <header style="flex:none;padding:14px 28px 0;background:var(--bg-card);border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--fg-4)">
+        <a href="S04-CourseList.dc.html" style="color:var(--fg-4)" style-hover="color:var(--primary)">과정 관리</a>
+        <x-ic name="chevron-right" s="13"></x-ic>
+        <a href="S06-CourseDetail.dc.html" style="color:var(--fg-4)" style-hover="color:var(--primary)">직장 내 괴롭힘 예방</a>
+        <x-ic name="chevron-right" s="13"></x-ic>
+        <span style="color:var(--fg-2);font-weight:700">3차시 원고</span>
+      </div>
+
+      <div style="display:flex;align-items:flex-end;gap:16px;margin-top:10px;padding-bottom:14px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:10px">
+            <h1 style="font-family:var(--font-display);font-size:21px;font-weight:700;margin:0">3차시 — 역할극 시나리오 원고</h1>
+            <dc-import name="StatusChip" status="review" hint-size="80px,26px"></dc-import>
+          </div>
+          <div style="font-size:12.5px;color:var(--fg-3);margin-top:5px">담당 강사 이서연 · 검수 담당 김정수 · 최신 v2 · 3시간 전 제출</div>
+        </div>
+
+        <!-- role preview toggle -->
+        <div style="display:flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--bg-sunken)">
+          <button onClick="{{ setPlanner }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ plannerBtnBg }};color:{{ plannerBtnFg }}">기획자 화면</button>
+          <button onClick="{{ setSme }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ smeBtnBg }};color:{{ smeBtnFg }}">강사 화면</button>
+        </div>
+
+        <!-- action buttons -->
+        <sc-if value="{{ isPlanner }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;gap:8px">
+            <button style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:700;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)"><x-ic name="clipboard-check" s="16"></x-ic> 검수 시작</button>
+            <button style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:1px solid var(--error);border-radius:var(--r-md);background:var(--bg-card);color:var(--error-fg);font-size:13px;font-weight:700;cursor:pointer" style-hover="background:var(--error-bg)"><x-ic name="corner-down-right" s="16"></x-ic> 수정 요청</button>
+            <button style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:700;cursor:pointer" style-hover="border-color:var(--success);color:var(--success-fg)"><x-ic name="check" s="16"></x-ic> 승인</button>
+            <button style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)"><x-ic name="flag" s="16"></x-ic> 최종본 확정</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isSme }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:8px">
+            <button style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:700;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)"><x-ic name="help-circle" s="16"></x-ic> 기획자에게 질문</button>
+            <button onClick="{{ openUpload }}" style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)"><x-ic name="upload" s="16"></x-ic> 새 버전 제출</button>
+          </div>
+        </sc-if>
+      </div>
+    </header>
+
+    <!-- 3-pane body -->
+    <div style="flex:1;display:flex;min-height:0;overflow:hidden">
+
+      <!-- 차시 목록 -->
+      <div style="width:236px;flex:none;border-right:1px solid var(--border);background:var(--bg-card);overflow-y:auto;padding:16px 12px">
+        <div style="font-size:12px;font-weight:700;color:var(--fg-4);padding:0 8px 8px">차시 목록 · 6</div>
+        <sc-for list="{{ chapters }}" as="ch" hint-placeholder-count="6">
+          <div class="chap" style="display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:var(--r-md);cursor:pointer;background:{{ ch.bg }};margin-bottom:2px">
+            <span style="width:8px;height:8px;border-radius:50%;flex:none;background:{{ ch.dot }}"></span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:{{ ch.weight }};color:{{ ch.fg }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ch.title }}</div>
+              <div style="font-size:11px;color:var(--fg-4);margin-top:2px">{{ ch.meta }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- 원고 작업 (center) -->
+      <div style="flex:1;min-width:0;overflow-y:auto;padding:22px 26px 40px">
+
+        <!-- 학습목표 (접힘) -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:16px">
+          <button onClick="{{ toggleObj }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:14px 18px;border:none;background:none;cursor:pointer;text-align:left">
+            <x-ic name="target" s="18" style="color:var(--fg-3)"></x-ic>
+            <span style="flex:1;font-size:14px;font-weight:700;color:var(--fg-1)">학습 목표 &amp; 원고 지침</span>
+            <span style="font-size:12px;color:var(--fg-4)">{{ objHint }}</span>
+            <x-ic name="{{ objChevron }}" s="17" style="color:var(--fg-4)"></x-ic>
+          </button>
+          <sc-if value="{{ objOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:2px 18px 18px 46px;font-size:13.5px;color:var(--fg-2);line-height:1.7">
+              <ul style="margin:0;padding-left:18px">
+                <li>직장 내 괴롭힘의 정의와 유형을 사례로 설명한다.</li>
+                <li>역할극을 통해 방관자 개입의 중요성을 전달한다.</li>
+                <li>분량: 8~10분 · 톤: 실무자 대상, 공감형</li>
+              </ul>
+              <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;font-size:12.5px"><x-ic name="file-text" s="14" style="color:var(--fg-4)"></x-ic><a href="#">원고 작성 템플릿.docx</a> 다운로드</div>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- 새 버전 제출 (역할별 펼침) -->
+        <div style="background:var(--bg-card);border:1px solid {{ uploadBorder }};border-radius:var(--r-lg);margin-bottom:16px;overflow:hidden">
+          <button onClick="{{ toggleUpload }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:14px 18px;border:none;background:{{ uploadHeadBg }};cursor:pointer;text-align:left">
+            <x-ic name="upload" s="18" style="color:{{ uploadIcon }}"></x-ic>
+            <span style="flex:1;font-size:14px;font-weight:700;color:var(--fg-1)">새 버전 제출</span>
+            <span style="font-size:12px;color:var(--fg-4)">{{ uploadHint }}</span>
+            <x-ic name="{{ uploadChevron }}" s="17" style="color:var(--fg-4)"></x-ic>
+          </button>
+          <sc-if value="{{ uploadOpen }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:6px 18px 18px">
+              <div style="border:1.5px dashed var(--border-strong);border-radius:var(--r-md);padding:22px;text-align:center;background:var(--bg-page-2)">
+                <x-ic name="upload" s="26" style="color:var(--fg-4)"></x-ic>
+                <div style="font-size:13.5px;color:var(--fg-2);font-weight:700;margin-top:8px">원고 파일을 끌어다 놓거나 클릭해 업로드</div>
+                <div style="font-size:12px;color:var(--fg-4);margin-top:3px">.docx · .pdf · .hwp · .pptx / 최대 20MB</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin:12px 0;color:var(--fg-4);font-size:12px"><div style="flex:1;height:1px;background:var(--border)"></div>또는<div style="flex:1;height:1px;background:var(--border)"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:0 12px;height:42px;border:1px solid var(--border-strong);border-radius:var(--r-md)">
+                <x-ic name="link" s="16" style="color:var(--fg-4)"></x-ic>
+                <input placeholder="Google Docs / 외부 링크 붙여넣기" style="flex:1;border:none;outline:none;background:none;font-size:13.5px">
+              </div>
+              <textarea placeholder="이번 버전에서 반영한 내용 (선택)" rows="2" style="width:100%;margin-top:10px;padding:10px 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);font-size:13.5px;resize:vertical;outline:none"></textarea>
+              <div style="display:flex;justify-content:flex-end;margin-top:10px">
+                <button style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)"><x-ic name="send" s="15"></x-ic> v3로 제출</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- 최신본 (크게) -->
+        <div style="display:flex;align-items:center;gap:8px;margin:4px 2px 10px">
+          <x-ic name="file-text" s="17" style="color:var(--primary-hover)"></x-ic>
+          <span style="font-family:var(--font-display);font-size:16px;font-weight:700">최신본</span>
+          <span style="font-size:12px;color:var(--fg-4)">버전 축</span>
+        </div>
+        <div style="background:var(--bg-card);border:1.5px solid var(--primary);border-radius:var(--r-xl);box-shadow:var(--shadow-md);overflow:hidden">
+          <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--primary-tint-2)">
+            <span style="font-family:var(--font-num);font-size:15px;font-weight:800;color:var(--primary-hover);padding:4px 10px;background:var(--bg-card);border-radius:var(--r-sm)">v2</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:700">역할극_시나리오_3차시_v2 · Google Docs</div>
+              <div style="font-size:12px;color:var(--fg-3);margin-top:2px">이서연 강사 제출 · 2026.07.07 09:12 · v1 피드백 3건 반영</div>
+            </div>
+            <dc-import name="StatusChip" status="review" hint-size="80px,26px"></dc-import>
+          </div>
+          <div style="display:flex;gap:10px;padding:14px 20px;flex-wrap:wrap">
+            <a href="#" class="lnk" style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:700"><x-ic name="external-link" s="15"></x-ic> Google Docs 열기</a>
+            <a href="#" class="lnk" style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:700"><x-ic name="download" s="15"></x-ic> .docx 내려받기</a>
+            <button onClick="{{ openPreview }}" class="lnk" style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:700;cursor:pointer"><x-ic name="eye" s="15"></x-ic> 본문 미리보기</button>
+          </div>
+          <div style="margin:0 20px 18px;padding:16px 18px;background:var(--bg-page-2);border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;color:var(--fg-3);line-height:1.8">
+            <div style="font-weight:700;color:var(--fg-2);margin-bottom:6px">[미리보기] 3차시 · 역할극 시나리오</div>
+            (인트로) “여러분은 이런 상황, 겪어보신 적 있나요?” … 팀 회의 장면. A 대리가 반복적으로 후배의 의견을 무시한다. 방관하던 동료 B가 개입하며 …
+            <div style="color:var(--fg-4);margin-top:6px">— 이하 본문 미리보기 생략 —</div>
+          </div>
+        </div>
+
+        <!-- 이전 버전 (접힘) -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);margin-top:16px">
+          <button onClick="{{ togglePrev }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:14px 18px;border:none;background:none;cursor:pointer;text-align:left">
+            <x-ic name="history" s="18" style="color:var(--fg-3)"></x-ic>
+            <span style="flex:1;font-size:14px;font-weight:700;color:var(--fg-1)">이전 버전 &amp; 파일·링크 타임라인</span>
+            <span style="font-size:12px;color:var(--fg-4)">{{ prevHint }}</span>
+            <x-ic name="{{ prevChevron }}" s="17" style="color:var(--fg-4)"></x-ic>
+          </button>
+          <sc-if value="{{ prevOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:0 18px 8px">
+              <sc-for list="{{ timeline }}" as="v" hint-placeholder-count="3">
+                <div style="display:flex;gap:14px;padding:12px 0;border-top:1px solid var(--border)">
+                  <div style="width:56px;flex:none;text-align:center">
+                    <div style="font-family:var(--font-num);font-size:13px;font-weight:800;color:{{ v.tagFg }};padding:3px 0;background:{{ v.tagBg }};border-radius:var(--r-sm)">{{ v.tag }}</div>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <x-ic name="{{ v.icon }}" s="15" style="color:var(--fg-4)"></x-ic>
+                      <span style="font-size:13.5px;font-weight:700;color:var(--fg-1)">{{ v.name }}</span>
+                      <sc-if value="{{ v.badge }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:{{ v.badgeBg }};color:{{ v.badgeFg }}">{{ v.badge }}</span></sc-if>
+                    </div>
+                    <div style="font-size:12px;color:var(--fg-3);margin-top:3px">{{ v.meta }}</div>
+                  </div>
+                  <a href="#" style="flex:none;align-self:center;font-size:12.5px;font-weight:700">{{ v.action }}</a>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+
+      <!-- 피드백 스레드 (right) -->
+      <div style="width:378px;flex:none;border-left:1px solid var(--border);background:var(--bg-card);display:flex;flex-direction:column;min-height:0">
+        <div style="flex:none;padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+          <x-ic name="message-square" s="18" style="color:var(--primary-hover)"></x-ic>
+          <span style="font-family:var(--font-display);font-size:16px;font-weight:700">피드백 &amp; 소통</span>
+          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--error-bg);color:var(--error-fg)">미반영 2</span>
+        </div>
+
+        <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+          <sc-for list="{{ feedback }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;gap:10px">
+              <span style="width:30px;height:30px;flex:none;border-radius:50%;background:{{ f.avBg }};color:{{ f.avFg }};display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">{{ f.avInit }}</span>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:7px">
+                  <span style="font-size:12.5px;font-weight:700">{{ f.name }}</span>
+                  <span style="font-size:11px;color:var(--fg-4)">{{ f.time }}</span>
+                </div>
+                <div style="margin-top:6px;padding:10px 12px;border-radius:var(--r-md);background:{{ f.bubbleBg }};border:1px solid {{ f.bubbleBorder }};font-size:13px;color:var(--fg-2);line-height:1.6">
+                  {{ f.text }}
+                  <sc-if value="{{ f.attach }}" hint-placeholder-val="{{ false }}">
+                    <a href="#" style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:7px 10px;border:1px solid var(--info);border-radius:var(--r-sm);background:var(--info-bg);color:var(--info-fg);font-size:12px;font-weight:700;text-decoration:none"><x-ic name="paperclip" s="13"></x-ic> {{ f.attach }}</a>
+                  </sc-if>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
+                  <span style="font-size:11px;color:var(--fg-4);display:inline-flex;align-items:center;gap:4px"><x-ic name="git-branch" s="12"></x-ic> 근거 {{ f.version }}</span>
+                  <sc-if value="{{ f.unresolved }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:999px;background:var(--error-bg);color:var(--error-fg)">미반영</span></sc-if>
+                  <sc-if value="{{ f.resolved }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:999px;background:var(--success-bg);color:var(--success-fg)">반영됨</span></sc-if>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="flex:none;padding:14px 20px;border-top:1px solid var(--border)">
+          <div style="border:1px solid var(--border-strong);border-radius:var(--r-md);padding:10px 12px">
+            <textarea placeholder="{{ composePlaceholder }}" rows="2" style="width:100%;border:none;outline:none;resize:none;font-size:13px"></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+              <sc-if value="{{ isPlanner }}" hint-placeholder-val="{{ true }}">
+                <button style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--bg-card);color:var(--fg-3);font-size:12px;font-weight:700;cursor:pointer"><x-ic name="paperclip" s="14"></x-ic> 검토본 첨부</button>
+              </sc-if>
+              <sc-if value="{{ isSme }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:var(--fg-4)">답글·질문을 남겨보세요</span></sc-if>
+              <button style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:none;border-radius:var(--r-sm);background:var(--primary);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)"><x-ic name="send" s="14"></x-ic> {{ composeCta }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <sc-if value="{{ previewOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closePreview }}" style="position:fixed;inset:0;background:rgba(17,24,39,.32);display:flex;align-items:center;justify-content:center;padding:40px;z-index:50">
+      <div onClick="{{ stop }}" style="width:720px;max-width:100%;max-height:100%;display:flex;flex-direction:column;background:var(--bg-card);border-radius:var(--r-2xl);box-shadow:var(--shadow-lg);overflow:hidden">
+        <div style="flex:none;display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--border)">
+          <span style="width:38px;height:38px;flex:none;border-radius:var(--r-md);background:var(--primary-tint-2);display:inline-flex;align-items:center;justify-content:center;color:var(--primary-hover)"><x-ic name="file-text" s="19"></x-ic></span>
+          <div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700">역할극_시나리오_3차시_v2</div><div style="font-size:12px;color:var(--fg-3);margin-top:2px">본문 미리보기 · Google Docs · 읽기 전용</div></div>
+          <dc-import name="StatusChip" status="review" hint-size="80px,26px"></dc-import>
+          <button onClick="{{ closePreview }}" style="width:34px;height:34px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center" style-hover="border-color:var(--border-strong);color:var(--fg-1)"><x-ic name="x" s="17"></x-ic></button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:28px 32px;background:var(--bg-page-2)">
+          <div style="max-width:600px;margin:0 auto;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:36px 40px">
+            <h2 style="font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--fg-1);margin:0 0 4px">3차시 — 역할극 시나리오</h2>
+            <div style="font-size:12px;color:var(--fg-4);margin-bottom:22px">분량 약 9분 · 출연 2인</div>
+            <div style="font-size:14px;line-height:1.95;color:var(--fg-2)">
+              <p style="margin:0 0 14px"><b style="color:var(--fg-1)">(인트로)</b> “여러분은 이런 상황, 겪어보신 적 있나요?” 화면 가득 사무실 풍경이 비칩니다.</p>
+              <p style="margin:0 0 6px"><b style="color:var(--fg-1)">[장면 1] 팀 회의실</b></p>
+              <p style="margin:0 0 8px"><b>A 대리</b>: (후배의 말을 끊으며) 그건 자네가 잘 몰라서 하는 소리야. 그냥 시키는 대로 해.</p>
+              <p style="margin:0 0 8px"><b>후배 사원</b>: (당황하며 말을 잉지 못한다)</p>
+              <p style="margin:0 0 8px"><b>동료 B</b>: (잠시 망설이다) 대리님, 방금 이야기 끝까지 들어보면 어떨까요?</p>
+              <p style="margin:0 0 14px"><b style="color:var(--fg-1)">(내레이션)</b> 방관하지 않고 한마디를 건네는 것. 그것만으로도 상황은 달라집니다.</p>
+              <p style="margin:0;color:var(--fg-4)">— 이하 본문 계속 —</p>
+            </div>
+          </div>
+        </div>
+        <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-top:1px solid var(--border)">
+          <span style="font-size:12px;color:var(--fg-4)">v2 · 이서연 강사 제출 · 2026.07.07</span>
+          <div style="display:flex;gap:8px">
+            <button onClick="{{ closePreview }}" style="padding:9px 16px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:700;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)">닫기</button>
+            <a href="#" style="display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13px;font-weight:700;text-decoration:none" style-hover="background:var(--primary-hover)"><x-ic name="external-link" s="15"></x-ic> Google Docs 열기</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  __pr(r){try{localStorage.setItem("cdh-role",r)}catch(e){}return r;}
+  state = { role: (function(){try{return localStorage.getItem("cdh-role")||"PLANNER";}catch(e){return "PLANNER";}})(), objOpen: false, prevOpen: false, uploadOpen: false, previewOpen: false };
+
+  setRole(r) { this.__pr(r); this.setState({ role: r, uploadOpen: r === "SME" }); }
+  toggle(k) { this.setState(s => ({ [k]: !s[k] })); }
+
+  renderVals() {
+    const isPlanner = this.state.role === "PLANNER";
+    const chev = o => (o ? "chevron-up" : "chevron-down");
+
+    const chapters = [
+      { title: "1차시 — 오프닝", meta: "v2 · 최종확정", st: "final" },
+      { title: "2차시 — 개념 정리", meta: "v1 · 검수중", st: "review" },
+      { title: "3차시 — 역할극 시나리오", meta: "v2 · 검수중", st: "review", cur: true },
+      { title: "4차시 — 사례 분석", meta: "작성 중", st: "progress" },
+      { title: "5차시 — 사례 분석 2", meta: "v1 · 검수중", st: "review" },
+      { title: "6차시 — 마무리 퀴즈", meta: "미시작", st: "wait" },
+    ];
+    const DOT = { wait: "#9CA3AF", progress: "#3B82F6", review: "#F59E0B", revise: "#EF4444", done: "#10B981", final: "#10B981" };
+    const chaps = chapters.map(c => ({
+      ...c,
+      dot: DOT[c.st],
+      bg: c.cur ? "var(--primary-tint)" : "transparent",
+      fg: c.cur ? "var(--primary-hover)" : "var(--fg-1)",
+      weight: c.cur ? 700 : 500,
+    }));
+
+    const timeline = [
+      { tag: "v2", tagBg: "var(--primary-tint)", tagFg: "var(--primary-hover)", icon: "link", name: "역할극_시나리오_3차시_v2 · Google Docs", badge: "최신", badgeBg: "var(--primary-tint)", badgeFg: "var(--primary-hover)", meta: "이서연 · 2026.07.07 09:12", action: "열기" },
+      { tag: "첨부", tagBg: "var(--info-bg)", tagFg: "var(--info-fg)", icon: "paperclip", name: "검토본_3차시_김정수.docx", badge: "기획자 검토본", badgeBg: "var(--info-bg)", badgeFg: "var(--info-fg)", meta: "김정수 · v1 기준 · 2026.07.05 · 버전과 별도", action: "받기" },
+      { tag: "v1", tagBg: "var(--bg-sunken)", tagFg: "var(--fg-2)", icon: "file-text", name: "역할극_시나리오_3차시_v1.docx", badge: "수정요청됨", badgeBg: "var(--error-bg)", badgeFg: "var(--error-fg)", meta: "이서연 · 2026.07.03 14:40", action: "받기" },
+    ];
+
+    const feedback = [
+      { name: "김정수 (기획자)", avInit: "김", avBg: "#FFD8C9", avFg: "#B7521F", time: "2일 전", text: "역할극 지문이 너무 길어요. 한 장면을 30초 내로 압축해 주세요.", version: "v1", unresolved: false, resolved: true, bubbleBg: "var(--bg-page-2)", bubbleBorder: "var(--border)" },
+      { name: "김정수 (기획자)", avInit: "김", avBg: "#FFD8C9", avFg: "#B7521F", time: "2일 전", text: "수정 방향은 검토본에 표시해 두었어요. 참고 부탁드립니다.", version: "v1", attach: "검토본_3차시_김정수.docx", unresolved: false, resolved: true, bubbleBg: "var(--bg-page-2)", bubbleBorder: "var(--border)" },
+      { name: "이서연 (강사)", avInit: "이", avBg: "#D5E3F2", avFg: "#245C92", time: "3시간 전", text: "지문 압축하고 방관자 개입 대사 추가해서 v2로 올렸습니다. 확인 부탁드려요!", version: "v2", unresolved: false, resolved: false, bubbleBg: "var(--info-bg)", bubbleBorder: "#CFE0F2" },
+      { name: "김정수 (기획자)", avInit: "김", avBg: "#FFD8C9", avFg: "#B7521F", time: "1시간 전", text: "인트로 톤이 살짝 딱딱해요. 도입 질문을 조금 더 부드럽게 바꿔주실 수 있을까요?", version: "v2", unresolved: true, resolved: false, bubbleBg: "#FFF7F5", bubbleBorder: "#FBD9D0" },
+    ];
+
+    const seg = on => ({ bg: on ? "var(--bg-card)" : "transparent", fg: on ? "var(--primary-hover)" : "var(--fg-3)" });
+    const p = seg(isPlanner), s = seg(!isPlanner);
+
+    return {
+      previewOpen: this.state.previewOpen,
+      openPreview: () => this.setState({ previewOpen: true }),
+      closePreview: () => this.setState({ previewOpen: false }),
+      stop: (e) => e.stopPropagation(),
+      sidebarRole: isPlanner ? "PLANNER" : "SME",
+      sidebarActive: isPlanner ? "review" : "scripts",
+      isPlanner, isSme: !isPlanner,
+      setPlanner: () => this.setRole("PLANNER"),
+      setSme: () => this.setRole("SME"),
+      plannerBtnBg: p.bg, plannerBtnFg: p.fg, smeBtnBg: s.bg, smeBtnFg: s.fg,
+
+      chapters: chaps,
+      timeline, feedback,
+
+      objOpen: this.state.objOpen, toggleObj: () => this.toggle("objOpen"),
+      objChevron: chev(this.state.objOpen), objHint: this.state.objOpen ? "" : "접힘",
+
+      prevOpen: this.state.prevOpen, togglePrev: () => this.toggle("prevOpen"),
+      prevChevron: chev(this.state.prevOpen), prevHint: this.state.prevOpen ? "" : "v1 · 검토본 포함 3건",
+
+      uploadOpen: this.state.uploadOpen, toggleUpload: () => this.toggle("uploadOpen"),
+      openUpload: () => this.setState({ uploadOpen: true }),
+      uploadChevron: chev(this.state.uploadOpen),
+      uploadHint: this.state.uploadOpen ? "" : (isPlanner ? "접힘 (검수 중심)" : "펼침"),
+      uploadBorder: this.state.uploadOpen ? "var(--primary)" : "var(--border)",
+      uploadHeadBg: this.state.uploadOpen ? "var(--primary-tint-2)" : "none",
+      uploadIcon: this.state.uploadOpen ? "var(--primary-hover)" : "var(--fg-3)",
+
+      composePlaceholder: isPlanner ? "피드백을 남기거나 검토본을 첨부하세요…" : "기획자에게 답글이나 질문을 남기세요…",
+      composeCta: isPlanner ? "피드백 전송" : "답글 전송",
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    input,select,textarea{font-family:var(--font-sans)}
+    .fld{width:100%;height:42px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);font-size:13.5px;outline:none;background:var(--bg-card)}
+    .fld:focus{border-color:var(--primary);box-shadow:var(--shadow-focus)}
+    .lbl{font-size:12.5px;font-weight:700;color:var(--fg-3);margin-bottom:6px;display:block}
+    .typecard:hover{border-color:var(--primary)}
+    .chrow:hover .del{opacity:1}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="PLANNER" active="courses" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+      <a href="S04-CourseList.dc.html" style="width:36px;height:36px;border:1px solid var(--border);border-radius:var(--r-md);display:inline-flex;align-items:center;justify-content:center;color:var(--fg-3)" style-hover="border-color:var(--primary);color:var(--primary)"><x-ic name="arrow-left" s="17"></x-ic></a>
+      <div style="font-family:var(--font-display);font-size:20px;font-weight:700">새 과정 만들기</div>
+    </header>
+
+    <div style="flex:1;overflow-y:auto;padding:28px 32px 40px">
+      <div style="max-width:760px;margin:0 auto">
+
+        <!-- stepper -->
+        <div style="display:flex;align-items:center;margin-bottom:26px">
+          <sc-for list="{{ steps }}" as="s" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;flex:{{ s.flex }}">
+              <div style="display:flex;align-items:center;gap:9px">
+                <div style="width:30px;height:30px;flex:none;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-num);font-size:13px;font-weight:800;background:{{ s.dotBg }};color:{{ s.dotFg }};border:2px solid {{ s.dotBorder }}">{{ s.num }}</div>
+                <span style="font-size:13px;font-weight:{{ s.weight }};color:{{ s.labelFg }};white-space:nowrap">{{ s.label }}</span>
+              </div>
+              <div style="flex:1;height:2px;margin:0 12px;background:{{ s.lineBg }};display:{{ s.lineShow }}"></div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:28px 30px">
+
+          <!-- STEP 1 : 기본 정보 -->
+          <sc-if value="{{ s1 }}" hint-placeholder-val="{{ true }}">
+            <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:4px">기본 정보</div>
+            <div style="font-size:13px;color:var(--fg-3);margin-bottom:22px">과정명과 차시 수, 진행 유형을 정하세요.</div>
+            <div style="display:flex;flex-direction:column;gap:22px">
+              <div><label class="lbl">과정명</label><input class="fld" placeholder="예: 직장 내 괴롭힘 예방"></div>
+
+              <div>
+                <label class="lbl">차시 수</label>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <sc-for list="{{ countOpts }}" as="o" hint-placeholder-count="4">
+                    <button onClick="{{ o.select }}" style="padding:11px 20px;border-radius:var(--r-md);border:1.5px solid {{ o.border }};background:{{ o.bg }};color:{{ o.fg }};font-size:13.5px;font-weight:700;cursor:pointer" style-hover="border-color:var(--primary)">{{ o.label }}</button>
+                  </sc-for>
+                  <sc-if value="{{ customOn }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border:1.5px solid var(--primary);border-radius:var(--r-md);background:var(--bg-card)">
+                      <input onChange="{{ onCustom }}" value="{{ count }}" type="number" min="1" max="99" style="width:52px;border:none;outline:none;background:none;font-family:var(--font-num);font-size:16px;font-weight:800;text-align:center">
+                      <span style="font-size:13px;color:var(--fg-3)">차시</span>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="font-size:12.5px;color:var(--fg-4);margin-top:10px">차시마다 원고 1개가 자동으로 생성돼요 · 현재 <b style="color:var(--fg-2)">{{ count }}차시</b></div>
+              </div>
+
+              <div>
+                <label class="lbl">교육 유형</label>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+                  <sc-for list="{{ types }}" as="t" hint-placeholder-count="3">
+                    <button onClick="{{ t.select }}" class="typecard" style="text-align:left;cursor:pointer;padding:16px 16px;border-radius:var(--r-lg);border:1.5px solid {{ t.border }};background:{{ t.bg }};transition:border-color .12s,background .12s">
+                      <span style="width:36px;height:36px;border-radius:var(--r-md);display:inline-flex;align-items:center;justify-content:center;background:{{ t.iconBg }};color:{{ t.iconFg }}"><x-ic name="{{ t.icon }}" s="19"></x-ic></span>
+                      <div style="font-size:14px;font-weight:700;margin-top:10px;color:var(--fg-1)">{{ t.label }}</div>
+                      <div style="font-size:11.5px;color:var(--fg-3);margin-top:3px;line-height:1.5">{{ t.desc }}</div>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div><label class="lbl">과정 설명 <span style="color:var(--fg-4);font-weight:500">(선택)</span></label><textarea rows="3" style="width:100%;padding:11px 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);font-size:13.5px;resize:vertical;outline:none" placeholder="학습 대상, 목표를 간단히 적어주세요"></textarea></div>
+            </div>
+          </sc-if>
+
+          <!-- STEP 2 : 일정 · 마일스톤 -->
+          <sc-if value="{{ s2 }}" hint-placeholder-val="{{ false }}">
+            <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:4px">일정 · 마일스톤</div>
+            <div style="font-size:13px;color:var(--fg-3);margin-bottom:22px">원고 작성부터 촬영까지의 주요 일정을 정하세요. 캘린더와 D-day에 반영돼요.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <sc-for list="{{ milestones }}" as="m" hint-placeholder-count="5">
+                <div>
+                  <label class="lbl"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:3px;background:{{ m.color }}"></span>{{ m.label }}</span></label>
+                  <div style="display:flex;align-items:center;gap:8px;height:42px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card)">
+                    <x-ic name="calendar" s="16" style="color:var(--fg-4)"></x-ic>
+                    <input value="{{ m.date }}" style="flex:1;border:none;outline:none;background:none;font-family:var(--font-num);font-size:13.5px">
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="margin-top:22px">
+              <div style="font-size:12.5px;font-weight:700;color:var(--fg-2);margin-bottom:14px">일정 미리보기</div>
+              <div style="display:flex;align-items:flex-start">
+                <sc-for list="{{ milestones }}" as="m" hint-placeholder-count="5">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative">
+                    <div style="position:absolute;top:9px;left:-50%;right:50%;height:2px;background:{{ m.color }};display:{{ m.lineShow }}"></div>
+                    <span style="position:relative;width:20px;height:20px;border-radius:50%;background:{{ m.color }};border:3px solid var(--bg-card);box-shadow:0 0 0 1px {{ m.color }}"></span>
+                    <div style="font-size:11.5px;font-weight:700;color:var(--fg-2);margin-top:9px;text-align:center">{{ m.short }}</div>
+                    <div style="font-family:var(--font-num);font-size:11px;color:var(--fg-4);margin-top:2px">{{ m.md }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- STEP 3 : 차시 구성 -->
+          <sc-if value="{{ s3 }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+              <div style="font-family:var(--font-display);font-size:18px;font-weight:700">차시 구성</div>
+              <span style="font-size:13px;color:var(--fg-4);font-weight:600">총 {{ count }}차시</span>
+            </div>
+            <div style="font-size:13px;color:var(--fg-3);margin-bottom:20px">차시명을 정하세요. 각 차시마다 원고 1개가 생성됩니다.</div>
+
+            <!-- 엑셀 업로드 -->
+            <div style="display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg-page-2);margin-bottom:18px;flex-wrap:wrap">
+              <span style="width:40px;height:40px;flex:none;border-radius:var(--r-md);background:var(--stage-done-bg);color:var(--stage-done-fg);display:inline-flex;align-items:center;justify-content:center"><x-ic name="layers" s="20"></x-ic></span>
+              <div style="flex:1;min-width:180px">
+                <div style="font-size:13.5px;font-weight:700">엑셀로 한 번에 구성하기</div>
+                <div style="font-size:12px;color:var(--fg-3);margin-top:2px">양식을 내려받아 커리큘럼을 채운 뒤 업로드하면 차시가 자동으로 구성돼요.</div>
+              </div>
+              <a href="#" style="flex:none;display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:700;text-decoration:none" style-hover="border-color:var(--primary);color:var(--primary-hover)"><x-ic name="download" s="16"></x-ic> 양식 템플릿</a>
+              <button style="flex:none;display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)"><x-ic name="upload" s="16"></x-ic> 커리큘럼 업로드</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;color:var(--fg-4);font-size:12px"><div style="flex:1;height:1px;background:var(--border)"></div>또는 직접 입력<div style="flex:1;height:1px;background:var(--border)"></div></div>
+
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="6">
+                <div class="chrow" style="display:flex;align-items:center;gap:12px;padding:8px 14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-card)">
+                  <span style="width:28px;height:28px;flex:none;border-radius:var(--r-sm);background:var(--primary-tint);display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-num);font-size:12px;font-weight:800;color:var(--primary-hover)">{{ c.n }}</span>
+                  <input onChange="{{ c.onEdit }}" value="{{ c.title }}" placeholder="{{ c.n }}차시 제목" style="flex:1;border:none;outline:none;background:none;font-size:13.5px;font-weight:600">
+                  <button onClick="{{ c.remove }}" class="del" style="width:28px;height:28px;border:none;background:none;color:var(--fg-4);cursor:pointer;opacity:.4;display:inline-flex;align-items:center;justify-content:center;transition:opacity .12s" style-hover="color:var(--error-fg)"><x-ic name="x" s="16"></x-ic></button>
+                </div>
+              </sc-for>
+              <button onClick="{{ addChap }}" style="display:inline-flex;align-items:center;gap:7px;align-self:flex-start;padding:9px 14px;border:1px dashed var(--border-strong);border-radius:var(--r-md);background:none;color:var(--fg-3);font-size:13px;font-weight:700;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)"><x-ic name="plus" s="15"></x-ic> 차시 추가</button>
+            </div>
+          </sc-if>
+
+          <!-- STEP 4 : 담당자 배정 -->
+          <sc-if value="{{ s4 }}" hint-placeholder-val="{{ false }}">
+            <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:4px">담당자 배정</div>
+            <div style="font-size:13px;color:var(--fg-3);margin-bottom:20px">검수 담당 기획자와 차시별 강사(SME)를 지정하세요.</div>
+            <div><label class="lbl">검수 담당 기획자</label><select class="fld" style="max-width:280px"><option>김정수 (나)</option><option>이하은</option></select></div>
+            <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;gap:12px;font-size:11.5px;font-weight:700;color:var(--fg-4);padding:0 4px"><span style="flex:1">차시</span><span style="width:240px">담당 강사</span></div>
+              <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-md)">
+                  <span style="flex:1;min-width:0;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.n }}차시 — {{ c.title }}</span>
+                  <select class="fld" style="width:240px"><option>이서연 강사</option><option>박도현 강사</option><option>최민아 강사</option><option>미배정</option></select>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- footer nav -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:26px;padding-top:20px;border-top:1px solid var(--border)">
+            <button onClick="{{ prev }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13.5px;font-weight:700;cursor:pointer;visibility:{{ prevVis }}" style-hover="border-color:var(--primary);color:var(--primary-hover)"><x-ic name="arrow-left" s="15"></x-ic> 이전</button>
+            <span style="font-size:12.5px;color:var(--fg-4)">{{ stepText }}</span>
+            <sc-if value="{{ notLast }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ next }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)">다음 <x-ic name="arrow-right" s="15"></x-ic></button>
+            </sc-if>
+            <sc-if value="{{ isLast }}" hint-placeholder-val="{{ false }}">
+              <a href="S06-CourseDetail.dc.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13.5px;font-weight:700" style-hover="background:var(--primary-hover)"><x-ic name="check" s="16"></x-ic> 과정 만들기</a>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){try{localStorage.setItem("cdh-role","PLANNER")}catch(e){}}
+  state = (() => {
+    const SAMPLE = ["오프닝 — 과정 소개", "개념 정리", "역할극 시나리오", "사례 분석", "사례 분석 2", "마무리 퀴즈"];
+    const chapters = [];
+    for (let i = 0; i < 15; i++) chapters.push({ title: SAMPLE[i] || "" });
+    return { step: 0, type: "청중형", mode: "15", chapters };
+  })();
+
+  resize(n, mode) {
+    this.setState(s => {
+      const next = [];
+      for (let i = 0; i < n; i++) next.push(s.chapters[i] || { title: "" });
+      return { chapters: next, mode };
+    });
+  }
+  selectCount(n) { this.resize(n, String(n)); }
+  selectCustom() { this.setState({ mode: "custom" }); }
+  onCustom(v) { const n = Math.max(1, Math.min(99, parseInt(v, 10) || 1)); this.resize(n, "custom"); }
+  addChap() { this.setState(s => ({ chapters: [...s.chapters, { title: "" }], mode: "custom" })); }
+  removeChap(i) { this.setState(s => s.chapters.length <= 1 ? {} : ({ chapters: s.chapters.filter((_, j) => j !== i), mode: "custom" })); }
+  editTitle(i, v) { this.setState(s => ({ chapters: s.chapters.map((c, j) => j === i ? { title: v } : c) })); }
+
+  renderVals() {
+    const step = this.state.step;
+    const labels = ["기본 정보", "일정 · 마일스톤", "차시 구성", "담당자 배정"];
+    const steps = labels.map((label, i) => {
+      const done = i < step, cur = i === step;
+      return {
+        num: done ? "✓" : String(i + 1),
+        label, weight: cur ? 700 : 500,
+        labelFg: cur ? "var(--fg-1)" : done ? "var(--fg-2)" : "var(--fg-4)",
+        dotBg: done ? "var(--success)" : cur ? "var(--primary)" : "var(--bg-card)",
+        dotFg: done || cur ? "#fff" : "var(--fg-4)",
+        dotBorder: done ? "var(--success)" : cur ? "var(--primary)" : "var(--border-strong)",
+        flex: i === labels.length - 1 ? "0" : "1",
+        lineShow: i === labels.length - 1 ? "none" : "block",
+        lineBg: done ? "var(--success)" : "var(--border-strong)",
+      };
+    });
+
+    const TYPES = [
+      { id: "실습형", label: "실습형", desc: "학습자가 직접 따라 하는 실습 중심", icon: "sliders" },
+      { id: "강의형", label: "강의형", desc: "강사 설명 중심의 정통 강의", icon: "graduation-cap" },
+      { id: "청중형", label: "청중형", desc: "사례·토론·역할극 등 참여 유도", icon: "users-round" },
+      { id: "대담형", label: "대담형", desc: "진행자와 강사의 대담·인터뷰 형식", icon: "message-square" },
+      { id: "기타", label: "기타", desc: "위 유형에 없는 맞춤 구성", icon: "more-horizontal" },
+    ];
+    const types = TYPES.map(t => {
+      const on = this.state.type === t.id;
+      return { ...t, select: () => this.setState({ type: t.id }),
+        border: on ? "var(--primary)" : "var(--border)",
+        bg: on ? "var(--primary-tint-2)" : "var(--bg-card)",
+        iconBg: on ? "var(--primary)" : "var(--bg-sunken)",
+        iconFg: on ? "#fff" : "var(--fg-3)" };
+    });
+
+    const M = [
+      { label: "킥오프", short: "킥오프", date: "2026.06.20", md: "6.20", color: "var(--stage-plan-fg)" },
+      { label: "원고 제출 마감", short: "원고 마감", date: "2026.07.20", md: "7.20", color: "var(--stage-script-fg)" },
+      { label: "검수 완료", short: "검수", date: "2026.07.23", md: "7.23", color: "var(--stage-qa-fg)" },
+      { label: "최종 확정", short: "확정", date: "2026.07.25", md: "7.25", color: "var(--stage-done-fg)" },
+      { label: "촬영", short: "촬영", date: "2026.07.28", md: "7.28", color: "var(--stage-film-fg)" },
+    ];
+    const milestones = M.map((m, i) => ({ ...m, lineShow: i === 0 ? "none" : "block" }));
+
+    const chapters = this.state.chapters.map((c, i) => ({
+      n: i + 1, title: c.title,
+      onEdit: e => this.editTitle(i, e.target.value),
+      remove: () => this.removeChap(i),
+    }));
+
+    return {
+      steps,
+      s1: step === 0, s2: step === 1, s3: step === 2, s4: step === 3,
+      prev: () => this.setState(s => ({ step: Math.max(0, s.step - 1) })),
+      next: () => this.setState(s => ({ step: Math.min(3, s.step + 1) })),
+      prevVis: step === 0 ? "hidden" : "visible",
+      notLast: step < 3, isLast: step === 3,
+      stepText: (step + 1) + " / 4 단계",
+
+      types,
+      count: this.state.chapters.length,
+      countOpts: [15, 30, 60].map(n => {
+        const on = this.state.mode === String(n);
+        return { label: n + "차시", select: () => this.selectCount(n),
+          border: on ? "var(--primary)" : "var(--border-strong)",
+          bg: on ? "var(--primary-tint-2)" : "var(--bg-card)",
+          fg: on ? "var(--primary-hover)" : "var(--fg-2)" };
+      }).concat([(() => {
+        const on = this.state.mode === "custom";
+        return { label: "기타", select: () => this.selectCustom(),
+          border: on ? "var(--primary)" : "var(--border-strong)",
+          bg: on ? "var(--primary-tint-2)" : "var(--bg-card)",
+          fg: on ? "var(--primary-hover)" : "var(--fg-2)" };
+      })()]),
+      customOn: this.state.mode === "custom",
+      onCustom: e => this.onCustom(e.target.value),
+      addChap: () => this.addChap(),
+      milestones, chapters,
+    };
+  }
+}
+</script>
+</body>
+</html>

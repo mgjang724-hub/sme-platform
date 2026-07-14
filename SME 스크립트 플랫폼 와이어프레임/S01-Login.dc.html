@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    input{font-family:var(--font-sans)}
+  </style>
+</helmet>
+<div style="height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1);position:relative;overflow:hidden">
+  <div style="position:absolute;width:520px;height:520px;border-radius:50%;background:var(--primary-tint);top:-180px;right:-140px;opacity:.6"></div>
+  <div style="position:absolute;width:360px;height:360px;border-radius:50%;background:var(--primary-tint-2);bottom:-160px;left:-120px;opacity:.7"></div>
+
+  <div style="position:relative;width:400px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-2xl);box-shadow:var(--shadow-lg);padding:40px 36px">
+    <img src="assets/logo-iscream-full.png" alt="i-Scream 원격교육연수원" style="height:28px;width:auto;display:block;margin:0 auto">
+    <div style="text-align:center;margin-top:22px">
+      <div style="font-family:var(--font-display);font-size:22px;font-weight:700">강사 원고 소통 플랫폼</div>
+      <div style="font-size:13px;color:var(--fg-3);margin-top:6px">SME Script Platform 로그인</div>
+    </div>
+
+    <div style="margin-top:26px">
+      <div style="font-size:12.5px;font-weight:700;color:var(--fg-3);margin-bottom:8px">역할 선택</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onClick="{{ setPlanner }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:14px;border:1.5px solid {{ pBorder }};border-radius:var(--r-md);background:{{ pBg }};cursor:pointer;text-align:left">
+          <x-ic name="clipboard-check" s="20" style="color:{{ pIcon }}"></x-ic>
+          <span style="font-size:14px;font-weight:700;color:var(--fg-1)">기획자</span>
+          <span style="font-size:11.5px;color:var(--fg-3)">PLANNER · 검수·안내</span>
+        </button>
+        <button onClick="{{ setSme }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:14px;border:1.5px solid {{ sBorder }};border-radius:var(--r-md);background:{{ sBg }};cursor:pointer;text-align:left" style-hover="border-color:var(--primary);background:var(--primary-tint-2)">
+          <x-ic name="graduation-cap" s="20" style="color:{{ sIcon }}"></x-ic>
+          <span style="font-size:14px;font-weight:700;color:var(--fg-1)">강사</span>
+          <span style="font-size:11.5px;color:var(--fg-3)">SME · 원고 제출</span>
+        </button>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;flex-direction:column;gap:12px">
+      <label style="display:block">
+        <span style="font-size:12.5px;font-weight:700;color:var(--fg-3)">이메일</span>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:0 12px;height:44px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card)">
+          <x-ic name="mail" s="17" style="color:var(--fg-4)"></x-ic>
+          <input type="email" placeholder="name@iscream.co.kr" style="flex:1;border:none;outline:none;background:none;font-size:14px;color:var(--fg-1)">
+        </div>
+      </label>
+      <label style="display:block">
+        <span style="font-size:12.5px;font-weight:700;color:var(--fg-3)">비밀번호</span>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:0 12px;height:44px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card)">
+          <x-ic name="lock" s="17" style="color:var(--fg-4)"></x-ic>
+          <input type="password" placeholder="••••••••" style="flex:1;border:none;outline:none;background:none;font-size:14px;color:var(--fg-1)">
+          <x-ic name="eye-off" s="17" style="color:var(--fg-4);cursor:pointer"></x-ic>
+        </div>
+      </label>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px">
+      <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--fg-3);cursor:pointer">
+        <span style="width:16px;height:16px;border:1.5px solid var(--border-strong);border-radius:4px;display:inline-block"></span>
+        로그인 상태 유지
+      </label>
+      <a href="#" style="font-size:12.5px">비밀번호 찾기</a>
+    </div>
+
+    <a href="{{ loginHref }}" onClick="{{ persist }}" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;height:46px;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:15px;font-weight:700" style-hover="background:var(--primary-hover)">
+      {{ loginLabel }} <x-ic name="log-in" s="18"></x-ic>
+    </a>
+    <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--fg-4)">
+      계정 문의는 담당 기획자 또는 <a href="#">운영팀</a>에게 연락해 주세요.
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { role: (() => { try { return localStorage.getItem("cdh-role") || "PLANNER"; } catch (e) { return "PLANNER"; } })() };
+  pick(r) { try { localStorage.setItem("cdh-role", r); } catch (e) {} this.setState({ role: r }); }
+  renderVals() {
+    const isP = this.state.role === "PLANNER";
+    const onc = on => ({ border: on ? "var(--primary)" : "var(--border-strong)", bg: on ? "var(--primary-tint)" : "var(--bg-card)", icon: on ? "var(--primary-hover)" : "var(--fg-3)" });
+    const p = onc(isP), s = onc(!isP);
+    return {
+      setPlanner: () => this.pick("PLANNER"),
+      setSme: () => this.pick("SME"),
+      pBorder: p.border, pBg: p.bg, pIcon: p.icon,
+      sBorder: s.border, sBg: s.bg, sIcon: s.icon,
+      loginHref: isP ? "S02-PlannerHome.dc.html" : "S03-MyTasks.dc.html",
+      loginLabel: isP ? "기획자로 로그인" : "강사로 로그인",
+      persist: () => { try { localStorage.setItem("cdh-role", this.state.role); } catch (e) {} },
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    .ccard{transition:box-shadow .15s,border-color .15s,transform .12s}
+    .ccard:hover{box-shadow:var(--shadow-md);border-color:var(--border-strong);transform:translateY(-2px)}
+    input{font-family:var(--font-sans)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="PLANNER" active="courses" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:18px">
+      <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-size:20px;font-weight:700">과정 관리</div></div>
+      <div style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;width:260px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card)">
+        <x-ic name="search" s="17" style="color:var(--fg-4)"></x-ic>
+        <input placeholder="과정명·강사 검색" style="flex:1;border:none;outline:none;background:none;font-size:13.5px">
+      </div>
+      <a href="S05-CourseWizard.dc.html" style="display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:14px;font-weight:700" style-hover="background:var(--primary-hover)">
+        <x-ic name="plus" s="17"></x-ic> 새 과정 만들기
+      </a>
+    </header>
+
+    <div style="flex:1;overflow-y:auto;padding:26px 32px 40px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+        <button style="padding:8px 15px;border-radius:999px;border:none;background:var(--fg-1);color:#fff;font-size:13px;font-weight:700;cursor:pointer">전체 6</button>
+        <button style="padding:8px 15px;border-radius:999px;border:1px solid var(--border-strong);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)">진행중 4</button>
+        <button style="padding:8px 15px;border-radius:999px;border:1px solid var(--border-strong);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)">지연 2</button>
+        <button style="padding:8px 15px;border-radius:999px;border:1px solid var(--border-strong);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)">완료 1</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:18px">
+        <sc-for list="{{ courses }}" as="c" hint-placeholder-count="4">
+          <a href="S06-CourseDetail.dc.html" class="ccard" style="display:block;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);padding:20px 22px;text-decoration:none;color:inherit">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+              <div style="min-width:0">
+                <div style="font-size:12px;color:var(--fg-4);font-weight:700">{{ c.category }}</div>
+                <div style="font-size:17px;font-weight:700;margin-top:5px;line-height:1.4">{{ c.title }}</div>
+              </div>
+              <dc-import name="StatusChip" status="{{ c.status }}" label="{{ c.statusLabel }}" hint-size="80px,26px"></dc-import>
+            </div>
+
+            <div style="margin-top:16px">
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:12.5px;margin-bottom:6px">
+                <span style="color:var(--fg-3)">원고 진행률</span>
+                <span style="font-family:var(--font-num);font-weight:700;color:var(--fg-1)">{{ c.pct }}%</span>
+              </div>
+              <div style="height:7px;border-radius:999px;background:var(--bg-sunken);overflow:hidden">
+                <div style="height:100%;border-radius:999px;background:{{ c.barColor }};width:{{ c.pctW }}"></div>
+              </div>
+              <div style="font-size:12px;color:var(--fg-4);margin-top:6px">전체 {{ c.total }}차시 · 확정 {{ c.doneN }} · 검수중 {{ c.reviewN }} · 작성중 {{ c.progN }}</div>
+            </div>
+
+            <sc-if value="{{ c.risk }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:7px;margin-top:14px;padding:8px 11px;border-radius:var(--r-sm);background:var(--error-bg);color:var(--error-fg);font-size:12.5px;font-weight:700">
+                <x-ic name="alert-triangle" s="15"></x-ic> {{ c.risk }}
+              </div>
+            </sc-if>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="width:26px;height:26px;border-radius:50%;background:{{ c.avBg }};color:{{ c.avFg }};display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">{{ c.avInit }}</span>
+                <span style="font-size:12.5px;color:var(--fg-3)">{{ c.owner }}</span>
+              </div>
+              <span style="font-size:12.5px;color:var(--fg-3);display:inline-flex;align-items:center;gap:5px"><x-ic name="calendar" s="14"></x-ic> {{ c.due }}</span>
+            </div>
+          </a>
+        </sc-for>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){try{localStorage.setItem("cdh-role","PLANNER")}catch(e){}}
+  renderVals() {
+    return {
+      courses: [
+        { category: "법정의무교육", title: "직장 내 괴롭힘 예방", status: "progress", statusLabel: "진행중", pct: 60, pctW: "60%", barColor: "var(--primary)", total: 6, doneN: 2, reviewN: 2, progN: 2, risk: "3차시 원고 마감 2일 지연", owner: "이서연 · 박도현", avBg: "#FFD8C9", avFg: "#B7521F", avInit: "이", due: "제출 ~7.20" },
+        { category: "법정의무교육", title: "성희롱 예방 교육", status: "review", statusLabel: "검수중", pct: 45, pctW: "45%", barColor: "var(--primary)", total: 4, doneN: 1, reviewN: 2, progN: 1, risk: "", owner: "박도현", avBg: "#E0D6F5", avFg: "#5B45A8", avInit: "박", due: "제출 ~7.25" },
+        { category: "직무역량", title: "개인정보보호 실무", status: "progress", statusLabel: "진행중", pct: 30, pctW: "30%", barColor: "var(--primary)", total: 5, doneN: 1, reviewN: 1, progN: 3, risk: "", owner: "최민아", avBg: "#CFE6E2", avFg: "#1E7E73", avInit: "최", due: "제출 ~8.05" },
+        { category: "직무역량", title: "리더십 커뮤니케이션", status: "wait", statusLabel: "대기", pct: 0, pctW: "4%", barColor: "var(--fg-4)", total: 8, doneN: 0, reviewN: 0, progN: 0, risk: "강사 배정 대기 중", owner: "미배정", avBg: "#E7E9ED", avFg: "#515862", avInit: "?", due: "킥오프 예정" },
+        { category: "안전보건", title: "산업안전 기초", status: "revise", statusLabel: "수정요청", pct: 55, pctW: "55%", barColor: "var(--error)", total: 6, doneN: 2, reviewN: 1, progN: 3, risk: "2차시 수정요청 답변 대기", owner: "정하늘", avBg: "#D5E3F2", avFg: "#245C92", avInit: "정", due: "제출 ~7.30" },
+        { category: "법정의무교육", title: "장애인 인식개선", status: "done", statusLabel: "완료", pct: 100, pctW: "100%", barColor: "var(--success)", total: 4, doneN: 4, reviewN: 0, progN: 0, risk: "", owner: "이서연", avBg: "#FFD8C9", avFg: "#B7521F", avInit: "이", due: "확정 완료" },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

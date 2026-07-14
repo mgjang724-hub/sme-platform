@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    input,textarea{font-family:var(--font-sans)}
+    .doc h2{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--fg-1);margin:0 0 12px}
+    .doc h3{font-size:15px;font-weight:700;color:var(--fg-1);margin:20px 0 8px}
+    .doc p{font-size:14.5px;color:var(--fg-2);line-height:1.85;margin:0 0 12px}
+    .doc li{font-size:14.5px;color:var(--fg-2);line-height:1.85}
+    .toc a{display:block;padding:7px 12px;border-radius:var(--r-sm);font-size:13px;color:var(--fg-3);text-decoration:none;border-left:2px solid transparent}
+    .toc a:hover{background:var(--bg-sunken);color:var(--fg-1)}
+    .doc td,.doc th{border:1px solid var(--border);padding:10px 12px;font-size:13.5px;text-align:left}
+    .doc th{background:var(--bg-sunken);font-weight:700;color:var(--fg-2)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="{{ sidebarRole }}" active="guide" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px">
+      <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg-4)">
+        <a href="S09-GuideCenter.dc.html" style="color:var(--fg-4)" style-hover="color:var(--primary)">안내센터</a>
+        <x-ic name="chevron-right" s="14"></x-ic>
+        <span style="color:var(--fg-2);font-weight:700">촬영 안내</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--bg-sunken)">
+        <button onClick="{{ setPlanner }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ plannerBtnBg }};color:{{ plannerBtnFg }}">기획자</button>
+        <button onClick="{{ setSme }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ smeBtnBg }};color:{{ smeBtnFg }}">강사</button>
+      </div>
+      <sc-if value="{{ isPlanner }}" hint-placeholder-val="{{ false }}">
+        <a href="S11-GuideManage.dc.html" style="display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13.5px;font-weight:700" style-hover="border-color:var(--primary);color:var(--primary-hover)"><x-ic name="pencil" s="16"></x-ic> 이 안내 편집</a>
+      </sc-if>
+    </header>
+
+    <div id="doc-scroll" style="flex:1;overflow-y:auto;position:relative">
+      <div style="max-width:1040px;margin:0 auto;padding:30px 32px 60px;display:flex;gap:32px;align-items:flex-start">
+
+        <!-- TOC -->
+        <nav class="toc" style="position:sticky;top:0;width:200px;flex:none;padding-top:6px">
+          <div style="font-size:11.5px;font-weight:700;color:var(--fg-4);padding:0 12px 6px">목차</div>
+          <a onClick="{{ go1 }}" href="javascript:void(0)" style="border-left-color:var(--primary);color:var(--fg-1);background:var(--primary-tint-2)">1. 촬영 개요</a>
+          <a onClick="{{ go2 }}" href="javascript:void(0)">2. 촬영 전 준비</a>
+          <a onClick="{{ go3 }}" href="javascript:void(0)">3. 당일 진행 순서</a>
+          <a onClick="{{ go4 }}" href="javascript:void(0)">4. 스튜디오 위치</a>
+          <a onClick="{{ go5 }}" href="javascript:void(0)">5. 첨부 양식</a>
+          <a onClick="{{ go6 }}" href="javascript:void(0)">6. 자주 묻는 질문</a>
+        </nav>
+
+        <!-- 본문 -->
+        <article style="flex:1;min-width:0">
+          <div style="font-size:12.5px;color:var(--fg-4);font-weight:700">촬영 안내 · 공통 안내 문서</div>
+          <h1 style="font-family:var(--font-display);font-size:28px;font-weight:700;margin:8px 0 6px">촬영 안내</h1>
+          <div style="font-size:12.5px;color:var(--fg-4);margin-bottom:18px">최종 수정 2026.07.01 · 작성 운영팀</div>
+
+          <!-- 특이사항 banner (연동) -->
+          <div style="display:flex;gap:12px;padding:16px 18px;border-radius:var(--r-lg);background:var(--warning-bg);border:1px solid #F1DDB0;margin-bottom:24px">
+            <x-ic name="info" s="20" style="color:var(--warning-fg)"></x-ic>
+            <div>
+              <div style="font-size:13.5px;font-weight:800;color:var(--warning-fg)">이 과정 특이사항 — 직장 내 괴롭힘 예방</div>
+              <div style="font-size:13.5px;color:var(--warning-fg);margin-top:3px;line-height:1.6">3차시 역할극은 별도 촬영이 필요합니다. 출연 강사 2인 일정 조율 후 스튜디오 B에서 진행합니다. <a href="S06-CourseDetail.dc.html" style="color:var(--warning-fg);font-weight:700;text-decoration:underline">과정 현황에서 보기</a></div>
+            </div>
+          </div>
+
+          <div class="doc">
+            <section id="sec1" style="scroll-margin-top:20px">
+              <h2>1. 촬영 개요</h2>
+              <p>모든 이러닝 콘텐츠는 원고 최종 확정 이후 스튜디오 촬영으로 진행됩니다. 강사님은 확정된 원고를 바탕으로 촬영에 참여하시며, 촬영 분량은 차시당 약 8~15분입니다.</p>
+              <p>촬영 일정은 원고 확정 후 담당 기획자가 강사님과 협의하여 확정합니다.</p>
+            </section>
+
+            <section id="sec2" style="scroll-margin-top:20px">
+              <h2 style="margin-top:28px">2. 촬영 전 준비</h2>
+              <h3>복장</h3>
+              <p>단색 계열의 상의를 권장하며, 잔무늬·로고가 큰 의상은 피해 주세요. 액세서리는 최소화합니다.</p>
+              <h3>준비물 체크리스트</h3>
+              <table style="border-collapse:collapse;width:100%;margin:4px 0 8px">
+                <thead><tr><th style="width:40%">항목</th><th>비고</th></tr></thead>
+                <tbody>
+                  <tr><td>확정 원고 (인쇄본)</td><td>대본용, 프롬프터 사용 시 파일도 지참</td></tr>
+                  <tr><td>발표 보조자료</td><td>PPT·이미지가 있는 경우 사전 전달</td></tr>
+                  <tr><td>신분증</td><td>스튜디오 출입 등록용</td></tr>
+                </tbody>
+              </table>
+            </section>
+
+            <section id="sec3" style="scroll-margin-top:20px">
+              <h2 style="margin-top:28px">3. 당일 진행 순서</h2>
+              <ol style="margin:0;padding-left:20px">
+                <li>스튜디오 도착 및 출입 등록 (촬영 30분 전)</li>
+                <li>메이크업 · 마이크 세팅</li>
+                <li>리허설 1회 (분량·톤 점검)</li>
+                <li>본 촬영 (차시 단위)</li>
+                <li>모니터링 및 재촬영 여부 확인</li>
+              </ol>
+            </section>
+
+            <section id="sec4" style="scroll-margin-top:20px">
+              <h2 style="margin-top:28px">4. 스튜디오 위치</h2>
+              <p>i-Scream 원격교육연수원 미디어센터 3층 · 서울特別市 강남구 (상세 주소는 확정 시 안내)</p>
+              <div style="height:180px;border-radius:var(--r-md);background:var(--bg-sunken);border:1px dashed var(--border-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--fg-4);gap:8px;margin:6px 0 4px">
+                <x-ic name="map-pin" s="26"></x-ic>
+                <span style="font-size:12.5px;font-weight:700">약도 이미지 삽입 영역</span>
+              </div>
+            </section>
+
+            <section id="sec5" style="scroll-margin-top:20px">
+              <h2 style="margin-top:28px">5. 첨부 양식</h2>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+                <a href="#" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-card);color:inherit;text-decoration:none" style-hover="border-color:var(--primary);background:var(--primary-tint-2)">
+                  <x-ic name="download" s="18" style="color:var(--primary-hover)"></x-ic>
+                  <div style="flex:1"><div style="font-size:14px;font-weight:700">촬영 준비물 체크리스트.pdf</div><div style="font-size:12px;color:var(--fg-4)">124 KB</div></div>
+                  <span style="font-size:12.5px;font-weight:700;color:var(--primary-hover)">받기</span>
+                </a>
+                <a href="#" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-card);color:inherit;text-decoration:none" style-hover="border-color:var(--primary);background:var(--primary-tint-2)">
+                  <x-ic name="download" s="18" style="color:var(--primary-hover)"></x-ic>
+                  <div style="flex:1"><div style="font-size:14px;font-weight:700">초상권·촬영 동의서 양식.docx</div><div style="font-size:12px;color:var(--fg-4)">38 KB</div></div>
+                  <span style="font-size:12.5px;font-weight:700;color:var(--primary-hover)">받기</span>
+                </a>
+              </div>
+            </section>
+
+            <section id="sec6" style="scroll-margin-top:20px">
+              <h2 style="margin-top:28px">6. 자주 묻는 질문</h2>
+              <h3>촬영일에 개인 사정이 생기면 어떻게 하나요?</h3>
+              <p>가능한 빨리 담당 기획자에게 연락 주세요. 스튜디오·인력 일정 조율이 필요하므로 최소 3일 전 통보를 권장합니다.</p>
+              <h3>원고를 외워야 하나요?</h3>
+              <p>프롬프터를 제공하므로 전부 암기하실 필요는 없습니다. 다만 자연스러운 전달을 위해 흐름은 숙지해 주세요.</p>
+            </section>
+          </div>
+
+          <!-- 하단 문의 -->
+          <div style="margin-top:36px;padding:22px 24px;border-radius:var(--r-xl);background:var(--bg-card);border:1px solid var(--border);box-shadow:var(--shadow-sm)">
+            <div style="display:flex;align-items:center;gap:8px"><x-ic name="help-circle" s="18" style="color:var(--primary-hover)"></x-ic><span style="font-family:var(--font-display);font-size:16px;font-weight:700">더 궁금한 점이 있으신가요?</span></div>
+            <div style="font-size:13px;color:var(--fg-3);margin-top:6px">담당 기획자에게 바로 문의할 수 있어요.</div>
+            <div style="display:flex;gap:20px;align-items:flex-start;margin-top:16px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 16px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-page-2)">
+                <span style="width:38px;height:38px;border-radius:50%;background:#FFD8C9;color:#B7521F;display:inline-flex;align-items:center;justify-content:center;font-weight:700">김</span>
+                <div><div style="font-size:13.5px;font-weight:700">김정수 기획자</div><div style="font-size:12px;color:var(--fg-3)">jsy@iscream.co.kr · 내선 214</div></div>
+              </div>
+              <div style="flex:1;min-width:280px">
+                <textarea placeholder="문의 내용을 남겨주세요. 담당 기획자에게 전달됩니다." rows="2" style="width:100%;padding:11px 13px;border:1px solid var(--border-strong);border-radius:var(--r-md);font-size:13.5px;resize:vertical;outline:none"></textarea>
+                <div style="display:flex;justify-content:flex-end;margin-top:8px"><button style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)"><x-ic name="send" s="15"></x-ic> 문의 보내기</button></div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  __pr(r){try{localStorage.setItem("cdh-role",r)}catch(e){}return r;}
+  state = { role: (function(){try{return localStorage.getItem("cdh-role")||"PLANNER";}catch(e){return "PLANNER";}})() };
+  scrollTo(id) {
+    const c = document.getElementById("doc-scroll");
+    const el = document.getElementById(id);
+    if (c && el) c.scrollTo({ top: el.offsetTop - 16, behavior: "smooth" });
+  }
+  renderVals() {
+    const isPlanner = this.state.role === "PLANNER";
+    const seg = on => ({ bg: on ? "var(--bg-card)" : "transparent", fg: on ? "var(--primary-hover)" : "var(--fg-3)" });
+    const p = seg(isPlanner), s = seg(!isPlanner);
+    return {
+      sidebarRole: this.state.role,
+      isPlanner,
+      setPlanner: () => this.setState({ role: this.__pr("PLANNER") }),
+      setSme: () => this.setState({ role: this.__pr("SME") }),
+      plannerBtnBg: p.bg, plannerBtnFg: p.fg, smeBtnBg: s.bg, smeBtnFg: s.fg,
+      go1: () => this.scrollTo("sec1"),
+      go2: () => this.scrollTo("sec2"),
+      go3: () => this.scrollTo("sec3"),
+      go4: () => this.scrollTo("sec4"),
+      go5: () => this.scrollTo("sec5"),
+      go6: () => this.scrollTo("sec6"),
+    };
+  }
+}
+</script>
+</body>
+</html>

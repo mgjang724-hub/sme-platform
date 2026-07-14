@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+</helmet>
+<aside style="width:240px;flex:none;height:100%;box-sizing:border-box;background:var(--bg-card);border-right:1px solid var(--border);display:flex;flex-direction:column;font-family:var(--font-sans)">
+  <div style="padding:22px 20px 16px;border-bottom:1px solid var(--border)">
+    <img src="assets/logo-iscream-full.png" alt="i-Scream 원격교육연수원" style="height:26px;width:auto;display:block">
+    <div style="margin-top:12px;font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--primary)">SME Script Platform</div>
+    <div style="font-size:11px;color:var(--fg-4);margin-top:2px">강사 원고 소통 플랫폼</div>
+  </div>
+  <nav style="flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:3px;overflow-y:auto">
+    <sc-for list="{{ items }}" as="it" hint-placeholder-count="5">
+      <a href="{{ it.href }}" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r-md);text-decoration:none;position:relative;background:{{ it.bg }};color:{{ it.fg }};font-size:14px;font-weight:{{ it.weight }}" style-hover="background:var(--bg-sunken)">
+        <span style="width:3px;height:18px;border-radius:2px;position:absolute;left:0;background:{{ it.bar }}"></span>
+        <x-ic name="{{ it.icon }}" s="19"></x-ic>
+        {{ it.label }}
+      </a>
+    </sc-for>
+  </nav>
+  <div style="padding:14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px">
+    <span style="width:34px;height:34px;border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;background:{{ avBg }};color:{{ avFg }}">{{ avInitial }}</span>
+    <div style="min-width:0;flex:1">
+      <div style="font-size:13px;font-weight:700;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</div>
+      <div style="display:inline-flex;align-items:center;gap:5px;margin-top:2px">
+        <span style="font-size:10.5px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:5px;background:{{ roleBg }};color:{{ roleFg }}">{{ roleLabel }}</span>
+      </div>
+    </div>
+    <x-ic name="chevron-down" s="16" style="color:var(--fg-4)"></x-ic>
+  </div>
+</aside>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:240,&quot;height&quot;:560},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;PLANNER&quot;,&quot;SME&quot;],&quot;default&quot;:&quot;PLANNER&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;active&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const role = this.props.role === "SME" ? "SME" : "PLANNER";
+    const active = this.props.active || (role === "SME" ? "tasks" : "dashboard");
+    const PLANNER = [
+      { id: "dashboard", label: "대시보드", icon: "layout-dashboard", href: "S02-PlannerHome.dc.html" },
+      { id: "courses",   label: "과정 관리", icon: "book-open",         href: "S04-CourseList.dc.html" },
+      { id: "review",    label: "검수",     icon: "clipboard-check",   href: "S12-ReviewQueue.dc.html" },
+      { id: "calendar",  label: "일정",     icon: "calendar",          href: "S15-Calendar.dc.html" },
+      { id: "guide",     label: "안내센터", icon: "book-marked",       href: "S09-GuideCenter.dc.html" },
+      { id: "members",   label: "참여자",   icon: "users-round",       href: "S08-Members.dc.html" },
+      { id: "settings",  label: "설정",     icon: "settings",          href: "S18-Settings.dc.html" },
+    ];
+    const SME = [
+      { id: "tasks",    label: "내 작업",  icon: "square-check-big",  href: "S03-MyTasks.dc.html" },
+      { id: "courses",  label: "과정 관리", icon: "book-open",         href: "S17-MyCourses.dc.html" },
+      { id: "scripts",  label: "원고 관리", icon: "file-text",         href: "S07-ScriptManage.dc.html" },
+      { id: "calendar", label: "일정",     icon: "calendar",          href: "S15-Calendar.dc.html" },
+      { id: "guide",    label: "안내센터", icon: "book-marked",       href: "S09-GuideCenter.dc.html" },
+      { id: "settings", label: "설정",     icon: "settings",          href: "S18-Settings.dc.html" },
+    ];
+    const items = (role === "SME" ? SME : PLANNER).map(it => {
+      const on = it.id === active;
+      return {
+        ...it,
+        weight: on ? 700 : 500,
+        bg: on ? "var(--primary-tint)" : "transparent",
+        fg: on ? "var(--primary-hover)" : "var(--fg-2)",
+        bar: on ? "var(--primary)" : "transparent",
+      };
+    });
+    const planner = role === "PLANNER";
+    return {
+      items,
+      userName: planner ? "김정수" : "이서연",
+      avInitial: planner ? "김" : "이",
+      avBg: planner ? "#FFD8C9" : "#D5E3F2",
+      avFg: planner ? "#B7521F" : "#245C92",
+      roleLabel: planner ? "PLANNER" : "SME",
+      roleBg: planner ? "#FFF1EC" : "#E8F1FB",
+      roleFg: planner ? "#B7521F" : "#245C92",
+    };
+  }
+}
+</script>
+</body>
+</html>

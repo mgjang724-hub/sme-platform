@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    input{font-family:var(--font-sans)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="{{ sidebarRole }}" active="settings" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px">
+      <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-size:20px;font-weight:700">설정</div></div>
+      <div style="display:flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--bg-sunken)">
+        <button onClick="{{ setPlanner }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ plannerBtnBg }};color:{{ plannerBtnFg }}">기획자</button>
+        <button onClick="{{ setSme }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ smeBtnBg }};color:{{ smeBtnFg }}">강사</button>
+      </div>
+    </header>
+
+    <div style="flex:1;overflow-y:auto;padding:28px 32px 48px">
+      <div style="max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:22px">
+
+        <!-- 프로필 -->
+        <section style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden">
+          <div style="padding:16px 22px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700">프로필</div>
+          <div style="padding:22px;display:flex;align-items:center;gap:16px">
+            <span style="width:56px;height:56px;flex:none;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;background:{{ avBg }};color:{{ avFg }}">{{ avInit }}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:16px;font-weight:700">{{ userName }}</div>
+              <div style="font-size:12.5px;color:var(--fg-3);margin-top:2px">{{ email }}</div>
+            </div>
+            <span style="font-size:11px;font-weight:800;letter-spacing:.04em;padding:4px 10px;border-radius:6px;background:{{ roleBg }};color:{{ roleFg }}">{{ roleLabel }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 22px 22px">
+            <label style="display:block"><span style="font-size:12px;font-weight:700;color:var(--fg-3)">이름</span><input value="{{ userName }}" style="width:100%;box-sizing:border-box;margin-top:6px;height:40px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);font-size:13.5px;outline:none"></label>
+            <label style="display:block"><span style="font-size:12px;font-weight:700;color:var(--fg-3)">소속</span><input value="{{ dept }}" style="width:100%;box-sizing:border-box;margin-top:6px;height:40px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);font-size:13.5px;outline:none"></label>
+          </div>
+        </section>
+
+        <!-- 알림 -->
+        <section style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden">
+          <div style="padding:16px 22px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700">알림</div>
+          <sc-for list="{{ notis }}" as="n" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:14px;padding:15px 22px;border-bottom:1px solid var(--border)">
+              <span style="width:38px;height:38px;flex:none;border-radius:var(--r-md);background:{{ n.iconBg }};color:{{ n.iconFg }};display:inline-flex;align-items:center;justify-content:center"><x-ic name="{{ n.icon }}" s="18"></x-ic></span>
+              <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">{{ n.title }}</div><div style="font-size:12px;color:var(--fg-3);margin-top:2px">{{ n.desc }}</div></div>
+              <button onClick="{{ n.toggle }}" style="width:44px;height:26px;flex:none;border:none;border-radius:999px;cursor:pointer;padding:0;position:relative;background:{{ n.trackBg }};transition:background .15s">
+                <span style="position:absolute;top:3px;left:{{ n.knobLeft }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:var(--shadow-sm);transition:left .15s"></span>
+              </button>
+            </div>
+          </sc-for>
+        </section>
+
+        <!-- 계정 -->
+        <section style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden">
+          <div style="padding:16px 22px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700">계정</div>
+          <div style="display:flex;align-items:center;gap:14px;padding:15px 22px;border-bottom:1px solid var(--border)">
+            <div style="flex:1"><div style="font-size:13.5px;font-weight:700">비밀번호 변경</div><div style="font-size:12px;color:var(--fg-3);margin-top:2px">마지막 변경 90일 전</div></div>
+            <button style="padding:8px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:700;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)">변경</button>
+          </div>
+          <a href="S01-Login.dc.html" style="display:flex;align-items:center;gap:10px;padding:15px 22px;color:var(--error-fg);text-decoration:none;font-size:13.5px;font-weight:700" style-hover="background:var(--error-bg)"><x-ic name="log-out" s="17"></x-ic> 로그아웃</a>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { role: (function(){try{return localStorage.getItem("cdh-role")||"PLANNER";}catch(e){return "PLANNER";}})(), n: { feedback: true, deadline: true, digest: false } };
+  __pr(r){ try{localStorage.setItem("cdh-role",r)}catch(e){} return r; }
+  renderVals() {
+    const planner = this.state.role === "PLANNER";
+    const seg = on => ({ bg: on ? "var(--bg-card)" : "transparent", fg: on ? "var(--primary-hover)" : "var(--fg-3)" });
+    const p = seg(planner), s = seg(!planner);
+    const sw = (key, title, desc, icon, iconBg, iconFg) => {
+      const on = this.state.n[key];
+      return { title, desc, icon, iconBg, iconFg,
+        toggle: () => this.setState(st => ({ n: { ...st.n, [key]: !st.n[key] } })),
+        trackBg: on ? "var(--primary)" : "var(--border-strong)",
+        knobLeft: on ? "21px" : "3px" };
+    };
+    return {
+      sidebarRole: this.state.role,
+      setPlanner: () => this.setState({ role: this.__pr("PLANNER") }),
+      setSme: () => this.setState({ role: this.__pr("SME") }),
+      plannerBtnBg: p.bg, plannerBtnFg: p.fg, smeBtnBg: s.bg, smeBtnFg: s.fg,
+      userName: planner ? "김정수" : "이서연",
+      email: planner ? "js.kim@iscream.co.kr" : "sy.lee@iscream.co.kr",
+      dept: planner ? "콘텐츠기획팀" : "외부 강사",
+      avInit: planner ? "김" : "이",
+      avBg: planner ? "#FFD8C9" : "#D5E3F2",
+      avFg: planner ? "#B7521F" : "#245C92",
+      roleLabel: planner ? "PLANNER" : "SME",
+      roleBg: planner ? "#FFF1EC" : "#E8F1FB",
+      roleFg: planner ? "#B7521F" : "#245C92",
+      notis: [
+        sw("feedback", planner ? "새 원고 제출 알림" : "피드백·답변 알림", planner ? "강사가 새 버전을 제출하면 알려드려요" : "기획자 피드백이 등록되면 알려드려요", "message-square", "var(--info-bg)", "var(--info-fg)"),
+        sw("deadline", "마감 알림", "마감 하루 전과 당일에 알려드려요", "clock", "var(--error-bg)", "var(--error-fg)"),
+        sw("digest", "주간 요약 메일", "매주 월요일 진행 현황을 메일로 받아요", "mail", "var(--primary-tint)", "var(--primary-hover)"),
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

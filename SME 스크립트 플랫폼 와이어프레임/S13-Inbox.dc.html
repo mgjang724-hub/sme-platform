@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    input,textarea{font-family:var(--font-sans)}
+    .inq:hover{background:var(--bg-sunken)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="{{ sidebarRole }}" active="{{ sidebarActive }}" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px">
+      <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-size:20px;font-weight:700">{{ pageTitle }}</div></div>
+      <div style="display:flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--bg-sunken)">
+        <button onClick="{{ setPlanner }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ plannerBtnBg }};color:{{ plannerBtnFg }}">기획자</button>
+        <button onClick="{{ setSme }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ smeBtnBg }};color:{{ smeBtnFg }}">강사</button>
+      </div>
+      <a href="S14-Notifications.dc.html" style="position:relative;width:40px;height:40px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-card);display:inline-flex;align-items:center;justify-content:center" style-hover="border-color:var(--border-strong)">
+        <x-ic name="bell" s="18" style="color:var(--fg-2)"></x-ic>
+        <span style="position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--primary)"></span>
+      </a>
+    </header>
+
+    <div style="flex:1;display:flex;min-height:0;overflow:hidden">
+
+      <!-- inquiry list -->
+      <div style="width:360px;flex:none;border-right:1px solid var(--border);background:var(--bg-card);display:flex;flex-direction:column;min-height:0">
+        <div style="flex:none;padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+          <span style="font-size:13.5px;font-weight:700">{{ listTitle }}</span>
+          <span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--primary-tint);color:var(--primary-hover)">{{ listCount }}</span>
+          <div style="flex:1"></div>
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="2">
+            <button style="padding:5px 11px;border-radius:999px;border:{{ t.border }};background:{{ t.bg }};color:{{ t.fg }};font-size:11.5px;font-weight:700;cursor:pointer">{{ t.label }}</button>
+          </sc-for>
+        </div>
+        <div style="flex:1;overflow-y:auto">
+          <sc-for list="{{ inquiries }}" as="q" hint-placeholder-count="5">
+            <button onClick="{{ q.select }}" class="inq" style="width:100%;text-align:left;display:flex;gap:12px;padding:15px 18px;border:none;border-bottom:1px solid var(--border);border-left:3px solid {{ q.selBar }};background:{{ q.selBg }};cursor:pointer;transition:background .12s">
+              <span style="width:36px;height:36px;flex:none;border-radius:50%;background:{{ q.avBg }};color:{{ q.avFg }};display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">{{ q.avInit }}</span>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:13px;font-weight:700;color:var(--fg-1)">{{ q.name }}</span>
+                  <sc-if value="{{ q.unread }}" hint-placeholder-val="{{ false }}"><span style="width:7px;height:7px;border-radius:50%;background:var(--primary);flex:none"></span></sc-if>
+                  <span style="margin-left:auto;font-size:11px;color:var(--fg-4)">{{ q.time }}</span>
+                </div>
+                <div style="font-size:12.5px;font-weight:700;color:var(--fg-2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ q.subject }}</div>
+                <div style="font-size:12px;color:var(--fg-4);margin-top:2px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ q.snippet }}</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:7px">
+                  <span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:{{ q.tagBg }};color:{{ q.tagFg }}"><x-ic name="{{ q.tagIcon }}" s="11"></x-ic>{{ q.context }}</span>
+                  <sc-if value="{{ q.statusLabel }}" hint-placeholder-val="{{ true }}"><span style="font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:{{ q.stBg }};color:{{ q.stFg }}">{{ q.statusLabel }}</span></sc-if>
+                </div>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- thread detail -->
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;min-height:0;background:var(--bg-page)">
+        <div style="flex:none;padding:20px 30px;border-bottom:1px solid var(--border);background:var(--bg-card)">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="width:44px;height:44px;flex:none;border-radius:50%;background:{{ cur.avBg }};color:{{ cur.avFg }};display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">{{ cur.avInit }}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-family:var(--font-display);font-size:17px;font-weight:700">{{ cur.subject }}</div>
+              <div style="font-size:12.5px;color:var(--fg-3);margin-top:2px">{{ cur.name }} · {{ cur.role }}</div>
+            </div>
+            <a href="{{ cur.contextHref }}" style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13px;font-weight:700" style-hover="border-color:var(--primary);color:var(--primary-hover)"><x-ic name="{{ cur.tagIcon }}" s="16"></x-ic> {{ cur.contextFull }}</a>
+          </div>
+        </div>
+
+        <div style="flex:1;overflow-y:auto;padding:26px 30px;display:flex;flex-direction:column;gap:16px">
+          <div style="align-self:center;font-size:11.5px;color:var(--fg-4);background:var(--bg-sunken);padding:4px 12px;border-radius:999px">{{ cur.dateLine }}</div>
+          <sc-for list="{{ cur.messages }}" as="m" hint-placeholder-count="2">
+            <div style="display:flex;gap:11px;max-width:78%;align-self:{{ m.align }};flex-direction:{{ m.dir }}">
+              <span style="width:32px;height:32px;flex:none;border-radius:50%;background:{{ m.avBg }};color:{{ m.avFg }};display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">{{ m.avInit }}</span>
+              <div style="min-width:0">
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-direction:{{ m.dir }}">
+                  <span style="font-size:12.5px;font-weight:700">{{ m.name }}</span>
+                  <span style="font-size:11px;color:var(--fg-4)">{{ m.time }}</span>
+                </div>
+                <div style="padding:12px 15px;border-radius:{{ m.radius }};background:{{ m.bubbleBg }};border:1px solid {{ m.bubbleBorder }};font-size:13.5px;color:{{ m.textColor }};line-height:1.7">{{ m.text }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- composer / answered state -->
+        <div style="flex:none;padding:16px 30px;border-top:1px solid var(--border);background:var(--bg-card)">
+          <sc-if value="{{ showComposer }}" hint-placeholder-val="{{ true }}">
+            <div style="border:1px solid var(--border-strong);border-radius:var(--r-md);padding:12px 14px">
+              <textarea placeholder="{{ composePlaceholder }}" rows="2" style="width:100%;border:none;outline:none;resize:none;font-size:13.5px"></textarea>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+                <button style="display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--bg-card);color:var(--fg-3);font-size:12px;font-weight:700;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)"><x-ic name="paperclip" s="14"></x-ic> 파일 첨부</button>
+                <button style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:var(--r-sm);background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)"><x-ic name="send" s="14"></x-ic> {{ composeCta }}</button>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ showAnswered }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--r-md);background:var(--success-bg);color:var(--success-fg)">
+              <x-ic name="circle-check" s="18"></x-ic>
+              <span style="font-size:13px;font-weight:700">기획자 답변이 도착했어요.</span>
+              <a href="S10-GuideDetail.dc.html" style="margin-left:auto;font-size:12.5px;font-weight:700;color:var(--success-fg);text-decoration:underline">추가 문의하기</a>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  __pr(r){try{localStorage.setItem("cdh-role",r)}catch(e){}return r;}
+  state = { role: (function(){try{return localStorage.getItem("cdh-role")||"PLANNER";}catch(e){return "PLANNER";}})(), sel: 0 };
+
+  renderVals() {
+    const isPlanner = this.state.role === "PLANNER";
+    const seg = on => ({ bg: on ? "var(--bg-card)" : "transparent", fg: on ? "var(--primary-hover)" : "var(--fg-3)" });
+    const p = seg(isPlanner), s = seg(!isPlanner);
+
+    const KIM = { avInit: "김", avBg: "#FFD8C9", avFg: "#B7521F", name: "김정수 기획자" };
+    const LEE = { avInit: "이", avBg: "#D5E3F2", avFg: "#245C92", name: "이서연 강사" };
+    const PARK = { avInit: "박", avBg: "#E0D6F5", avFg: "#5B45A8", name: "박도현 강사" };
+
+    // planner sees inquiries FROM smes; sme sees THEIR OWN inquiries
+    const plannerInq = [
+      { from: LEE, subject: "3차시 역할극 촬영 일정 문의", snippet: "3차시 역할극은 출연자가 2명이라 촬영 일정 조율이 필요할 것 같아요. 언제쯤 가능할까요?", time: "1시간 전", unread: true, context: "촬영 안내", tagIcon: "clapperboard", tagBg: "var(--stage-film-bg)", tagFg: "var(--stage-film-fg)", contextHref: "S10-GuideDetail.dc.html", contextFull: "촬영 안내 문서", statusLabel: "답변 대기", stBg: "var(--warning-bg)", stFg: "var(--warning-fg)", answered: false,
+        messages: [ { who: LEE, time: "오늘 10:12", text: "3차시 역할극은 출연자가 2명이라 촬영 일정 조율이 필요할 것 같아요. 스튜디오 B는 언제쯤 예약 가능할까요? 두 강사 모두 화·목 오후가 편합니다." } ] },
+      { from: PARK, subject: "원고 분량 기준이 궁금해요", snippet: "차시당 8~10분이라고 하셨는데, 슬라이드 포함 기준인지 순수 발화 기준인지 궁금합니다.", time: "3시간 전", unread: true, context: "원고 작성 가이드", tagIcon: "file-text", tagBg: "var(--stage-script-bg)", tagFg: "var(--stage-script-fg)", contextHref: "S09-GuideCenter.dc.html", contextFull: "원고 작성 가이드", statusLabel: "답변 대기", stBg: "var(--warning-bg)", stFg: "var(--warning-fg)", answered: false,
+        messages: [ { who: PARK, time: "오늘 08:40", text: "차시당 분량이 8~10분이라고 안내받았는데, 이게 슬라이드 설명 포함 기준인가요, 아니면 순수 발화 기준인가요? 대본 길이 잡는 데 참고하려고요." } ] },
+      { from: LEE, subject: "Google Docs 링크 제출 방법", snippet: "파일 대신 Google Docs 링크로 제출해도 괜찮을까요? 편집 권한은…", time: "어제", unread: false, context: "원고 상세관리", tagIcon: "message-square", tagBg: "var(--primary-tint)", tagFg: "var(--primary-hover)", contextHref: "S07-ScriptManage.dc.html", contextFull: "3차시 원고", statusLabel: "답변 완료", stBg: "var(--success-bg)", stFg: "var(--success-fg)", answered: true,
+        messages: [ { who: LEE, time: "어제 15:20", text: "파일 대신 Google Docs 링크로 제출해도 괜찮을까요? 편집 권한은 어떻게 드리면 될지 궁금해요." }, { who: KIM, time: "어제 16:05", text: "네, 링크 제출 환영합니다! 링크에 '뷰어' 권한만 주시면 되고, 원고 상세 화면의 링크 입력칸에 붙여넣어 주세요. 제가 검토본은 별도 파일로 올려드릴게요." } ] },
+      { from: PARK, subject: "복장 관련 문의", snippet: "촬영 때 넥타이 착용이 필수인가요?", time: "2일 전", unread: false, context: "촬영 안내", tagIcon: "clapperboard", tagBg: "var(--stage-film-bg)", tagFg: "var(--stage-film-fg)", contextHref: "S10-GuideDetail.dc.html", contextFull: "촬영 안내 문서", statusLabel: "답변 완료", stBg: "var(--success-bg)", stFg: "var(--success-fg)", answered: true,
+        messages: [ { who: PARK, time: "2일 전", text: "촬영 때 넥타이 착용이 필수인가요? 단색 셔츠만 입어도 될지 궁금합니다." }, { who: KIM, time: "2일 전", text: "넥타이는 필수 아니에요. 단색 셔츠·재킷이면 충분합니다. 잔무늬만 피해주세요!" } ] },
+    ];
+
+    const smeInq = [
+      { from: KIM, subject: "3차시 역할극 촬영 일정 문의", snippet: "3차시 역할극은 출연자가 2명이라 촬영 일정 조율이 필요할 것 같아요…", time: "1시간 전", unread: false, context: "촬영 안내", tagIcon: "clapperboard", tagBg: "var(--stage-film-bg)", tagFg: "var(--stage-film-fg)", contextHref: "S10-GuideDetail.dc.html", contextFull: "촬영 안내 문서", statusLabel: "답변 대기", stBg: "var(--warning-bg)", stFg: "var(--warning-fg)", answered: false,
+        messages: [ { who: LEE, time: "오늘 10:12", text: "3차시 역할극은 출연자가 2명이라 촬영 일정 조율이 필요할 것 같아요. 스튜디오 B는 언제쯤 예약 가능할까요? 두 강사 모두 화·목 오후가 편합니다." } ] },
+      { from: KIM, subject: "Google Docs 링크 제출 방법", snippet: "네, 링크 제출 환영합니다! 링크에 '뷰어' 권한만…", time: "어제", unread: true, context: "원고 상세관리", tagIcon: "message-square", tagBg: "var(--primary-tint)", tagFg: "var(--primary-hover)", contextHref: "S07-ScriptManage.dc.html", contextFull: "3차시 원고", statusLabel: "답변 도착", stBg: "var(--success-bg)", stFg: "var(--success-fg)", answered: true,
+        messages: [ { who: LEE, time: "어제 15:20", text: "파일 대신 Google Docs 링크로 제출해도 괜찮을까요? 편집 권한은 어떻게 드리면 될지 궁금해요." }, { who: KIM, time: "어제 16:05", text: "네, 링크 제출 환영합니다! 링크에 '뷰어' 권한만 주시면 되고, 원고 상세 화면의 링크 입력칸에 붙여넣어 주세요. 제가 검토본은 별도 파일로 올려드릴게요." } ] },
+    ];
+
+    const list = isPlanner ? plannerInq : smeInq;
+    const sel = Math.min(this.state.sel, list.length - 1);
+
+    const inquiries = list.map((q, i) => {
+      const on = i === sel;
+      return {
+        select: () => this.setState({ sel: i }),
+        name: q.from.name, avInit: q.from.avInit, avBg: q.from.avBg, avFg: q.from.avFg,
+        subject: q.subject, snippet: q.snippet, time: q.time, unread: q.unread,
+        context: q.context, tagIcon: q.tagIcon, tagBg: q.tagBg, tagFg: q.tagFg,
+        statusLabel: q.statusLabel, stBg: q.stBg, stFg: q.stFg,
+        selBg: on ? "var(--primary-tint-2)" : "transparent",
+        selBar: on ? "var(--primary)" : "transparent",
+      };
+    });
+
+    const c = list[sel];
+    const messages = c.messages.map(m => {
+      const mine = m.who === KIM ? isPlanner : !isPlanner; // is this message from the current viewer
+      return {
+        name: m.who.name, avInit: m.who.avInit, avBg: m.who.avBg, avFg: m.who.avFg, time: m.time, text: m.text,
+        align: mine ? "flex-end" : "flex-start",
+        dir: mine ? "row-reverse" : "row",
+        radius: mine ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+        bubbleBg: mine ? "var(--primary)" : "var(--bg-card)",
+        bubbleBorder: mine ? "var(--primary)" : "var(--border)",
+        textColor: mine ? "#fff" : "var(--fg-2)",
+      };
+    });
+
+    const tab = (label, on) => ({ label, bg: on ? "var(--fg-1)" : "var(--bg-card)", fg: on ? "#fff" : "var(--fg-3)", border: on ? "none" : "1px solid var(--border-strong)" });
+
+    return {
+      sidebarRole: this.state.role,
+      sidebarActive: isPlanner ? "review" : "tasks",
+      pageTitle: "문의함",
+      isPlanner,
+      setPlanner: () => this.setState({ role: this.__pr("PLANNER"), sel: 0 }),
+      setSme: () => this.setState({ role: this.__pr("SME"), sel: 0 }),
+      plannerBtnBg: p.bg, plannerBtnFg: p.fg, smeBtnBg: s.bg, smeBtnFg: s.fg,
+
+      listTitle: isPlanner ? "받은 문의" : "내 문의",
+      listCount: isPlanner ? "답변대기 2" : list.length + "건",
+      tabs: isPlanner ? [ tab("전체", true), tab("대기", false) ] : [],
+      inquiries,
+
+      cur: {
+        name: c.from.name, role: isPlanner ? "강사" : "담당 기획자",
+        avInit: c.from.avInit, avBg: c.from.avBg, avFg: c.from.avFg,
+        subject: c.subject, tagIcon: c.tagIcon, contextHref: c.contextHref, contextFull: c.contextFull,
+        dateLine: "2026.07.08 (수)", messages,
+      },
+
+      showComposer: isPlanner || !c.answered,
+      showAnswered: !isPlanner && c.answered,
+      composePlaceholder: isPlanner ? "답변을 입력하세요. 강사에게 알림으로 전달됩니다…" : "추가로 궁금한 점을 남겨보세요…",
+      composeCta: isPlanner ? "답변 보내기" : "문의 보내기",
+    };
+  }
+}
+</script>
+</body>
+</html>

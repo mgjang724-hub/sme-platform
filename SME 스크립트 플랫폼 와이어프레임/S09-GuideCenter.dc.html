@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    input{font-family:var(--font-sans)}
+    .gcard{transition:box-shadow .15s,border-color .15s,transform .12s}
+    .gcard:hover{box-shadow:var(--shadow-md);border-color:var(--border-strong);transform:translateY(-2px)}
+    .faq:hover{background:var(--primary-tint-2)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="{{ sidebarRole }}" active="guide" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px">
+      <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-size:20px;font-weight:700">안내센터</div></div>
+      <div style="display:flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--bg-sunken)">
+        <button onClick="{{ setPlanner }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ plannerBtnBg }};color:{{ plannerBtnFg }}">기획자</button>
+        <button onClick="{{ setSme }}" style="padding:6px 13px;border:none;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ smeBtnBg }};color:{{ smeBtnFg }}">강사</button>
+      </div>
+      <sc-if value="{{ isPlanner }}" hint-placeholder-val="{{ false }}">
+        <a href="S11-GuideManage.dc.html" style="display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--fg-2);font-size:13.5px;font-weight:700" style-hover="border-color:var(--primary);color:var(--primary-hover)"><x-ic name="sliders" s="16"></x-ic> 안내 관리</a>
+      </sc-if>
+    </header>
+
+    <div style="flex:1;overflow-y:auto;padding:28px 32px 44px">
+      <div style="max-width:1000px;margin:0 auto">
+        <!-- hero + search -->
+        <div style="position:relative;overflow:hidden;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-2xl);box-shadow:var(--shadow-md);padding:28px 30px;margin-bottom:24px">
+          <span style="position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:var(--primary-tint)"></span>
+          <span style="position:absolute;right:80px;bottom:-60px;width:120px;height:120px;border-radius:50%;background:var(--primary-tint-2)"></span>
+          <div style="position:relative">
+            <div style="font-family:var(--font-display);font-size:24px;font-weight:700">강사님을 위한 안내 모음</div>
+            <div style="font-size:14px;color:var(--fg-3);margin-top:6px">원고 작성부터 계약·비용 지급·촬영까지, 궁금한 내용을 한 곳에서 확인하세요.</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:18px;padding:0 16px;height:48px;max-width:520px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:var(--r-md);box-shadow:var(--shadow-xs)">
+              <x-ic name="search" s="19" style="color:var(--fg-4)"></x-ic>
+              <input placeholder="안내 내용 검색 (예: 원고 분량, 지급일, 촬영 준비물)" style="flex:1;border:none;outline:none;background:none;font-size:14px">
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ top 3 -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <x-ic name="help-circle" s="18" style="color:var(--primary-hover)"></x-ic>
+          <span style="font-family:var(--font-display);font-size:17px;font-weight:700">자주 묻는 질문 TOP 3</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px">
+          <sc-for list="{{ faqs }}" as="q" hint-placeholder-count="3">
+            <a href="S10-GuideDetail.dc.html" class="faq" style="display:flex;align-items:flex-start;gap:10px;padding:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);text-decoration:none;color:inherit;transition:background .12s">
+              <span style="font-family:var(--font-num);font-size:16px;font-weight:800;color:var(--primary)">Q{{ q.n }}</span>
+              <span style="font-size:13.5px;font-weight:600;color:var(--fg-2);line-height:1.5">{{ q.q }}</span>
+            </a>
+          </sc-for>
+        </div>
+
+        <!-- category cards -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-family:var(--font-display);font-size:17px;font-weight:700">안내 카테고리</span>
+          <span style="font-size:12.5px;color:var(--fg-4)">과정과 무관하게 언제든 열람할 수 있어요</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+          <sc-for list="{{ cats }}" as="c" hint-placeholder-count="5">
+            <a href="S10-GuideDetail.dc.html" class="gcard" style="display:block;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);padding:20px 22px;text-decoration:none;color:inherit">
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="width:44px;height:44px;flex:none;border-radius:var(--r-md);background:{{ c.iconBg }};color:{{ c.iconFg }};display:inline-flex;align-items:center;justify-content:center"><x-ic name="{{ c.icon }}" s="22"></x-ic></span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:15.5px;font-weight:700">{{ c.title }}</div>
+                  <div style="font-size:11.5px;color:var(--fg-4);margin-top:2px">최종 수정 {{ c.updated }}</div>
+                </div>
+                <x-ic name="chevron-right" s="18" style="color:var(--fg-4)"></x-ic>
+              </div>
+              <div style="font-size:13px;color:var(--fg-3);line-height:1.6;margin-top:12px">{{ c.summary }}</div>
+              <sc-if value="{{ c.flag }}" hint-placeholder-val="{{ false }}">
+                <div style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:6px 10px;border-radius:999px;background:var(--warning-bg);color:var(--warning-fg);font-size:11.5px;font-weight:700"><x-ic name="info" s="13"></x-ic> {{ c.flag }}</div>
+              </sc-if>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  __pr(r){try{localStorage.setItem("cdh-role",r)}catch(e){}return r;}
+  state = { role: (function(){try{return localStorage.getItem("cdh-role")||"PLANNER";}catch(e){return "PLANNER";}})() };
+  renderVals() {
+    const isPlanner = this.state.role === "PLANNER";
+    const seg = on => ({ bg: on ? "var(--bg-card)" : "transparent", fg: on ? "var(--primary-hover)" : "var(--fg-3)" });
+    const p = seg(isPlanner), s = seg(!isPlanner);
+    return {
+      sidebarRole: this.state.role,
+      isPlanner,
+      setPlanner: () => this.setState({ role: this.__pr("PLANNER") }),
+      setSme: () => this.setState({ role: this.__pr("SME") }),
+      plannerBtnBg: p.bg, plannerBtnFg: p.fg, smeBtnBg: s.bg, smeBtnFg: s.fg,
+      faqs: [
+        { n: 1, q: "원고 한 차시 분량과 제출 형식은 어떻게 되나요?" },
+        { n: 2, q: "촬영 전에 강사가 준비해야 할 것은 무엇인가요?" },
+        { n: 3, q: "강의료는 언제, 어떻게 지급되나요?" },
+      ],
+      cats: [
+        { icon: "file-text", iconBg: "#E8F1FB", iconFg: "#245C92", title: "원고 작성 안내", updated: "2026.06.28", summary: "차시별 분량·구성·톤 가이드와 원고 템플릿, 제출 방법을 안내합니다.", flag: "" },
+        { icon: "users-round", iconBg: "#EFEBFB", iconFg: "#5B45A8", title: "강사의 역할 안내", updated: "2026.05.12", summary: "기획·검수·촬영 단계에서 강사(SME)가 맡는 역할과 협업 흐름을 설명합니다.", flag: "" },
+        { icon: "file-signature", iconBg: "#FFF0E8", iconFg: "#B7521F", title: "계약 안내", updated: "2026.04.30", summary: "위촉 계약 절차, 필요 서류, 저작권·활용 범위에 대한 안내입니다.", flag: "" },
+        { icon: "dollar-sign", iconBg: "#E7F6EF", iconFg: "#1B6B4A", title: "비용 지급 안내", updated: "2026.06.02", summary: "강의료 산정 기준, 세금계산서·원천징수, 지급 일정과 계좌 등록 방법.", flag: "" },
+        { icon: "clapperboard", iconBg: "#FCEEF4", iconFg: "#9C3A6B", title: "촬영 안내", updated: "2026.07.01", summary: "촬영 일정 조율, 스튜디오 위치, 복장·준비물, 당일 진행 순서를 안내합니다.", flag: "이 과정 특이사항 있음" },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

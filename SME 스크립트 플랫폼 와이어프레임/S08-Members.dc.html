@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="tokens.css">
+  <script src="icons.js"></script>
+  <style>
+    body{margin:0}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{color:var(--primary-hover)}
+    input,select{font-family:var(--font-sans)}
+    .row:hover{background:var(--bg-sunken)}
+  </style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:var(--bg-page);font-family:var(--font-sans);color:var(--fg-1)">
+  <dc-import name="AppSidebar" role="PLANNER" active="members" hint-size="240px,100%"></dc-import>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+    <header style="flex:none;height:66px;padding:0 32px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px">
+      <div style="flex:1"><div style="font-family:var(--font-display);font-size:20px;font-weight:700">참여자 · 권한</div></div>
+      <button onClick="{{ toggleInvite }}" style="display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:14px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)"><x-ic name="plus" s="17"></x-ic> 강사(SME) 초대</button>
+    </header>
+
+    <div style="flex:1;overflow-y:auto;padding:26px 32px 44px">
+      <div style="max-width:960px;margin:0 auto">
+
+        <!-- invite panel -->
+        <sc-if value="{{ inviteOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--bg-card);border:1.5px solid var(--primary);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:20px 22px;margin-bottom:22px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><x-ic name="mail" s="18" style="color:var(--primary-hover)"></x-ic><span style="font-family:var(--font-display);font-size:16px;font-weight:700">강사 초대</span></div>
+            <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:10px;align-items:end">
+              <div><div style="font-size:12px;font-weight:700;color:var(--fg-3);margin-bottom:6px">이메일</div><input placeholder="instructor@email.com" style="width:100%;height:42px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);font-size:13.5px;outline:none"></div>
+              <div><div style="font-size:12px;font-weight:700;color:var(--fg-3);margin-bottom:6px">배정 과정</div><select style="width:100%;height:42px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--r-md);font-size:13.5px;outline:none"><option>직장 내 괴롭힘 예방</option><option>성희롱 예방 교육</option></select></div>
+              <div><div style="font-size:12px;font-weight:700;color:var(--fg-3);margin-bottom:6px">차시</div><select style="width:100%;height:42px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--r-md);font-size:13.5px;outline:none"><option>3차시</option><option>전체</option></select></div>
+              <button style="height:42px;padding:0 18px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:var(--primary-hover)">초대 보내기</button>
+            </div>
+            <div style="font-size:12px;color:var(--fg-4);margin-top:10px">초대받은 강사는 이메일 링크로 가입 후 배정된 원고에 접근할 수 있어요.</div>
+          </div>
+        </sc-if>
+
+        <!-- planners -->
+        <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px">기획자 <span style="font-size:13px;color:var(--fg-4);font-weight:600">2명</span></div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:26px">
+          <sc-for list="{{ planners }}" as="m" hint-placeholder-count="2">
+            <div class="row" style="display:flex;align-items:center;gap:14px;padding:15px 22px;border-bottom:1px solid var(--border);transition:background .12s">
+              <span style="width:38px;height:38px;flex:none;border-radius:50%;background:{{ m.avBg }};color:{{ m.avFg }};display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">{{ m.init }}</span>
+              <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">{{ m.name }} <span style="font-size:12px;color:var(--fg-4);font-weight:500">{{ m.tag }}</span></div><div style="font-size:12.5px;color:var(--fg-3)">{{ m.email }}</div></div>
+              <span style="font-size:11.5px;font-weight:800;letter-spacing:.03em;padding:4px 9px;border-radius:6px;background:var(--primary-tint);color:var(--primary-hover)">PLANNER</span>
+              <div style="width:120px;text-align:right"><span style="font-size:12px;color:var(--fg-4)">{{ m.scope }}</span></div>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- SMEs -->
+        <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px">강사 (SME) <span style="font-size:13px;color:var(--fg-4);font-weight:600">4명</span></div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden">
+          <div style="display:flex;align-items:center;gap:14px;padding:12px 22px;border-bottom:1px solid var(--border);font-size:11.5px;font-weight:700;color:var(--fg-4)">
+            <span style="width:38px"></span><span style="flex:1">이름 / 이메일</span><span style="width:180px">담당</span><span style="width:96px">상태</span><span style="width:176px;text-align:right">관리</span>
+          </div>
+          <sc-for list="{{ smes }}" as="m" hint-placeholder-count="4">
+            <div class="row" style="display:flex;align-items:center;gap:14px;padding:15px 22px;border-bottom:1px solid var(--border);transition:background .12s">
+              <span style="width:38px;height:38px;flex:none;border-radius:50%;background:{{ m.avBg }};color:{{ m.avFg }};display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">{{ m.init }}</span>
+              <div style="flex:1;min-width:0"><a href="S16-SmeDetail.dc.html" style="font-size:14px;font-weight:700;color:var(--fg-1)" style-hover="color:var(--primary-hover)">{{ m.name }}</a><div style="font-size:12.5px;color:var(--fg-3)">{{ m.email }}</div></div>
+              <div style="width:180px;font-size:12.5px;color:var(--fg-3)">{{ m.scope }}</div>
+              <div style="width:96px"><span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:{{ m.stBg }};color:{{ m.stFg }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ m.stDot }}"></span>{{ m.st }}</span></div>
+              <div style="width:176px;display:flex;justify-content:flex-end;gap:6px">
+                <a href="S16-SmeDetail.dc.html" style="padding:6px 10px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--bg-card);color:var(--fg-2);font-size:12px;font-weight:700;text-decoration:none" style-hover="border-color:var(--primary);color:var(--primary-hover)">상세</a>
+                <sc-if value="{{ m.pending }}" hint-placeholder-val="{{ false }}"><button style="padding:6px 10px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--bg-card);color:var(--fg-2);font-size:12px;font-weight:700;cursor:pointer" style-hover="border-color:var(--primary);color:var(--primary-hover)">재발송</button></sc-if>
+                <button style="padding:6px 10px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--bg-card);color:var(--error-fg);font-size:12px;font-weight:700;cursor:pointer" style-hover="border-color:var(--error);background:var(--error-bg)">회수</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){try{localStorage.setItem("cdh-role","PLANNER")}catch(e){}}
+  state = { inviteOpen: false };
+  renderVals() {
+    const active = { st: "활성", stBg: "var(--success-bg)", stFg: "var(--success-fg)", stDot: "#10B981", pending: false };
+    const pending = { st: "초대 대기", stBg: "var(--warning-bg)", stFg: "var(--warning-fg)", stDot: "#F59E0B", pending: true };
+    return {
+      inviteOpen: this.state.inviteOpen,
+      toggleInvite: () => this.setState(s => ({ inviteOpen: !s.inviteOpen })),
+      planners: [
+        { name: "김정수", tag: "(나)", email: "jsy@iscream.co.kr", init: "김", avBg: "#FFD8C9", avFg: "#B7521F", scope: "전체 과정" },
+        { name: "이하은", tag: "", email: "hae@iscream.co.kr", init: "이", avBg: "#E0D6F5", avFg: "#5B45A8", scope: "직무역량 2건" },
+      ],
+      smes: [
+        { name: "이서연", email: "seoyeon@email.com", init: "이", avBg: "#D5E3F2", avFg: "#245C92", scope: "괴롭힘 예방 · 1,3차시", ...active },
+        { name: "박도현", email: "dohyun@email.com", init: "박", avBg: "#CFE6E2", avFg: "#1E7E73", scope: "성희롱 예방 · 4차시", ...active },
+        { name: "최민아", email: "mina@email.com", init: "최", avBg: "#FFD8C9", avFg: "#B7521F", scope: "개인정보보호 · 전체", ...active },
+        { name: "정하늘 (초대됨)", email: "haneul@email.com", init: "정", avBg: "#E7E9ED", avFg: "#515862", scope: "산업안전 · 2차시", ...pending },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

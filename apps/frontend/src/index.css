@@ -1,0 +1,96 @@
+@import './tokens.css';
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-page);
+  font-family: var(--font-sans);
+  color: var(--fg-1);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Global scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--fg-4);
+  border-radius: var(--r-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-3);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: var(--t-sm);
+}
+
+/* Sidebar hover transition */
+.sidebar-item {
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease !important;
+}
+.sidebar-item:hover {
+  transform: translateX(4px);
+}
+
+/* Card hover animation */
+.tcard {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+.tcard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--border-strong) !important;
+}
+
+/* Queue Row hover animation */
+.qrow {
+  transition: background-color 0.15s ease, transform 0.15s ease !important;
+}
+.qrow:hover {
+  background-color: var(--bg-sunken) !important;
+  transform: translateX(4px);
+}
+
+/* Notification hover animation */
+.noti {
+  transition: background-color 0.15s ease, transform 0.15s ease !important;
+}
+.noti:hover {
+  background-color: var(--bg-sunken) !important;
+  transform: translateX(4px);
+}
+
+/* Calendar upcoming hover animation */
+.up {
+  transition: background-color 0.15s ease, transform 0.15s ease !important;
+}
+.up:hover {
+  background-color: var(--bg-sunken) !important;
+  transform: translateX(4px);
+}

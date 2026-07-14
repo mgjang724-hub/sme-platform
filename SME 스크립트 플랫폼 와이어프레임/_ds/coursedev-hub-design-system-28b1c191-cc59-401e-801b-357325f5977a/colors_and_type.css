@@ -1,0 +1,132 @@
+/* ============================================================
+   CourseDev Hub — Design Foundations
+   Color + Type tokens for the i-Scream Training Center workspace
+   Load Pretendard (Korean UI) + Inter (Latin fallback) before this.
+   ============================================================ */
+
+/* NanumGothic — uploaded brand face: body / UI (self-hosted) */
+@font-face {
+  font-family: 'NanumGothic';
+  src: url('fonts/NanumGothic.ttf') format('truetype');
+  font-weight: 400 800;
+  font-display: swap;
+}
+/* NanumSquareRound — uploaded brand face: rounded display / headings (self-hosted) */
+/* NOTE: only the Regular (R) weight was provided — bold headings use faux-bold. */
+@font-face {
+  font-family: 'NanumSquareRound';
+  src: url('fonts/NanumSquareRoundR.ttf') format('truetype');
+  font-weight: 400 800;
+  font-display: swap;
+}
+/* Pretendard — secondary Korean/Latin UI face (CDN) */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+/* Inter — Latin numerals / labels fallback */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ---- Brand ---------------------------------------------- */
+  --brand-orange:      #F06020; /* literal logo orange (sampled) */
+  --brand-warmgray:    #6E5F60; /* literal logo wordmark gray   */
+
+  /* ---- Primary (coral-orange) action color ---------------- */
+  --primary:           #FF6B4A;
+  --primary-hover:     #F45A38;
+  --primary-active:    #E24E2F;
+  --primary-tint:      #FFF1EC; /* light fill behind primary    */
+  --primary-tint-2:    #FFF4EF; /* alt light fill               */
+  --primary-on:        #FFFFFF; /* text/icon on primary         */
+
+  /* ---- Neutrals / text ------------------------------------ */
+  --fg-1:              #222222; /* primary text                 */
+  --fg-2:              #4B5563; /* strong secondary             */
+  --fg-3:              #6B7280; /* secondary / meta             */
+  --fg-4:              #9AA1AC; /* muted / placeholder          */
+  --bg-page:           #F7F8FA; /* app background               */
+  --bg-page-2:         #FAFAFA; /* alt app background           */
+  --bg-card:           #FFFFFF; /* card / surface               */
+  --bg-sunken:         #F2F3F5; /* wells, track, hover row      */
+  --border:            #E5E7EB; /* hairline                     */
+  --border-strong:     #D6D9DE; /* input / divider emphasis     */
+
+  /* ---- Semantic status (soft pastels) --------------------- */
+  --success:           #2F9E6E; --success-bg: #E7F6EF; --success-fg: #1B6B4A;
+  --warning:           #E0992B; --warning-bg: #FBF1DC; --warning-fg: #8A5A12;
+  --error:             #E2574C; --error-bg:   #FCEBE9; --error-fg:   #A63329;
+  --info:              #3B82C4; --info-bg:    #E8F1FB; --info-fg:    #245C92;
+  --neutral-bg:        #F1F2F4; --neutral-fg: #515862;
+
+  /* ---- Stage chip palette (course pipeline) --------------- */
+  --stage-plan-bg:     #EFEBFB; --stage-plan-fg:    #5B45A8; /* Planning   */
+  --stage-script-bg:   #E8F1FB; --stage-script-fg:  #245C92; /* Script     */
+  --stage-story-bg:    #E6F6F4; --stage-story-fg:   #1E7E73; /* Storyboard */
+  --stage-film-bg:     #FFF0E8; --stage-film-fg:    #B7521F; /* Filming    */
+  --stage-edit-bg:     #FBF1DC; --stage-edit-fg:    #8A5A12; /* Editing    */
+  --stage-lms-bg:      #EAF0F6; --stage-lms-fg:     #3C5A7A; /* LMS Porting*/
+  --stage-qa-bg:       #FCEEF4; --stage-qa-fg:      #9C3A6B; /* QA Review  */
+  --stage-done-bg:     #E7F6EF; --stage-done-fg:    #1B6B4A; /* Completed  */
+
+  /* ---- Radii ---------------------------------------------- */
+  --r-xs:  6px;
+  --r-sm:  8px;
+  --r-md:  10px;  /* buttons / inputs            */
+  --r-lg:  12px;  /* chips / small cards         */
+  --r-xl:  16px;  /* cards                       */
+  --r-2xl: 20px;  /* large panels                */
+  --r-pill: 999px;
+
+  /* ---- Shadows (subtle only) ------------------------------ */
+  --shadow-xs: 0 1px 2px rgba(17,24,39,0.04);
+  --shadow-sm: 0 2px 6px rgba(17,24,39,0.05);
+  --shadow-md: 0 4px 12px rgba(17,24,39,0.06);   /* card resting */
+  --shadow-lg: 0 8px 24px rgba(17,24,39,0.10);   /* popover/menu */
+  --shadow-focus: 0 0 0 3px rgba(255,107,74,0.22); /* orange ring */
+
+  /* ---- Spacing scale (4px base) --------------------------- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
+
+  /* ---- Type families -------------------------------------- */
+  --font-sans: 'NanumGothic', 'Pretendard', 'Pretendard Variable', 'Inter',
+               -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR',
+               'Malgun Gothic', sans-serif;
+  --font-display: 'NanumSquareRound', 'NanumGothic', 'Pretendard',
+               -apple-system, 'Apple SD Gothic Neo', sans-serif;
+  --font-num:  'Inter', 'Pretendard', sans-serif; /* tabular numerals */
+
+  /* ---- Type scale (px) ------------------------------------ */
+  --t-display: 28px; --t-display-lh: 1.25; --t-display-w: 700;
+  --t-h1:      24px; --t-h1-lh:      1.3;  --t-h1-w:      700;
+  --t-h2:      20px; --t-h2-lh:      1.35; --t-h2-w:      700;
+  --t-h3:      18px; --t-h3-lh:      1.4;  --t-h3-w:      600;
+  --t-card:    16px; --t-card-lh:    1.45; --t-card-w:    600;
+  --t-body:    15px; --t-body-lh:    1.6;  --t-body-w:    400;
+  --t-sm:      14px; --t-sm-lh:      1.55; --t-sm-w:      400;
+  --t-meta:    13px; --t-meta-lh:    1.5;  --t-meta-w:    400;
+  --t-caption: 12px; --t-caption-lh: 1.45; --t-caption-w:500;
+}
+
+/* ============================================================
+   Semantic element styles — apply directly or copy into components
+   ============================================================ */
+.ds-display { font-family: var(--font-display); font-size: var(--t-display);
+  line-height: var(--t-display-lh); font-weight: var(--t-display-w);
+  color: var(--fg-1); letter-spacing: -0.01em; }
+.ds-h1 { font-family: var(--font-display); font-size: var(--t-h1);
+  line-height: var(--t-h1-lh); font-weight: var(--t-h1-w);
+  color: var(--fg-1); letter-spacing: -0.01em; }
+.ds-h2 { font-family: var(--font-display); font-size: var(--t-h2);
+  line-height: var(--t-h2-lh); font-weight: var(--t-h2-w); color: var(--fg-1); }
+.ds-h3 { font-family: var(--font-sans); font-size: var(--t-h3);
+  line-height: var(--t-h3-lh); font-weight: var(--t-h3-w); color: var(--fg-1); }
+.ds-card-title { font-family: var(--font-sans); font-size: var(--t-card);
+  line-height: var(--t-card-lh); font-weight: var(--t-card-w); color: var(--fg-1); }
+.ds-body { font-family: var(--font-sans); font-size: var(--t-body);
+  line-height: var(--t-body-lh); font-weight: var(--t-body-w); color: var(--fg-2); }
+.ds-sm { font-family: var(--font-sans); font-size: var(--t-sm);
+  line-height: var(--t-sm-lh); color: var(--fg-2); }
+.ds-meta { font-family: var(--font-sans); font-size: var(--t-meta);
+  line-height: var(--t-meta-lh); color: var(--fg-3); }
+.ds-caption { font-family: var(--font-sans); font-size: var(--t-caption);
+  line-height: var(--t-caption-lh); font-weight: var(--t-caption-w); color: var(--fg-3); }
+.ds-num { font-family: var(--font-num); font-feature-settings: 'tnum' 1; }

@@ -1,0 +1,200 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum GlobalRole {
+  PLANNER
+  PM
+  SME
+  ADMIN
+  MANAGER
+}
+
+enum CourseStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum DeliverableType {
+  SCRIPT
+}
+
+enum FeedbackStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  REOPENED
+  FORCE_CLOSED
+}
+
+enum DecisionStatus {
+  ASKED
+  WAITING
+  DECIDED
+  CLOSED
+}
+
+model User {
+  user_id       String     @id @default(uuid())
+  name          String
+  email         String     @unique
+  password_hash String
+  global_role   GlobalRole
+  status        String     @default("ACTIVE") // ACTIVE, INACTIVE
+
+  coursesCreated           Course[]           @relation("PlannerCourses")
+  courseMembers            CourseMember[]
+  fileVersionsUploaded     FileVersion[]
+  approvals                Approval[]
+  feedbacksAssigned        Feedback[]         @relation("AssignedFeedbacks")
+  feedbacksCreated         Feedback[]         @relation("CreatedFeedbacks")
+  decisionsDecided         DecisionLog[]      @relation("DecidedDecisions")
+  decisionsRequested       DecisionLog[]      @relation("RequestedDecisions")
+}
+
+model Course {
+  course_id     String       @id @default(uuid())
+  course_name   String
+  lesson_count  Int          @default(0)
+  current_stage String
+  status        CourseStatus @default(DRAFT)
+  planner_id    String
+  planner       User         @relation("PlannerCourses", fields: [planner_id], references: [user_id])
+  courseCode    String
+  vendor        String?
+  dev_type      String?
+  overview      String?
+  milestones    Json?
+
+  members            CourseMember[]
+  lessons            Lesson[]
+  decisions          DecisionLog[]
+}
+
+model CourseMember {
+  id             String    @id @default(uuid())
+  course_id      String
+  course         Course    @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  user_id        String
+  user           User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  role_in_course String
+  access_scope   String?
+  invited_at     DateTime  @default(now())
+  revoked_at     DateTime?
+  revoke_reason  String?
+}
+
+model Lesson {
+  lesson_id      String   @id @default(uuid())
+  course_id      String
+  course         Course   @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  lesson_no      Int
+  title          String
+  subtitle       String?
+  derived_status String   @default("NOT_SUBMITTED")
+  lessonCode     String
+
+  deliverables       Deliverable[]
+  decisions          DecisionLog[]
+}
+
+model Deliverable {
+  deliverable_id        String          @id @default(uuid())
+  lesson_id             String
+  lesson                Lesson          @relation(fields: [lesson_id], references: [lesson_id], onDelete: Cascade)
+  deliverable_type      DeliverableType @default(SCRIPT)
+  owner_role            String
+  current_status        String          @default("NOT_SUBMITTED") // NOT_SUBMITTED | SUBMITTED | IN_REVIEW | REVISION_REQUESTED | APPROVED
+  blocking_reason       String?
+  final_file_version_id String?         @unique
+
+  final_file_version    FileVersion?    @relation("FinalVersion", fields: [final_file_version_id], references: [version_id], onDelete: SetNull)
+  fileVersions          FileVersion[]   @relation("DeliverableVersions")
+  feedbacks             Feedback[]
+}
+
+model FileVersion {
+  version_id             String      @id @default(uuid())
+  deliverable_id         String
+  deliverable            Deliverable @relation("DeliverableVersions", fields: [deliverable_id], references: [deliverable_id], onDelete: Cascade)
+  storage_path           String
+  preview_path           String?
+  stage                  String?
+  round_no               Int
+  kind                   String      @default("FILE") // FILE | LINK
+  based_on_attachment_id String?
+  is_final               Boolean     @default(false)
+  uploaded_by            String
+  uploader               User        @relation(fields: [uploaded_by], references: [user_id])
+  created_at             DateTime    @default(now())
+
+  approvals              Approval[]
+  feedbacks              Feedback[]
+  finalOfDeliverable     Deliverable? @relation("FinalVersion")
+}
+
+model Feedback {
+  feedback_id     String         @id @default(uuid())
+  deliverable_id  String
+  deliverable     Deliverable    @relation(fields: [deliverable_id], references: [deliverable_id], onDelete: Cascade)
+  file_version_id String?
+  fileVersion     FileVersion?   @relation(fields: [file_version_id], references: [version_id], onDelete: SetNull)
+  location_type   String?
+  location_value  String?
+  content         String
+  assignee_id     String
+  assignee        User           @relation("AssignedFeedbacks", fields: [assignee_id], references: [user_id])
+  status          FeedbackStatus @default(OPEN)
+  reopen_count    Int            @default(0)
+  due_date        DateTime?
+  created_by      String
+  creator         User           @relation("CreatedFeedbacks", fields: [created_by], references: [user_id])
+  created_at      DateTime       @default(now())
+
+  attachments     FeedbackAttachment[]
+}
+
+model FeedbackAttachment {
+  id           String   @id @default(uuid())
+  feedback_id  String
+  feedback     Feedback @relation(fields: [feedback_id], references: [feedback_id], onDelete: Cascade)
+  file_name    String
+  storage_path String
+  uploaded_at  DateTime @default(now())
+}
+
+model Approval {
+  id              String      @id @default(uuid())
+  file_version_id String
+  fileVersion     FileVersion @relation(fields: [file_version_id], references: [version_id], onDelete: Cascade)
+  approved_by     String
+  approver        User        @relation(fields: [approved_by], references: [user_id])
+  approved_at     DateTime    @default(now())
+  lock_applied    Boolean     @default(false)
+}
+
+model DecisionLog {
+  decision_id            String         @id @default(uuid())
+  course_id              String
+  course                 Course         @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  lesson_id              String?
+  lesson                 Lesson?        @relation(fields: [lesson_id], references: [lesson_id], onDelete: SetNull)
+  topic                  String
+  question               String
+  options                Json?
+  decision               String?
+  decided_by             String?
+  decider                User?          @relation("DecidedDecisions", fields: [decided_by], references: [user_id], onDelete: SetNull)
+  requested_by           String
+  requester              User           @relation("RequestedDecisions", fields: [requested_by], references: [user_id])
+  status                 DecisionStatus @default(ASKED)
+  due_date               DateTime?
+  related_deliverable_id String?
+}
