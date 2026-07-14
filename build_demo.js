@@ -27,6 +27,16 @@ function cleanFolderSync(folderPath) {
 async function main() {
   console.log('=== [1/4] STARTING INTEGRATED DEMO BUILD ===');
   
+  // Ensure all dependencies (including devDependencies) are installed for building
+  console.log('\n>>> Ensuring all dependencies (including devDependencies) are installed...');
+  try {
+    execSync('npm install --include=dev', { stdio: 'inherit' });
+    console.log('✔ Dependencies installed successfully.');
+  } catch (err) {
+    console.error('❌ Dependency installation failed.');
+    process.exit(1);
+  }
+
   // 1. Build Frontend
   console.log('\n>>> Building Frontend (React)...');
   try {
