@@ -1,6 +1,7 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GlobalRole, CourseStatus, DeliverableType } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class CoursesService {
@@ -172,12 +173,23 @@ export class CoursesService {
     }
 
     const { email, role_in_course } = dto;
-    const targetUser = await this.prisma.user.findUnique({
+    let targetUser = await this.prisma.user.findUnique({
       where: { email },
     });
 
     if (!targetUser) {
-      throw new NotFoundException('해당 이메일의 유저를 찾을 수 없습니다.');
+      // Auto-create user account if it doesn't exist
+      const defaultPasswordHash = await bcrypt.hash('test1234', 10);
+      const namePrefix = email.split('@')[0];
+      targetUser = await this.prisma.user.create({
+        data: {
+          name: role_in_course === 'PLANNER' ? `${namePrefix} 기획자` : `${namePrefix} 강사`,
+          email,
+          password_hash: defaultPasswordHash,
+          global_role: role_in_course === 'PLANNER' ? GlobalRole.PLANNER : GlobalRole.SME,
+          status: 'ACTIVE',
+        },
+      });
     }
 
     // Check if member already exists

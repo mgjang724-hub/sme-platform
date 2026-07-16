@@ -12,7 +12,8 @@ import {
   Clapperboard,
   AlertTriangle,
   MessageSquare,
-  ArrowRight
+  ArrowRight,
+  UserPlus
 } from 'lucide-react';
 
 interface Lesson {
@@ -232,6 +233,27 @@ const CourseDetail: React.FC = () => {
               강사
             </button>
           </div>
+
+          {(user?.global_role === 'PLANNER' || user?.global_role === 'ADMIN') && (
+            <button 
+              onClick={() => navigate(`/courses/${course.course_id}/members`)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
+                padding: '10px 16px',
+                borderRadius: 'var(--r-md)',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-strong)',
+                color: 'var(--fg-2)',
+                fontSize: '13.5px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              <UserPlus size={16} /> 강사 초대 · 배정
+            </button>
+          )}
 
           <button 
             onClick={() => navigate(`/courses/${course.course_id}/lessons/${course.lessons[0]?.lesson_id}/script`)}
