@@ -1,9 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class CalendarService {
+  private readonly filepath = path.join(process.cwd(), 'calendar_events.json');
+
   constructor(private prisma: PrismaService) {}
+
+  private readCustomEvents(): any[] {
+    try {
+      if (!fs.existsSync(this.filepath)) {
+        fs.writeFileSync(this.filepath, JSON.stringify([]));
+        return [];
+      }
+      const data = fs.readFileSync(this.filepath, 'utf8');
+      return JSON.parse(data);
+    } catch (err) {
+      return [];
+    }
+  }
+
+  private writeCustomEvents(events: any[]): void {
+    fs.writeFileSync(this.filepath, JSON.stringify(events, null, 2));
+  }
 
   async getEvents(user: any) {
     const courses = await this.prisma.course.findMany({
@@ -84,6 +105,54 @@ export class CalendarService {
       }
     });
 
+    // Merge custom events
+    const customEvents = this.readCustomEvents();
+    customEvents.forEach(evt => {
+      // If user is SME, only show custom events they created or that are related to courses they are assigned to
+      if (user.global_role === 'SME') {
+        const isMyCourse = evt.course_id ? courses.some(c => c.course_id === evt.course_id) : false;
+        const isMyCreated = evt.creator_id === user.user_id;
+        if (isMyCourse || isMyCreated || !evt.course_id) {
+          events.push(evt);
+        }
+      } else {
+        events.push(evt);
+      }
+    });
+
     return events;
+  }
+
+  async createEvent(user: any, dto: any) {
+    const { label, date, kind, description, course_id } = dto;
+    const events = this.readCustomEvents();
+
+    let course_name = '공통 일정';
+    if (course_id) {
+      const course = await this.prisma.course.findUnique({
+        where: { course_id }
+      });
+      if (course) {
+        course_name = course.course_name;
+      }
+    }
+
+    const newEvent = {
+      id: `custom-${Date.now()}`,
+      course_id: course_id || null,
+      course_name,
+      label,
+      date,
+      kind: kind || 'meeting',
+      description: description || '',
+      creator_name: user.name,
+      creator_id: user.user_id,
+      created_at: new Date().toISOString()
+    };
+
+    events.push(newEvent);
+    this.writeCustomEvents(events);
+
+    return newEvent;
   }
 }

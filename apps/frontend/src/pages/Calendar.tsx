@@ -13,6 +13,7 @@ interface CalendarEvent {
   label: string;
   date: string;
   kind: 'kickoff' | 'due' | 'review' | 'final' | 'film';
+  description?: string;
 }
 
 const Calendar: React.FC = () => {
@@ -20,8 +21,19 @@ const Calendar: React.FC = () => {
   const navigate = useNavigate();
 
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewRole, setViewRole] = useState<'PLANNER' | 'SME'>('PLANNER');
+
+  // Modal States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formLabel, setFormLabel] = useState('');
+  const [formDate, setFormDate] = useState('2026-07-13');
+  const [formKind, setFormKind] = useState<'kickoff' | 'due' | 'review' | 'final' | 'film'>('film');
+  const [formCourseId, setFormCourseId] = useState('');
+  const [formDescription, setFormDescription] = useState('');
+  const [formError, setFormError] = useState('');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -30,18 +42,58 @@ const Calendar: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchEventsAndCourses = async () => {
       try {
-        const list = await apiFetch('/calendar');
+        const [list, courseList] = await Promise.all([
+          apiFetch('/calendar'),
+          apiFetch('/courses')
+        ]);
         setEvents(list);
+        setCourses(courseList || []);
       } catch (err) {
         console.error('Failed to load calendar events', err);
       } finally {
         setLoading(false);
       }
     };
-    fetchEvents();
-  }, [viewRole]);
+    fetchEventsAndCourses();
+  }, [viewRole, refreshTrigger]);
+
+  const handleSubmitEvent = async () => {
+    if (!formLabel.trim()) {
+      setFormError('일정명을 입력해 주세요.');
+      return;
+    }
+    if (!formDate) {
+      setFormError('날짜를 지정해 주세요.');
+      return;
+    }
+    setFormError('');
+    try {
+      await apiFetch('/calendar', {
+        method: 'POST',
+        body: JSON.stringify({
+          label: formLabel,
+          date: formDate,
+          kind: formKind,
+          course_id: formCourseId || null,
+          description: formDescription
+        })
+      });
+      // reset form
+      setFormLabel('');
+      setFormDate('2026-07-13');
+      setFormKind('film');
+      setFormCourseId('');
+      setFormDescription('');
+      setIsModalOpen(false);
+      // refresh events
+      setRefreshTrigger(prev => prev + 1);
+    } catch (err) {
+      console.error('Failed to create calendar event', err);
+      setFormError('일정 등록에 실패했습니다.');
+    }
+  };
 
   if (loading) {
     return (
@@ -110,8 +162,26 @@ const Calendar: React.FC = () => {
         gap: '18px',
         flexShrink: 0
       }}>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 700 }}>일정 · 마감 캘린더</div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            style={{
+              padding: '7px 14px',
+              backgroundColor: 'var(--primary)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 'var(--r-md)',
+              fontSize: '12.5px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              transition: 'background 0.12s'
+            }}
+          >
+            + 일정 추가
+          </button>
         </div>
 
         {/* Role switcher */}
@@ -234,7 +304,8 @@ const Calendar: React.FC = () => {
                             return (
                               <div
                                 key={e.id}
-                                onClick={() => navigate(`/courses/${e.course_id}`)}
+                                onClick={() => e.course_id && navigate(`/courses/${e.course_id}`)}
+                                title={`${e.label}${e.description ? `\n- ${e.description}` : ''}`}
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
@@ -290,7 +361,8 @@ const Calendar: React.FC = () => {
               return (
                 <div
                   key={e.id}
-                  onClick={() => navigate(`/courses/${e.course_id}`)}
+                  onClick={() => e.course_id && navigate(`/courses/${e.course_id}`)}
+                  title={`${e.label}${e.description ? `\n- ${e.description}` : ''}`}
                   style={{
                     display: 'flex',
                     gap: '13px',
@@ -342,6 +414,172 @@ const Calendar: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Add Event Modal */}
+      {isModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.4)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backdropFilter: 'blur(3px)'
+        }}>
+          <div style={{
+            width: '420px',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--r-lg)',
+            boxShadow: 'var(--shadow-xl)',
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--fg-1)' }}>새 일정 추가</div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 800, color: 'var(--fg-3)' }}>일정명</label>
+              <input
+                type="text"
+                value={formLabel}
+                onChange={e => setFormLabel(e.target.value)}
+                placeholder="예: 원고 검토 회의"
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 'var(--r-sm)',
+                  backgroundColor: 'var(--bg-sunken)',
+                  color: 'var(--fg-1)',
+                  fontSize: '13px'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 800, color: 'var(--fg-3)' }}>날짜</label>
+              <input
+                type="date"
+                value={formDate}
+                onChange={e => setFormDate(e.target.value)}
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 'var(--r-sm)',
+                  backgroundColor: 'var(--bg-sunken)',
+                  color: 'var(--fg-1)',
+                  fontSize: '13px'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 800, color: 'var(--fg-3)' }}>구분</label>
+              <select
+                value={formKind}
+                onChange={e => setFormKind(e.target.value as any)}
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 'var(--r-sm)',
+                  backgroundColor: 'var(--bg-sunken)',
+                  color: 'var(--fg-1)',
+                  fontSize: '13px'
+                }}
+              >
+                <option value="kickoff">회의/계획 (파랑)</option>
+                <option value="due">마감일 (주황)</option>
+                <option value="review">검수일 (하늘)</option>
+                <option value="final">최종확정 (초록)</option>
+                <option value="film">촬영/기타 (보라)</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 800, color: 'var(--fg-3)' }}>연관 과정 (선택)</label>
+              <select
+                value={formCourseId}
+                onChange={e => setFormCourseId(e.target.value)}
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 'var(--r-sm)',
+                  backgroundColor: 'var(--bg-sunken)',
+                  color: 'var(--fg-1)',
+                  fontSize: '13px'
+                }}
+              >
+                <option value="">공통 일정</option>
+                {courses.map(c => (
+                  <option key={c.course_id} value={c.course_id}>{c.course_name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 800, color: 'var(--fg-3)' }}>설명</label>
+              <textarea
+                value={formDescription}
+                onChange={e => setFormDescription(e.target.value)}
+                placeholder="일정 세부 사항 입력"
+                rows={3}
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 'var(--r-sm)',
+                  backgroundColor: 'var(--bg-sunken)',
+                  color: 'var(--fg-1)',
+                  fontSize: '13px',
+                  resize: 'none'
+                }}
+              />
+            </div>
+
+            {formError && (
+              <div style={{ fontSize: '12px', color: 'var(--error-fg)', fontWeight: 700 }}>{formError}</div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                style={{
+                  padding: '9px 15px',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 'var(--r-md)',
+                  background: 'var(--bg-card)',
+                  color: 'var(--fg-2)',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSubmitEvent}
+                style={{
+                  padding: '9px 18px',
+                  border: 'none',
+                  borderRadius: 'var(--r-md)',
+                  background: 'var(--primary)',
+                  color: '#fff',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                등록
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
