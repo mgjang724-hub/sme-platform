@@ -35,7 +35,50 @@ const CourseList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'DELAYED' | 'DONE'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'DELAYED' | 'DONE' | 'ARCHIVED'>('ALL');
+
+  const handleToggleArchive = async (courseId: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'ARCHIVED' ? 'ACTIVE' : 'ARCHIVED';
+    const confirmMsg = nextStatus === 'ARCHIVED' 
+      ? '이 과정을 보관함으로 이동하시겠습니까?\n보관된 과정은 [보관됨] 탭에서만 조회됩니다.'
+      : '이 과정을 보관함에서 해제(복원)하시겠습니까?';
+    
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      await apiFetch(`/courses/${courseId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: nextStatus })
+      });
+      
+      // Update state locally
+      setCourses(prev => prev.map(c => {
+        if (c.course_id === courseId) {
+          return { ...c, status: nextStatus as any };
+        }
+        return c;
+      }));
+    } catch (err) {
+      alert('상태 업데이트에 실패했습니다.');
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: string, courseName: string) => {
+    if (!window.confirm(`[경고] "${courseName}" 과정을 삭제하시겠습니까?\n과정 삭제 시 관련된 모든 차시, 원고 산출물, 피드백 히스토리가 완전히 영구 삭제되며 복구할 수 없습니다.`)) {
+      return;
+    }
+
+    try {
+      await apiFetch(`/courses/${courseId}`, {
+        method: 'DELETE'
+      });
+      
+      // Remove from state locally
+      setCourses(prev => prev.filter(c => c.course_id !== courseId));
+    } catch (err) {
+      alert('과정 삭제에 실패했습니다.');
+    }
+  };
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -92,25 +135,39 @@ const CourseList: React.FC = () => {
       (c.courseCode && c.courseCode.toLowerCase().includes(search.toLowerCase())) ||
       (c.vendor && c.vendor.toLowerCase().includes(search.toLowerCase()));
 
+    if (!matchesSearch) return false;
+
+    // Archived Filter
+    if (statusFilter === 'ARCHIVED') {
+      return c.status === 'ARCHIVED';
+    }
+
+    // Hide archived from main list
+    if (c.status === 'ARCHIVED') return false;
+
     const isDelayed = c.delayed_lessons > 0;
     const isDone = c.progress_rate === 100;
     const isActive = c.status === 'ACTIVE' && !isDelayed && !isDone;
 
-    if (statusFilter === 'ACTIVE') return matchesSearch && isActive;
-    if (statusFilter === 'DELAYED') return matchesSearch && isDelayed;
-    if (statusFilter === 'DONE') return matchesSearch && isDone;
+    if (statusFilter === 'ACTIVE') return isActive;
+    if (statusFilter === 'DELAYED') return isDelayed;
+    if (statusFilter === 'DONE') return isDone;
 
-    return matchesSearch;
+    return true; // statusFilter === 'ALL'
   });
 
   const counts = {
-    all: courses.length,
+    all: courses.filter(c => c.status !== 'ARCHIVED').length,
     active: courses.filter(c => c.status === 'ACTIVE' && c.progress_rate < 100 && c.delayed_lessons === 0).length,
-    delayed: courses.filter(c => c.delayed_lessons > 0).length,
-    done: courses.filter(c => c.progress_rate === 100).length
+    delayed: courses.filter(c => c.status === 'ACTIVE' && c.delayed_lessons > 0).length,
+    done: courses.filter(c => c.status === 'ACTIVE' && c.progress_rate === 100).length,
+    archived: courses.filter(c => c.status === 'ARCHIVED').length
   };
 
   const getCourseStatusDetails = (c: Course) => {
+    if (c.status === 'ARCHIVED') {
+      return { label: '보관됨', bg: '#E2E8F0', fg: '#475569', barColor: '#94A3B8' };
+    }
     if (c.status === 'DRAFT') {
       return { label: '초안', bg: 'var(--neutral-bg)', fg: 'var(--neutral-fg)', barColor: 'var(--fg-4)' };
     }
@@ -248,6 +305,20 @@ const CourseList: React.FC = () => {
           >
             완료 {counts.done}
           </button>
+          <button 
+            onClick={() => setStatusFilter('ARCHIVED')}
+            style={{
+              padding: '8px 15px',
+              borderRadius: '999px',
+              backgroundColor: statusFilter === 'ARCHIVED' ? 'var(--fg-1)' : 'var(--bg-card)',
+              color: statusFilter === 'ARCHIVED' ? '#fff' : 'var(--fg-2)',
+              border: statusFilter === 'ARCHIVED' ? 'none' : '1px solid var(--border-strong)',
+              fontSize: '13px',
+              fontWeight: 700,
+            }}
+          >
+            보관됨 {counts.archived}
+          </button>
         </div>
 
         {/* Course Cards Grid */}
@@ -367,19 +438,63 @@ const CourseList: React.FC = () => {
                     }}>S</span>
                     <span style={{ fontSize: '12.5px', color: 'var(--fg-3)' }}>SME 강사 배정됨</span>
                   </div>
-                  <button 
-                    onClick={() => navigate(`/courses/${c.course_id}`)}
-                    style={{
-                      fontSize: '12.5px',
-                      color: 'var(--primary)',
-                      fontWeight: 700,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    상세보기 <ArrowRight size={14} />
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    {(user?.global_role === 'PLANNER' || user?.global_role === 'ADMIN') && (
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleArchive(c.course_id, c.status);
+                          }}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            fontSize: '12.5px',
+                            color: 'var(--fg-3)',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            padding: 0
+                          }}
+                        >
+                          {c.status === 'ARCHIVED' ? '복원' : '보관'}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCourse(c.course_id, c.course_name);
+                          }}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            fontSize: '12.5px',
+                            color: 'var(--error-fg)',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            padding: 0
+                          }}
+                        >
+                          삭제
+                        </button>
+                      </>
+                    )}
+                    <button 
+                      onClick={() => navigate(`/courses/${c.course_id}`)}
+                      style={{
+                        fontSize: '12.5px',
+                        color: 'var(--primary)',
+                        fontWeight: 700,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        border: 'none',
+                        background: 'none',
+                        cursor: 'pointer',
+                        padding: 0
+                      }}
+                    >
+                      상세보기 <ArrowRight size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );

@@ -245,4 +245,41 @@ export class CoursesService {
       },
     });
   }
+
+  async updateStatus(course_id: string, user: any, status: CourseStatus) {
+    const course = await this.prisma.course.findUnique({
+      where: { course_id },
+    });
+
+    if (!course) {
+      throw new NotFoundException('해당 과정을 찾을 수 없습니다.');
+    }
+
+    if (course.planner_id !== user.user_id && user.global_role !== GlobalRole.ADMIN) {
+      throw new ForbiddenException('과정 기획자나 관리자만 상태를 업데이트할 수 있습니다.');
+    }
+
+    return this.prisma.course.update({
+      where: { course_id },
+      data: { status },
+    });
+  }
+
+  async deleteCourse(course_id: string, user: any) {
+    const course = await this.prisma.course.findUnique({
+      where: { course_id },
+    });
+
+    if (!course) {
+      throw new NotFoundException('해당 과정을 찾을 수 없습니다.');
+    }
+
+    if (course.planner_id !== user.user_id && user.global_role !== GlobalRole.ADMIN) {
+      throw new ForbiddenException('과정 기획자나 관리자만 과정을 삭제할 수 있습니다.');
+    }
+
+    return this.prisma.course.delete({
+      where: { course_id },
+    });
+  }
 }

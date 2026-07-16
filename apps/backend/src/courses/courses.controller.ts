@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Request } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 
 @Controller('courses')
@@ -42,5 +42,22 @@ export class CoursesController {
     @Body('reason') reason: string,
   ) {
     return this.coursesService.revokeMember(courseId, req.user, memberUserId, reason);
+  }
+
+  @Patch(':id/status')
+  async updateStatus(
+    @Request() req: any,
+    @Param('id') courseId: string,
+    @Body('status') status: any,
+  ) {
+    return this.coursesService.updateStatus(courseId, req.user, status);
+  }
+
+  @Delete(':id')
+  async deleteCourse(
+    @Request() req: any,
+    @Param('id') courseId: string,
+  ) {
+    return this.coursesService.deleteCourse(courseId, req.user);
   }
 }
