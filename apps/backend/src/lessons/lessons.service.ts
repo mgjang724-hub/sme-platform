@@ -4,6 +4,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import * as fs from 'fs';
 import * as path from 'path';
+import { extractTextFromDoc } from '../utils/document-parser';
 
 @Injectable()
 export class LessonsService {
@@ -190,11 +191,25 @@ export class LessonsService {
     // Save file locally
     fs.writeFileSync(filePath, file.buffer);
 
+    // Extract text for HWPX or DOCX previews
+    let previewPath: string | null = null;
+    const ext = originalName.split('.').pop()?.toLowerCase();
+    if (ext === 'hwpx' || ext === 'docx') {
+      const extractedText = extractTextFromDoc(filePath);
+      if (extractedText) {
+        const previewFileName = `preview_${nextRound}_${Date.now()}.txt`;
+        const previewFilePath = path.join(uploadDir, previewFileName);
+        fs.writeFileSync(previewFilePath, extractedText, 'utf8');
+        previewPath = `/uploads/${previewFileName}`;
+      }
+    }
+
     // Create FileVersion in DB
     const fileVersion = await this.prisma.fileVersion.create({
       data: {
         deliverable_id: deliverableId,
         storage_path: `/uploads/${safeName}`,
+        preview_path: previewPath,
         stage: 'DRAFT',
         round_no: nextRound,
         kind: 'FILE',
