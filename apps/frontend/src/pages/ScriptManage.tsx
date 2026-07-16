@@ -51,7 +51,7 @@ interface Feedback {
   };
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL !== undefined ? import.meta.env.VITE_API_BASE_URL : 'http://localhost:3001';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 const ScriptManage: React.FC = () => {
   const { id: courseId, lessonId } = useParams<{ id: string, lessonId: string }>();
