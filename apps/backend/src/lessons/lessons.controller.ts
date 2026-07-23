@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Request, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Request, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { LessonsService } from './lessons.service';
 
@@ -33,5 +33,19 @@ export class LessonsController {
   @Get('deliverables/:id/files')
   async getVersions(@Param('id') deliverableId: string) {
     return this.lessonsService.getVersions(deliverableId);
+  }
+
+  @Get('deliverables/file-versions/:versionId/ai-analysis')
+  async getAiAnalysis(@Param('versionId') versionId: string) {
+    return this.lessonsService.getAiAnalysis(versionId);
+  }
+
+  @Get('deliverables/:id/diff')
+  async getDiffComparison(
+    @Param('id') deliverableId: string,
+    @Query('v1') v1?: string,
+    @Query('v2') v2?: string,
+  ) {
+    return this.lessonsService.getDiffComparison(deliverableId, v1, v2);
   }
 }

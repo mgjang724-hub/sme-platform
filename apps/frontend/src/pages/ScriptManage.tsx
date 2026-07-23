@@ -15,7 +15,12 @@ import {
   X,
   FileText,
   Flag,
-  MessageSquare
+  MessageSquare,
+  Sparkles,
+  GitCompare,
+  Clock,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 
 interface Lesson {
@@ -74,6 +79,16 @@ const ScriptManage: React.FC = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewText, setPreviewText] = useState<string | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
+
+  // AI Analysis Modal State
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiData, setAiData] = useState<any | null>(null);
+
+  // Diff Modal State
+  const [diffModalOpen, setDiffModalOpen] = useState(false);
+  const [diffLoading, setDiffLoading] = useState(false);
+  const [diffData, setDiffData] = useState<any | null>(null);
 
   // Form Inputs
   const [linkUrl, setLinkUrl] = useState('');
@@ -279,6 +294,36 @@ const ScriptManage: React.FC = () => {
     if (status === 'SUBMITTED' || status === 'IN_REVIEW') return '#F59E0B'; // Orange
     if (status === 'REVISION_REQUESTED') return '#EF4444'; // Red
     return '#9CA3AF'; // Gray
+  };
+
+  const handleOpenAiAnalysis = async () => {
+    if (!latestVer) return;
+    setAiModalOpen(true);
+    setAiLoading(true);
+    try {
+      const data = await apiFetch(`/deliverables/file-versions/${latestVer.version_id}/ai-analysis`);
+      setAiData(data);
+    } catch (err: any) {
+      alert(err.message || 'AI 분석 데이터를 불러오지 못했습니다.');
+      setAiModalOpen(false);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleOpenDiffComparison = async () => {
+    if (!deliverable) return;
+    setDiffModalOpen(true);
+    setDiffLoading(true);
+    try {
+      const data = await apiFetch(`/deliverables/${deliverable.deliverable_id}/diff`);
+      setDiffData(data);
+    } catch (err: any) {
+      alert(err.message || '버전 비교 데이터를 불러오지 못했습니다.');
+      setDiffModalOpen(false);
+    } finally {
+      setDiffLoading(false);
+    }
   };
 
   return (
@@ -681,11 +726,51 @@ const ScriptManage: React.FC = () => {
                     backgroundColor: 'var(--bg-card)',
                     color: 'var(--fg-2)',
                     fontSize: '13px',
-                    fontWeight: 700
+                    fontWeight: 700,
+                    cursor: 'pointer'
                   }}
                 >
                   <Eye size={15} /> 본문 미리보기
                 </button>
+                <button 
+                  onClick={handleOpenAiAnalysis}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '7px',
+                    padding: '9px 14px',
+                    border: 'none',
+                    borderRadius: 'var(--r-md)',
+                    background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
+                    color: '#fff',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)'
+                  }}
+                >
+                  <Sparkles size={15} /> ✨ AI 원고 분석
+                </button>
+                {versions.length >= 2 && (
+                  <button 
+                    onClick={handleOpenDiffComparison}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '7px',
+                      padding: '9px 14px',
+                      border: '1px solid var(--border-strong)',
+                      borderRadius: 'var(--r-md)',
+                      backgroundColor: 'var(--bg-card)',
+                      color: 'var(--fg-1)',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <GitCompare size={15} /> 버전 비교 (Diff)
+                  </button>
+                )}
               </div>
 
               {/* Preview Box */}
@@ -1015,6 +1100,251 @@ const ScriptManage: React.FC = () => {
                   fontSize: '13px',
                   fontWeight: 700
                 }}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Analysis Modal Overlay */}
+      {aiModalOpen && (
+        <div 
+          onClick={() => setAiModalOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(17, 24, 39, 0.45)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '30px',
+            zIndex: 60
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '760px',
+              maxWidth: '100%',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: 'var(--bg-card)',
+              borderRadius: 'var(--r-2xl)',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)',
+              overflow: 'hidden'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 24px', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)' }}>
+              <span style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: '#4F46E5',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff'
+              }}>
+                <Sparkles size={20} />
+              </span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '16px', fontWeight: 800, color: '#312E81' }}>✨ AI 원고 자동 검수 & 요약 리포트</div>
+                <div style={{ fontSize: '12px', color: '#4338CA' }}>v{latestVer?.round_no} 원고 실시간 AI 가독성 및 시간 측정 분석</div>
+              </div>
+              <button 
+                onClick={() => setAiModalOpen(false)}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#4338CA' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', backgroundColor: '#F8FAFC' }}>
+              {aiLoading ? (
+                <div style={{ padding: '60px 0', textAlign: 'center', color: '#64748B' }}>
+                  AI가 원고 본문의 발화 속도, 맞춤법, 어조 및 요약문을 분석 중입니다...
+                </div>
+              ) : aiData ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                  {/* Top Stats Cards */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <Clock size={28} style={{ color: '#4F46E5' }} />
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>예상 강의 소요 시간</div>
+                        <div style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginTop: '2px' }}>
+                          {aiData.estimated_time}
+                        </div>
+                        <div style={{ fontSize: '11.5px', color: '#94A3B8', marginTop: '2px' }}>
+                          총 {aiData.char_count?.toLocaleString()}자 (공백 제외 {aiData.char_count_no_space?.toLocaleString()}자)
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <CheckCircle2 size={28} style={{ color: '#10B981' }} />
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>원고 품질 정합성 점수</div>
+                        <div style={{ fontSize: '20px', fontWeight: 800, color: '#047857', marginTop: '2px' }}>
+                          {aiData.overall_score}점 <span style={{ fontSize: '13px', fontWeight: 500, color: '#94A3B8' }}>/ 100점</span>
+                        </div>
+                        <div style={{ fontSize: '11.5px', color: '#94A3B8', marginTop: '2px' }}>
+                          연수원 표준 원고 가이드 충족
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3-Line Summary Card */}
+                  <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#1E293B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <FileText size={16} style={{ color: '#4F46E5' }} /> AI 3줄 핵심 요약
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {aiData.summary?.map((line: string, idx: number) => (
+                        <div key={idx} style={{ display: 'flex', gap: '8px', fontSize: '13px', color: '#334155', lineHeight: '1.6' }}>
+                          <span style={{ color: '#4F46E5', fontWeight: 800 }}>•</span>
+                          <span>{line}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Proofreading & Recommendations */}
+                  <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#1E293B', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <AlertCircle size={16} style={{ color: '#F59E0B' }} /> AI 맞춤법 & 문체 교정 리포트
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {aiData.proofread_points?.map((pt: any, idx: number) => (
+                        <div key={idx} style={{ padding: '12px 14px', background: '#F8FAFC', borderRadius: '8px', borderLeft: `4px solid ${pt.type === 'sentence_length' ? '#EF4444' : pt.type === 'tone' ? '#F59E0B' : '#10B981'}` }}>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: '#1E293B' }}>{pt.title}</div>
+                          <div style={{ fontSize: '12.5px', color: '#475569', marginTop: '4px', lineHeight: 1.5 }}>{pt.description}</div>
+                          {pt.suggestion && (
+                            <div style={{ fontSize: '12px', color: '#4F46E5', marginTop: '6px', fontWeight: 600, background: '#EEF2FF', padding: '6px 10px', borderRadius: '6px' }}>
+                              💡 {pt.suggestion}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div style={{ padding: '14px 24px', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setAiModalOpen(false)}
+                style={{ padding: '8px 18px', borderRadius: '8px', background: '#1E293B', color: '#fff', fontWeight: 700, fontSize: '13px', border: 'none', cursor: 'pointer' }}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Diff Viewer Modal Overlay */}
+      {diffModalOpen && (
+        <div 
+          onClick={() => setDiffModalOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(17, 24, 39, 0.45)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '30px',
+            zIndex: 60
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '840px',
+              maxWidth: '100%',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: 'var(--bg-card)',
+              borderRadius: 'var(--r-2xl)',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)',
+              overflow: 'hidden'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 24px', borderBottom: '1px solid var(--border)', background: '#F8FAFC' }}>
+              <GitCompare size={20} style={{ color: 'var(--primary)' }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--fg-1)' }}>
+                  🔍 원고 버전 변경점 대조 (v{diffData?.v1?.round_no || 1} ↔ v{diffData?.v2?.round_no || 2})
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--fg-3)' }}>
+                  이전 버전 대비 신규 수정/추가된 문장을 대조합니다.
+                </div>
+              </div>
+              <button 
+                onClick={() => setDiffModalOpen(false)}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--fg-3)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', fontFamily: 'monospace', fontSize: '13px', lineHeight: '1.7', backgroundColor: '#0F172A', color: '#E2E8F0' }}>
+              {diffLoading ? (
+                <div style={{ padding: '60px 0', textAlign: 'center', color: '#94A3B8' }}>
+                  두 버전 간의 차이점(Diff)을 파싱하여 비교 중입니다...
+                </div>
+              ) : diffData?.diff ? (
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {diffData.diff.map((line: any, idx: number) => {
+                    const isAdded = line.type === 'added';
+                    const isRemoved = line.type === 'removed';
+                    return (
+                      <div 
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          padding: '2px 8px',
+                          backgroundColor: isAdded ? 'rgba(16, 185, 129, 0.2)' : isRemoved ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                          color: isAdded ? '#34D399' : isRemoved ? '#F87171' : '#CBD5E1',
+                          borderLeft: `3px solid ${isAdded ? '#10B981' : isRemoved ? '#EF4444' : 'transparent'}`
+                        }}
+                      >
+                        <span style={{ width: '40px', color: '#64748B', userSelect: 'none', flexShrink: 0 }}>
+                          {line.line_no_v1 || ''}
+                        </span>
+                        <span style={{ width: '40px', color: '#64748B', userSelect: 'none', flexShrink: 0 }}>
+                          {line.line_no_v2 || ''}
+                        </span>
+                        <span style={{ width: '20px', fontWeight: 800, userSelect: 'none', flexShrink: 0 }}>
+                          {isAdded ? '+' : isRemoved ? '-' : ' '}
+                        </span>
+                        <span style={{ textDecoration: isRemoved ? 'line-through' : 'none', flex: 1, whiteSpace: 'pre-wrap' }}>
+                          {line.text}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+
+            <div style={{ padding: '14px 24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC' }}>
+              <div style={{ display: 'flex', gap: '16px', fontSize: '12px' }}>
+                <span style={{ color: '#059669', fontWeight: 700 }}>+ 추가된 문장</span>
+                <span style={{ color: '#DC2626', fontWeight: 700 }}>- 삭제된 문장</span>
+              </div>
+              <button 
+                onClick={() => setDiffModalOpen(false)}
+                style={{ padding: '8px 18px', borderRadius: '8px', background: '#1E293B', color: '#fff', fontWeight: 700, fontSize: '13px', border: 'none', cursor: 'pointer' }}
               >
                 닫기
               </button>

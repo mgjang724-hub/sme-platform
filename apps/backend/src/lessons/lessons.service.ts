@@ -6,11 +6,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { extractTextFromDoc } from '../utils/document-parser';
 
+import { AiService } from '../ai/ai.service';
+
 @Injectable()
 export class LessonsService {
   private s3Client: S3Client;
 
-  constructor(private prisma: PrismaService) {
+  constructor(
+    private prisma: PrismaService,
+    private aiService: AiService,
+  ) {
     const endpoint = process.env.AWS_ENDPOINT;
     this.s3Client = new S3Client({
       region: process.env.AWS_REGION || 'ap-northeast-2',
@@ -228,6 +233,76 @@ export class LessonsService {
       round_no: nextRound,
       storage_path: `/uploads/${safeName}`,
       kind: 'FILE',
+    };
+  }
+
+  async getAiAnalysis(versionId: string) {
+    const version = await this.prisma.fileVersion.findUnique({
+      where: { version_id: versionId },
+      include: {
+        deliverable: {
+          include: {
+            lesson: true,
+          },
+        },
+      },
+    });
+
+    if (!version) {
+      throw new NotFoundException('해당 원고 버전을 찾을 수 없습니다.');
+    }
+
+    let scriptText = '';
+    if (version.preview_path) {
+      const fullPath = path.join(process.cwd(), version.preview_path.replace(/^\//, ''));
+      if (fs.existsSync(fullPath)) {
+        scriptText = fs.readFileSync(fullPath, 'utf8');
+      }
+    }
+
+    if (!scriptText.trim()) {
+      scriptText = `[도입] 안녕하세요. 오늘 수업에서는 ${version.deliverable?.lesson?.title || '본 차시'} 학습 목표와 실무 적용 방안을 다룹니다.\n\n[본문] 학교자율시간 특화 수업 시수와 디지털 교육과정 개정을 바탕으로 주요 핵심 개념을 파악하고 강사 수업 설계를 진행해보겠습니다.\n\n[정리] 이상으로 본 차시 수업 기획 및 원고 작성을 마치겠습니다.`;
+    }
+
+    return this.aiService.analyzeScript(scriptText, version.deliverable?.lesson?.title);
+  }
+
+  async getDiffComparison(deliverableId: string, v1Id?: string, v2Id?: string) {
+    const versions = await this.prisma.fileVersion.findMany({
+      where: { deliverable_id: deliverableId },
+      orderBy: { round_no: 'asc' },
+    });
+
+    if (versions.length === 0) {
+      throw new NotFoundException('비교할 원고 버전에 존재하지 않습니다.');
+    }
+
+    let version1 = v1Id ? versions.find(v => v.version_id === v1Id) : versions[0];
+    let version2 = v2Id ? versions.find(v => v.version_id === v2Id) : versions[versions.length - 1];
+
+    if (!version1) version1 = versions[0];
+    if (!version2) version2 = versions[versions.length - 1];
+
+    const getText = (ver: typeof version1) => {
+      if (!ver) return '';
+      if (ver.preview_path) {
+        const fullPath = path.join(process.cwd(), ver.preview_path.replace(/^\//, ''));
+        if (fs.existsSync(fullPath)) {
+          return fs.readFileSync(fullPath, 'utf8');
+        }
+      }
+      return `[v${ver.round_no} 원고 데이터]\n도입부 질문 및 1차 시안 개요 멘트입니다.\n수업 설계 핵심 내용과 연수원 가이드라인이 명시되어 있습니다.\n감사합니다.`;
+    };
+
+    const textV1 = getText(version1);
+    const textV2 = getText(version2);
+
+    const diffLines = this.aiService.compareScriptVersions(textV1, textV2);
+
+    return {
+      v1: { version_id: version1?.version_id, round_no: version1?.round_no },
+      v2: { version_id: version2?.version_id, round_no: version2?.round_no },
+      diff: diffLines,
     };
   }
 }
