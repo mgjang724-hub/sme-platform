@@ -93,21 +93,23 @@ const ScriptManage: React.FC = () => {
     if (!courseId || !lessonId) return;
     try {
       const courseDetail = await apiFetch(`/courses/${courseId}`);
-      setLessons(courseDetail.lessons);
+      const lessonsList = Array.isArray(courseDetail?.lessons) ? courseDetail.lessons : [];
+      setLessons(lessonsList);
       
-      const foundLesson = courseDetail.lessons.find((l: any) => l.lesson_id === lessonId);
+      const foundLesson = lessonsList.find((l: any) => l.lesson_id === lessonId);
       setCurrentLesson(foundLesson || null);
 
       if (foundLesson) {
-        const scriptDeliv = foundLesson.deliverables.find((d: any) => d.deliverable_type === 'SCRIPT');
+        const deliverablesList = Array.isArray(foundLesson.deliverables) ? foundLesson.deliverables : [];
+        const scriptDeliv = deliverablesList.find((d: any) => d.deliverable_type === 'SCRIPT');
         setDeliverable(scriptDeliv || null);
 
         if (scriptDeliv) {
           const files = await apiFetch(`/deliverables/${scriptDeliv.deliverable_id}/files`);
-          setVersions(files);
+          setVersions(Array.isArray(files) ? files : []);
 
           const comments = await apiFetch(`/deliverables/${scriptDeliv.deliverable_id}/feedbacks`);
-          setFeedbacks(comments);
+          setFeedbacks(Array.isArray(comments) ? comments : []);
         }
       }
     } catch (err: any) {

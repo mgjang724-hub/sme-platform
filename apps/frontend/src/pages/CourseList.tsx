@@ -85,19 +85,19 @@ const CourseList: React.FC = () => {
       try {
         const result = await apiFetch('/courses');
         
-        // Enhance results with mock progress data if not fully calculated by backend
-        const enhanced = result.map((c: any) => {
-          // If progress_rate is not provided or 0, let's calculate a mock/realistic rate for seed data
-          let rate = c.progress_rate || 0;
-          let delayed = c.delayed_lessons || 0;
+        const safeList = Array.isArray(result) ? result : [];
+        const enhanced = safeList.map((c: any) => {
+          let rate = c?.progress_rate || 0;
+          let delayed = c?.delayed_lessons || 0;
+          let courseName = c?.course_name || '';
           
-          if (c.course_name.includes('학교자율시간')) {
-            // For seed course, let's start with 20% progress
+          if (courseName && courseName.includes('학교자율시간')) {
             rate = 20;
           }
 
           return {
             ...c,
+            course_name: courseName,
             progress_rate: rate,
             delayed_lessons: delayed,
           };
@@ -131,9 +131,15 @@ const CourseList: React.FC = () => {
 
   // Filter logic
   const filtered = courses.filter((c) => {
-    const matchesSearch = c.course_name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.courseCode && c.courseCode.toLowerCase().includes(search.toLowerCase())) ||
-      (c.vendor && c.vendor.toLowerCase().includes(search.toLowerCase()));
+    if (!c) return false;
+    const courseName = (c.course_name || '').toLowerCase();
+    const courseCode = (c.courseCode || '').toLowerCase();
+    const vendor = (c.vendor || '').toLowerCase();
+    const searchLower = (search || '').toLowerCase();
+
+    const matchesSearch = courseName.includes(searchLower) ||
+      courseCode.includes(searchLower) ||
+      vendor.includes(searchLower);
 
     if (!matchesSearch) return false;
 
@@ -145,8 +151,8 @@ const CourseList: React.FC = () => {
     // Hide archived from main list
     if (c.status === 'ARCHIVED') return false;
 
-    const isDelayed = c.delayed_lessons > 0;
-    const isDone = c.progress_rate === 100;
+    const isDelayed = (c.delayed_lessons || 0) > 0;
+    const isDone = (c.progress_rate || 0) === 100;
     const isActive = c.status === 'ACTIVE' && !isDelayed && !isDone;
 
     if (statusFilter === 'ACTIVE') return isActive;
@@ -157,11 +163,11 @@ const CourseList: React.FC = () => {
   });
 
   const counts = {
-    all: courses.filter(c => c.status !== 'ARCHIVED').length,
-    active: courses.filter(c => c.status === 'ACTIVE' && c.progress_rate < 100 && c.delayed_lessons === 0).length,
-    delayed: courses.filter(c => c.status === 'ACTIVE' && c.delayed_lessons > 0).length,
-    done: courses.filter(c => c.status === 'ACTIVE' && c.progress_rate === 100).length,
-    archived: courses.filter(c => c.status === 'ARCHIVED').length
+    all: courses.filter(c => c && c.status !== 'ARCHIVED').length,
+    active: courses.filter(c => c && c.status === 'ACTIVE' && (c.progress_rate || 0) < 100 && (c.delayed_lessons || 0) === 0).length,
+    delayed: courses.filter(c => c && c.status === 'ACTIVE' && (c.delayed_lessons || 0) > 0).length,
+    done: courses.filter(c => c && c.status === 'ACTIVE' && c.progress_rate === 100).length,
+    archived: courses.filter(c => c && c.status === 'ARCHIVED').length
   };
 
   const getCourseStatusDetails = (c: Course) => {

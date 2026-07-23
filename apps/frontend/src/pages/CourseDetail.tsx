@@ -89,9 +89,10 @@ const CourseDetail: React.FC = () => {
   }
 
   const milestones = course.milestones || {};
-  const instructorNames = course.members
-    .filter((m: any) => m.role_in_course === 'SME')
-    .map((m: any) => m.user.name)
+  const membersList = Array.isArray(course.members) ? course.members : [];
+  const instructorNames = membersList
+    .filter((m: any) => m && m.role_in_course === 'SME')
+    .map((m: any) => m.user?.name || '강사')
     .join(', ') || '미배정';
 
   // Roadmap Milestones Mapping
