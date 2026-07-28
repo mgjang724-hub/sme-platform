@@ -400,6 +400,24 @@ const ScriptManage: React.FC = () => {
           {viewRole === 'PLANNER' ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button 
+                onClick={() => setTabOpen({ ...tabOpen, upload: true })}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '9px 14px',
+                  borderRadius: 'var(--r-md)',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border-strong)',
+                  color: 'var(--fg-1)',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                <Upload size={16} /> 검수본/수정본 파일 업로드
+              </button>
+              <button 
                 onClick={handleApproveDeliverable}
                 style={{
                   display: 'inline-flex',
@@ -410,7 +428,8 @@ const ScriptManage: React.FC = () => {
                   background: 'var(--primary)',
                   color: '#fff',
                   fontSize: '13px',
-                  fontWeight: 700
+                  fontWeight: 700,
+                  cursor: 'pointer'
                 }}
               >
                 <Flag size={16} /> 최종본 승인/확정
@@ -429,7 +448,8 @@ const ScriptManage: React.FC = () => {
                   background: 'var(--primary)',
                   color: '#fff',
                   fontSize: '13px',
-                  fontWeight: 700
+                  fontWeight: 700,
+                  cursor: 'pointer'
                 }}
               >
                 <Upload size={16} /> 새 버전 제출
@@ -530,31 +550,32 @@ const ScriptManage: React.FC = () => {
             )}
           </div>
 
-          {/* New version submission (Only for SME) */}
-          {viewRole === 'SME' && (
-            <div style={{
-              background: 'var(--bg-card)',
-              border: `1.5px solid ${tabOpen.upload ? 'var(--primary)' : 'var(--border)'}`,
-              borderRadius: 'var(--r-lg)',
-              marginBottom: '16px',
-              overflow: 'hidden'
-            }}>
-              <button 
-                onClick={() => setTabOpen({ ...tabOpen, upload: !tabOpen.upload })}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '14px 18px',
-                  background: tabOpen.upload ? 'var(--primary-tint-2)' : 'none',
-                  textAlign: 'left'
-                }}
-              >
-                <Upload size={18} style={{ color: tabOpen.upload ? 'var(--primary-hover)' : 'var(--fg-3)' }} />
-                <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, color: 'var(--fg-1)' }}>새 버전 원고 제출</span>
-                {tabOpen.upload ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
-              </button>
+          {/* New version / feedback file submission */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: `1.5px solid ${tabOpen.upload ? 'var(--primary)' : 'var(--border)'}`,
+            borderRadius: 'var(--r-lg)',
+            marginBottom: '16px',
+            overflow: 'hidden'
+          }}>
+            <button 
+              onClick={() => setTabOpen({ ...tabOpen, upload: !tabOpen.upload })}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '14px 18px',
+                background: tabOpen.upload ? 'var(--primary-tint-2)' : 'none',
+                textAlign: 'left'
+              }}
+            >
+              <Upload size={18} style={{ color: tabOpen.upload ? 'var(--primary-hover)' : 'var(--fg-3)' }} />
+              <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, color: 'var(--fg-1)' }}>
+                {viewRole === 'PLANNER' ? '검수본 / 피드백 첨부 파일 등록' : '새 버전 원고 제출'}
+              </span>
+              {tabOpen.upload ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+            </button>
               
               {tabOpen.upload && (
                 <form onSubmit={handleUploadSubmit} style={{ padding: '18px' }}>
@@ -653,7 +674,6 @@ const ScriptManage: React.FC = () => {
                 </form>
               )}
             </div>
-          )}
 
           {/* Latest Version Section */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '14px 2px 10px' }}>
