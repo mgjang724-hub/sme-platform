@@ -97,11 +97,38 @@ const ScriptManage: React.FC = () => {
   const [submittingFile, setSubmittingFile] = useState(false);
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
+  const latestVer = versions[0];
+  const unresolvedFeedbacks = feedbacks.filter(f => f.status === 'OPEN' || f.status === 'REOPENED');
+
   useEffect(() => {
     if (user) {
       setViewRole(user.global_role === 'SME' ? 'SME' : 'PLANNER');
     }
   }, [user]);
+
+  useEffect(() => {
+    if (previewOpen && latestVer) {
+      if (latestVer.preview_path) {
+        setLoadingPreview(true);
+        fetch(`${API_BASE}${latestVer.preview_path}`)
+          .then(res => {
+            if (!res.ok) throw new Error();
+            return res.text();
+          })
+          .then(text => {
+            setPreviewText(text);
+          })
+          .catch(() => {
+            setPreviewText('미리보기 본문 데이터를 읽어오는데 실패했습니다.');
+          })
+          .finally(() => {
+            setLoadingPreview(false);
+          });
+      } else {
+        setPreviewText(null);
+      }
+    }
+  }, [previewOpen, latestVer]);
 
   // Load all course lessons & detail data
   const loadData = async () => {
@@ -246,7 +273,6 @@ const ScriptManage: React.FC = () => {
   const handleApproveDeliverable = async () => {
     if (!deliverable) return;
     try {
-      // Simulate final approval by updating deliverable status to APPROVED
       await apiFetch(`/deliverables/${deliverable.deliverable_id}/files`, {
         method: 'POST',
         body: JSON.stringify({
@@ -254,40 +280,12 @@ const ScriptManage: React.FC = () => {
           url: versions[0]?.storage_path || 'google-docs-approved',
         })
       });
-      // Set to approved
       alert('원고가 최종 승인 및 확정 완료되었습니다.');
       navigate(`/courses/${courseId}`);
     } catch (err: any) {
       alert(err.message);
     }
   };
-
-  const latestVer = versions[0];
-  const unresolvedFeedbacks = feedbacks.filter(f => f.status === 'OPEN' || f.status === 'REOPENED');
-
-  useEffect(() => {
-    if (previewOpen && latestVer) {
-      if (latestVer.preview_path) {
-        setLoadingPreview(true);
-        fetch(`${API_BASE}${latestVer.preview_path}`)
-          .then(res => {
-            if (!res.ok) throw new Error();
-            return res.text();
-          })
-          .then(text => {
-            setPreviewText(text);
-          })
-          .catch(() => {
-            setPreviewText('미리보기 본문 데이터를 읽어오는데 실패했습니다.');
-          })
-          .finally(() => {
-            setLoadingPreview(false);
-          });
-      } else {
-        setPreviewText(null);
-      }
-    }
-  }, [previewOpen, latestVer]);
 
   const getDotColor = (status: string) => {
     if (status === 'APPROVED') return '#10B981'; // Green
