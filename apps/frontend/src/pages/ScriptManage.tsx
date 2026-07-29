@@ -97,8 +97,11 @@ const ScriptManage: React.FC = () => {
   const [submittingFile, setSubmittingFile] = useState(false);
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
+  const [filterUnresolvedOnly, setFilterUnresolvedOnly] = useState(false);
+
   const latestVer = versions[0];
   const unresolvedFeedbacks = feedbacks.filter(f => f.status === 'OPEN' || f.status === 'REOPENED');
+  const displayedFeedbacks = filterUnresolvedOnly ? unresolvedFeedbacks : feedbacks;
 
   useEffect(() => {
     if (user) {
@@ -272,6 +275,9 @@ const ScriptManage: React.FC = () => {
   // Approve Deliverable (Final approve)
   const handleApproveDeliverable = async () => {
     if (!deliverable) return;
+    const confirmMsg = `[최종본 승인/확정 안내]\n\n원고를 최종 승인 및 확정하시겠습니까?\n\n- 확정 후에는 원고가 락(Lock) 처리되어 강사의 신규 업로드 및 편집이 차단됩니다.\n- 기획팀 검토 결과 최종 원고로 수록됩니다.`;
+    if (!window.confirm(confirmMsg)) return;
+
     try {
       await apiFetch(`/deliverables/${deliverable.deliverable_id}/files`, {
         method: 'POST',
@@ -671,7 +677,26 @@ const ScriptManage: React.FC = () => {
                     }}
                   />
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px' }}>
+                    <button 
+                      type="button"
+                      onClick={() => alert('원고 내용이 임시 저장되었습니다.')}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '9px 14px',
+                        borderRadius: 'var(--r-md)',
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border-strong)',
+                        color: 'var(--fg-2)',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      💾 임시 저장
+                    </button>
                     <button 
                       type="submit"
                       disabled={submittingFile}
@@ -684,10 +709,11 @@ const ScriptManage: React.FC = () => {
                         background: 'var(--primary)',
                         color: '#fff',
                         fontSize: '13.5px',
-                        fontWeight: 700
+                        fontWeight: 700,
+                        cursor: 'pointer'
                       }}
                     >
-                      <Send size={15} /> 제출하기
+                      <Send size={15} /> 📤 검수 요청 제출
                     </button>
                   </div>
                 </form>
@@ -905,16 +931,32 @@ const ScriptManage: React.FC = () => {
                 미반영 {unresolvedFeedbacks.length}
               </span>
             )}
+            <button
+              onClick={() => setFilterUnresolvedOnly(!filterUnresolvedOnly)}
+              style={{
+                marginLeft: 'auto',
+                fontSize: '11px',
+                fontWeight: 700,
+                color: filterUnresolvedOnly ? 'var(--primary-hover)' : 'var(--fg-3)',
+                border: '1px solid ' + (filterUnresolvedOnly ? 'var(--primary)' : 'var(--border-strong)'),
+                borderRadius: 'var(--r-pill)',
+                padding: '3px 8px',
+                background: filterUnresolvedOnly ? 'var(--primary-tint)' : 'var(--bg-card)',
+                cursor: 'pointer'
+              }}
+            >
+              {filterUnresolvedOnly ? '✓ 미반영만 보기' : '미반영만 보기'}
+            </button>
           </div>
 
           {/* Feedback Messages List */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {feedbacks.length === 0 ? (
+            {displayedFeedbacks.length === 0 ? (
               <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--fg-4)', fontSize: '12.5px' }}>
-                등록된 피드백이나 댓글이 없습니다.
+                {filterUnresolvedOnly ? '미반영된 피드백이 없습니다. 모든 피드백이 완료되었습니다!' : '등록된 피드백이나 댓글이 없습니다.'}
               </div>
             ) : (
-              feedbacks.map((f) => {
+              displayedFeedbacks.map((f) => {
                 const isCreatorPlanner = f.creator.global_role === 'PLANNER' || f.creator.global_role === 'ADMIN';
                 const avatarInit = f.creator.name.charAt(0);
                 

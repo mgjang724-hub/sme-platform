@@ -36,6 +36,7 @@ const ReviewQueue: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('전체');
+  const [responsibilityTab, setResponsibilityTab] = useState<'MY_REVIEW' | 'SME_REVISION' | 'ALL'>('MY_REVIEW');
 
   useEffect(() => {
     const fetchQueue = async () => {
@@ -67,8 +68,16 @@ const ReviewQueue: React.FC = () => {
     const matchSearch = item.lesson.title.toLowerCase().includes(search.toLowerCase()) ||
       item.lesson.course.course_name.toLowerCase().includes(search.toLowerCase());
     
-    if (selectedCourse === '전체') return matchSearch;
-    return matchSearch && item.lesson.course.course_name === selectedCourse;
+    const matchCourse = selectedCourse === '전체' || item.lesson.course.course_name === selectedCourse;
+    
+    let matchTab = true;
+    if (responsibilityTab === 'MY_REVIEW') {
+      matchTab = item.current_status !== 'REVISION_REQUESTED';
+    } else if (responsibilityTab === 'SME_REVISION') {
+      matchTab = item.current_status === 'REVISION_REQUESTED';
+    }
+
+    return matchSearch && matchCourse && matchTab;
   });
 
 
@@ -168,6 +177,59 @@ const ReviewQueue: React.FC = () => {
               <span style={{ fontSize: '14px', color: 'var(--fg-3)', fontWeight: 600, marginLeft: '3px' }}>일</span>
             </div>
           </div>
+        </div>
+
+        {/* Responsibility Action Tabs */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+          <button
+            onClick={() => setResponsibilityTab('MY_REVIEW')}
+            style={{
+              padding: '10px 18px',
+              borderRadius: 'var(--r-lg)',
+              border: 'none',
+              background: responsibilityTab === 'MY_REVIEW' ? 'linear-gradient(135deg, #FF6B4A 0%, #E04826 100%)' : 'var(--bg-card)',
+              color: responsibilityTab === 'MY_REVIEW' ? '#fff' : 'var(--fg-2)',
+              fontWeight: 800,
+              fontSize: '13.5px',
+              cursor: 'pointer',
+              boxShadow: responsibilityTab === 'MY_REVIEW' ? '0 4px 12px rgba(224,72,38,0.25)' : 'none'
+            }}
+          >
+            ⚡ 내 검수 대기 ({queue.filter(q => q.current_status !== 'REVISION_REQUESTED').length})
+          </button>
+
+          <button
+            onClick={() => setResponsibilityTab('SME_REVISION')}
+            style={{
+              padding: '10px 18px',
+              borderRadius: 'var(--r-lg)',
+              border: 'none',
+              background: responsibilityTab === 'SME_REVISION' ? '#3B82F6' : 'var(--bg-card)',
+              color: responsibilityTab === 'SME_REVISION' ? '#fff' : 'var(--fg-2)',
+              fontWeight: 800,
+              fontSize: '13.5px',
+              cursor: 'pointer',
+              boxShadow: responsibilityTab === 'SME_REVISION' ? '0 4px 12px rgba(59,130,246,0.25)' : 'none'
+            }}
+          >
+            🔄 강사 수정 중 ({queue.filter(q => q.current_status === 'REVISION_REQUESTED').length})
+          </button>
+
+          <button
+            onClick={() => setResponsibilityTab('ALL')}
+            style={{
+              padding: '10px 18px',
+              borderRadius: 'var(--r-lg)',
+              border: '1px solid var(--border-strong)',
+              background: responsibilityTab === 'ALL' ? 'var(--fg-1)' : 'var(--bg-card)',
+              color: responsibilityTab === 'ALL' ? '#fff' : 'var(--fg-2)',
+              fontWeight: 800,
+              fontSize: '13.5px',
+              cursor: 'pointer'
+            }}
+          >
+            전체 보기 ({queue.length})
+          </button>
         </div>
 
         {/* Filter Chips */}
