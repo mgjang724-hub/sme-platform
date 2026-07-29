@@ -107,14 +107,14 @@ const CourseDetail: React.FC = () => {
   const getStatusChipColors = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return { label: '승인완료', bg: 'var(--success-bg)', fg: 'var(--success-fg)' };
+        return { label: '최종확정 (완료)', bg: 'var(--success-bg)', fg: 'var(--success-fg)' };
       case 'SUBMITTED':
       case 'IN_REVIEW':
-        return { label: '검수중', bg: 'var(--info-bg)', fg: 'var(--info-fg)' };
+        return { label: '검수대기 (기획자)', bg: 'var(--info-bg)', fg: 'var(--info-fg)' };
       case 'REVISION_REQUESTED':
-        return { label: '수정요청', bg: 'var(--error-bg)', fg: 'var(--error-fg)' };
+        return { label: '수정요청 (강사)', bg: 'var(--error-bg)', fg: 'var(--error-fg)' };
       default:
-        return { label: '작성중', bg: 'var(--primary-tint-2)', fg: 'var(--primary-hover)' };
+        return { label: '작성대기 (강사)', bg: 'var(--primary-tint-2)', fg: 'var(--primary-hover)' };
     }
   };
 

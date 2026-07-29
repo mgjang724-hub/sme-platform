@@ -1151,16 +1151,40 @@ const ScriptManage: React.FC = () => {
                       문서 본문을 실시간 추출하여 로딩 중입니다...
                     </div>
                   ) : previewText !== null ? (
-                    <div>
+                    <div 
+                      onMouseUp={() => {
+                        const sel = window.getSelection();
+                        const text = sel?.toString().trim();
+                        if (text && text.length > 2) {
+                          if (window.confirm(`선택한 문장을 피드백으로 남기시겠습니까?\n\n"${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`)) {
+                            setFeedbackInput(prev => `${prev ? prev + '\n' : ''}> "${text}"\n\n`);
+                            setPreviewOpen(false);
+                          }
+                        }
+                      }}
+                      style={{ cursor: 'text' }}
+                    >
                       {previewText}
-                      <p style={{ margin: '20px 0 0', color: 'var(--fg-4)' }}>— 본문 미리보기 끝 —</p>
+                      <p style={{ margin: '20px 0 0', color: 'var(--fg-4)' }}>— 본문 미리보기 끝 — (문장을 드래그하여 바로 피드백을 남겨보세요)</p>
                     </div>
                   ) : (
-                    <div>
+                    <div
+                      onMouseUp={() => {
+                        const sel = window.getSelection();
+                        const text = sel?.toString().trim();
+                        if (text && text.length > 2) {
+                          if (window.confirm(`선택한 문장을 피드백으로 인용하시겠습니까?\n\n"${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`)) {
+                            setFeedbackInput(prev => `${prev ? prev + '\n' : ''}> "${text}"\n\n`);
+                            setPreviewOpen(false);
+                          }
+                        }
+                      }}
+                      style={{ cursor: 'text' }}
+                    >
                       <p style={{ margin: '0 0 14px' }}><b>(도입 질문)</b> “여러분은 오늘 하루 어떤 수업을 설계하셨나요? 학교자율시간을 적극 활용해 본 수업 사례들을 기반으로 교육과정을 기획하고 배정해보겠습니다.”</p>
                       <p style={{ margin: '0 0 12px' }}><b>[핵심 개념]</b> 학교자율시간은 교육부가 시도 교육청과 각 학교에 재량권을 주어 자율적으로 신설하는 특화 수업 시수입니다.</p>
                       <p style={{ margin: '0 0 12px' }}>이 시간을 활용하여 인공지능, 예술융합, 디지털 리터러시 등 다양한 과목들을 연수 및 수업 설계로 확장할 수 있습니다.</p>
-                      <p style={{ margin: 0, color: 'var(--fg-4)' }}>— 본문 미리보기 끝 —</p>
+                      <p style={{ margin: 0, color: 'var(--fg-4)' }}>— 본문 미리보기 끝 — (문장을 드래그하여 바로 피드백을 남겨보세요)</p>
                     </div>
                   )}
                 </div>

@@ -144,13 +144,13 @@ const MyTasks: React.FC = () => {
   const getStatusChipColors = (status: string) => {
     switch (status) {
       case 'DONE':
-        return { label: '승인', bg: 'var(--success-bg)', fg: 'var(--success-fg)', accent: '#10B981' };
+        return { label: '최종확정 (완료)', bg: 'var(--success-bg)', fg: 'var(--success-fg)', accent: '#10B981' };
       case 'REVIEW':
-        return { label: '검수중', bg: 'var(--info-bg)', fg: 'var(--info-fg)', accent: '#F59E0B' };
+        return { label: '검수대기 (기획자)', bg: 'var(--info-bg)', fg: 'var(--info-fg)', accent: '#F59E0B' };
       case 'REVISE':
-        return { label: '수정요청', bg: 'var(--error-bg)', fg: 'var(--error-fg)', accent: '#EF4444' };
+        return { label: '수정요청 (강사)', bg: 'var(--error-bg)', fg: 'var(--error-fg)', accent: '#EF4444' };
       default:
-        return { label: '진행중', bg: 'var(--primary-tint-2)', fg: 'var(--primary-hover)', accent: '#3B82F6' };
+        return { label: '작성대기 (강사)', bg: 'var(--primary-tint-2)', fg: 'var(--primary-hover)', accent: '#3B82F6' };
     }
   };
 

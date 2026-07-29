@@ -99,6 +99,18 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const getStatusLabel = (status: string, type: string) => {
+    if (type === 'FEEDBACK') {
+      if (status === 'RESOLVED') return '반영완료 (강사)';
+      if (status === 'OPEN' || status === 'REOPENED') return '미반영 (강사)';
+    }
+    if (type === 'DECISION') {
+      if (status === 'WAITING' || status === 'ASKED') return '답변대기 (기획자)';
+      if (status === 'RESOLVED') return '해결됨';
+    }
+    return status;
+  };
+
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
@@ -349,7 +361,7 @@ const Dashboard: React.FC = () => {
                     backgroundColor: statusColors.bg,
                     color: statusColors.fg
                   }}>
-                    {t.status}
+                    {getStatusLabel(t.status, t.type)}
                   </span>
 
                   <div style={{

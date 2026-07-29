@@ -388,12 +388,13 @@ const ReviewQueue: React.FC = () => {
                   gap: '6px',
                   padding: '8px 0',
                   borderRadius: 'var(--r-md)',
-                  backgroundColor: 'var(--primary)',
-                  color: '#fff',
+                  backgroundColor: item.current_status === 'REVISION_REQUESTED' ? 'var(--bg-sunken)' : 'var(--primary)',
+                  color: item.current_status === 'REVISION_REQUESTED' ? 'var(--fg-2)' : '#fff',
+                  border: item.current_status === 'REVISION_REQUESTED' ? '1px solid var(--border-strong)' : 'none',
                   fontSize: '13px',
                   fontWeight: 700
                 }}>
-                  검수 시작 <ArrowRight size={15} />
+                  {item.current_status === 'REVISION_REQUESTED' ? '진행 보기' : '검수 시작'} <ArrowRight size={15} />
                 </span>
               </div>
             );
