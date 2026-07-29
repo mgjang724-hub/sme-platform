@@ -295,11 +295,11 @@ const ScriptManage: React.FC = () => {
   };
 
   const handleOpenAiAnalysis = async () => {
-    if (!latestVer) return;
     setAiModalOpen(true);
     setAiLoading(true);
     try {
-      const data = await apiFetch(`/deliverables/file-versions/${latestVer.version_id}/ai-analysis`);
+      const versionId = latestVer ? latestVer.version_id : 'default';
+      const data = await apiFetch(`/deliverables/file-versions/${versionId}/ai-analysis`);
       setAiData(data);
     } catch (err: any) {
       alert(err.message || 'AI 분석 데이터를 불러오지 못했습니다.');
@@ -397,46 +397,65 @@ const ScriptManage: React.FC = () => {
           </div>
 
           {/* Action buttons per role */}
-          {viewRole === 'PLANNER' ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button 
-                onClick={() => setTabOpen({ ...tabOpen, upload: true })}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '9px 14px',
-                  borderRadius: 'var(--r-md)',
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-strong)',
-                  color: 'var(--fg-1)',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                <Upload size={16} /> 검수본/수정본 파일 업로드
-              </button>
-              <button 
-                onClick={handleApproveDeliverable}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '9px 14px',
-                  borderRadius: 'var(--r-md)',
-                  background: 'var(--primary)',
-                  color: '#fff',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                <Flag size={16} /> 최종본 승인/확정
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              onClick={handleOpenAiAnalysis}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '9px 14px',
+                borderRadius: 'var(--r-md)',
+                background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
+                color: '#fff',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)'
+              }}
+            >
+              <Sparkles size={16} /> ✨ AI 원고 분석
+            </button>
+
+            {viewRole === 'PLANNER' ? (
+              <>
+                <button 
+                  onClick={() => setTabOpen({ ...tabOpen, upload: true })}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '9px 14px',
+                    borderRadius: 'var(--r-md)',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-strong)',
+                    color: 'var(--fg-1)',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Upload size={16} /> 검수본/수정본 파일 업로드
+                </button>
+                <button 
+                  onClick={handleApproveDeliverable}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '9px 14px',
+                    borderRadius: 'var(--r-md)',
+                    background: 'var(--primary)',
+                    color: '#fff',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Flag size={16} /> 최종본 승인/확정
+                </button>
+              </>
+            ) : (
               <button 
                 onClick={() => setTabOpen({ ...tabOpen, upload: true })}
                 style={{
@@ -454,8 +473,8 @@ const ScriptManage: React.FC = () => {
               >
                 <Upload size={16} /> 새 버전 제출
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </header>
 

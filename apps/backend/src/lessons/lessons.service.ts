@@ -237,23 +237,22 @@ export class LessonsService {
   }
 
   async getAiAnalysis(versionId: string) {
-    const version = await this.prisma.fileVersion.findUnique({
-      where: { version_id: versionId },
-      include: {
-        deliverable: {
-          include: {
-            lesson: true,
+    let version: any = null;
+    if (versionId && versionId !== 'default') {
+      version = await this.prisma.fileVersion.findUnique({
+        where: { version_id: versionId },
+        include: {
+          deliverable: {
+            include: {
+              lesson: true,
+            },
           },
         },
-      },
-    });
-
-    if (!version) {
-      throw new NotFoundException('해당 원고 버전을 찾을 수 없습니다.');
+      });
     }
 
     let scriptText = '';
-    if (version.preview_path) {
+    if (version && version.preview_path) {
       const fullPath = path.join(process.cwd(), version.preview_path.replace(/^\//, ''));
       if (fs.existsSync(fullPath)) {
         scriptText = fs.readFileSync(fullPath, 'utf8');
@@ -261,10 +260,10 @@ export class LessonsService {
     }
 
     if (!scriptText.trim()) {
-      scriptText = `[도입] 안녕하세요. 오늘 수업에서는 ${version.deliverable?.lesson?.title || '본 차시'} 학습 목표와 실무 적용 방안을 다룹니다.\n\n[본문] 학교자율시간 특화 수업 시수와 디지털 교육과정 개정을 바탕으로 주요 핵심 개념을 파악하고 강사 수업 설계를 진행해보겠습니다.\n\n[정리] 이상으로 본 차시 수업 기획 및 원고 작성을 마치겠습니다.`;
+      scriptText = `[도입] 안녕하세요. 오늘 수업에서는 ${version?.deliverable?.lesson?.title || '본 차시'} 학습 목표와 실무 적용 방안을 다룹니다.\n\n[본문] 학교자율시간 특화 수업 시수와 디지털 교육과정 개정을 바탕으로 주요 핵심 개념을 파악하고 강사 수업 설계를 진행해보겠습니다. 이 시간을 활용하여 인공지능, 예술융합, 디지털 리터러시 등 다양한 과목들을 연수 및 수업 설계로 확장할 수 있습니다.\n\n[정리] 이상으로 본 차시 수업 기획 및 원고 작성을 마치겠습니다.`;
     }
 
-    return this.aiService.analyzeScript(scriptText, version.deliverable?.lesson?.title);
+    return this.aiService.analyzeScript(scriptText, version?.deliverable?.lesson?.title);
   }
 
   async getDiffComparison(deliverableId: string, v1Id?: string, v2Id?: string) {
