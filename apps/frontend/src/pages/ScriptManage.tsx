@@ -678,7 +678,7 @@ const ScriptManage: React.FC = () => {
             >
               <Upload size={18} style={{ color: tabOpen.upload ? 'var(--primary-hover)' : 'var(--fg-3)' }} />
               <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, color: 'var(--fg-1)' }}>
-                {viewRole === 'PLANNER' ? '검수본 / 피드백 첨부 파일 등록' : '새 버전 원고 제출'}
+                {viewRole === 'PLANNER' ? '검수본 업로드 폼 열기' : '새 원고 업로드 폼 열기'}
               </span>
               {tabOpen.upload ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
             </button>
@@ -821,7 +821,7 @@ const ScriptManage: React.FC = () => {
                         cursor: 'pointer'
                       }}
                     >
-                      <Send size={15} /> 📤 검수 요청 제출
+                      <Send size={15} /> 📤 최종 제출하기
                     </button>
                   </div>
                 </form>
@@ -993,13 +993,36 @@ const ScriptManage: React.FC = () => {
                         v{v.round_no}
                       </span>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--fg-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {v.storage_path}
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--fg-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {v.storage_path}
+                        </div>
+                        <div style={{ fontSize: '11.5px', color: 'var(--fg-4)', marginTop: '2px' }}>
+                          업로드: {v.uploader?.name || '강사'} · {new Date(v.created_at).toLocaleString()}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '11.5px', color: 'var(--fg-4)', marginTop: '2px' }}>
-                        업로드: {v.uploader?.name || '강사'} · {new Date(v.created_at).toLocaleString()}
-                      </div>
+                      <a 
+                        href={v.storage_path.startsWith('http') ? v.storage_path : `${API_BASE}${v.storage_path}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 12px',
+                          border: '1px solid var(--border-strong)',
+                          borderRadius: 'var(--r-sm)',
+                          backgroundColor: 'var(--bg-card)',
+                          color: 'var(--fg-2)',
+                          fontSize: '11.5px',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          flexShrink: 0
+                        }}
+                      >
+                        <ExternalLink size={13} /> 다운로드
+                      </a>
                     </div>
                   </div>
                 ))}
