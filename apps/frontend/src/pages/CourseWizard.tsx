@@ -47,6 +47,10 @@ const CourseWizard: React.FC = () => {
   const [bulkInputOpen, setBulkInputOpen] = useState(false);
   const [bulkText, setBulkText] = useState('');
 
+  // UX-601: Invite SME states
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [invitedSmes, setInvitedSmes] = useState<string[]>([]);
+
   const handleBulkParse = () => {
     if (!bulkText.trim()) return;
     const lines = bulkText.split('\n').filter(l => l.trim() !== '');
@@ -585,10 +589,58 @@ const CourseWizard: React.FC = () => {
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', gap: '12px', fontSize: '11.5px', fontWeight: 700, color: 'var(--fg-4)', padding: '0 4px' }}>
-                    <span style={{ flex: 1 }}>차시</span>
-                    <span style={{ width: '240px' }}>SME 강사 지정</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                    <div style={{ display: 'flex', gap: '12px', fontSize: '11.5px', fontWeight: 700, color: 'var(--fg-4)', padding: '0 4px', flex: 1 }}>
+                      <span style={{ flex: 1 }}>차시</span>
+                      <span style={{ width: '240px' }}>SME 강사 지정</span>
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <input 
+                        type="email" 
+                        placeholder="초대할 강사 이메일" 
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        style={{
+                          width: '180px',
+                          height: '32px',
+                          padding: '0 10px',
+                          border: '1px solid var(--border-strong)',
+                          borderRadius: 'var(--r-md)',
+                          fontSize: '12.5px',
+                          outline: 'none',
+                          background: 'var(--bg-card)'
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          if (inviteEmail.trim() && inviteEmail.includes('@')) {
+                            const newEmail = inviteEmail.trim();
+                            if (!invitedSmes.includes(newEmail)) {
+                              setInvitedSmes([...invitedSmes, newEmail]);
+                            }
+                            alert(`${newEmail} 님에게 과정 초대 메일을 발송했습니다.`);
+                            setInviteEmail('');
+                          } else {
+                            alert('올바른 이메일 주소를 입력해주세요.');
+                          }
+                        }}
+                        style={{
+                          padding: '0 12px',
+                          height: '32px',
+                          border: 'none',
+                          borderRadius: 'var(--r-md)',
+                          background: 'var(--primary)',
+                          color: '#fff',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        초대 발송
+                      </button>
+                    </div>
                   </div>
                   {chapters.map((c, i) => (
                     <div 
@@ -620,6 +672,9 @@ const CourseWizard: React.FC = () => {
                         }}
                       >
                         <option value="홍길동 강사">홍길동 강사 (sme@test.com)</option>
+                        {invitedSmes.map((email, idx) => (
+                          <option key={`inv-${idx}`} value={email}>{email} (초대됨)</option>
+                        ))}
                         <option value="미배정">미배정 (나중에 지정)</option>
                       </select>
                     </div>
