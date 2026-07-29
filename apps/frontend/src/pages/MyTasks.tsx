@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   Search, 
-  Bell, 
   CheckCircle, 
   MessageSquare, 
   Clapperboard, 
   GitBranch, 
   Clock, 
-  ArrowRight 
+  ArrowRight,
+  BookOpen
 } from 'lucide-react';
 
 interface Task {
@@ -32,9 +32,11 @@ const MyTasks: React.FC = () => {
   const navigate = useNavigate();
 
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [rawCourses, setRawCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [activeTab, setActiveTab] = useState<'TASKS' | 'COURSES'>('TASKS');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PROGRESS' | 'REVISE' | 'REVIEW' | 'DONE'>('ALL');
 
@@ -42,6 +44,7 @@ const MyTasks: React.FC = () => {
     const fetchTasks = async () => {
       try {
         const courses = await apiFetch('/courses');
+        setRawCourses(courses);
         const allTasks: Task[] = [];
 
         for (const c of courses) {
@@ -180,63 +183,75 @@ const MyTasks: React.FC = () => {
         gap: '18px',
         flexShrink: 0
       }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 700 }}>내 작업</div>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 700 }}>강사 대시보드</div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px', borderRadius: '999px', background: 'var(--bg-sunken)' }}>
+            <button 
+              onClick={() => setActiveTab('TASKS')}
+              style={{
+                padding: '6px 13px',
+                border: 'none',
+                borderRadius: '999px',
+                fontSize: '12.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                backgroundColor: activeTab === 'TASKS' ? 'var(--bg-card)' : 'transparent',
+                color: activeTab === 'TASKS' ? 'var(--primary-hover)' : 'var(--fg-3)'
+              }}
+            >
+              내 작업(To-Do)
+            </button>
+            <button 
+              onClick={() => setActiveTab('COURSES')}
+              style={{
+                padding: '6px 13px',
+                border: 'none',
+                borderRadius: '999px',
+                fontSize: '12.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                backgroundColor: activeTab === 'COURSES' ? 'var(--bg-card)' : 'transparent',
+                color: activeTab === 'COURSES' ? 'var(--primary-hover)' : 'var(--fg-3)'
+              }}
+            >
+              과정 전체 로드맵
+            </button>
+          </div>
         </div>
         
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          height: '40px',
-          padding: '0 12px',
-          width: '260px',
-          border: '1px solid var(--border-strong)',
-          borderRadius: 'var(--r-md)',
-          background: 'var(--bg-card)'
-        }}>
-          <Search size={17} style={{ color: 'var(--fg-4)' }} />
-          <input 
-            placeholder="원고 검색" 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              flex: 1,
-              border: 'none',
-              outline: 'none',
-              background: 'none',
-              fontSize: '13.5px'
-            }} 
-          />
-        </div>
-        <button style={{
-          position: 'relative',
-          width: '40px',
-          height: '40px',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--r-md)',
-          background: 'var(--bg-card)',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <Bell size={18} style={{ color: 'var(--fg-2)' }} />
-          {feedbackTasksCount > 0 && (
-            <span style={{
-              position: 'absolute',
-              top: '8px',
-              right: '9px',
-              width: '7px',
-              height: '7px',
-              borderRadius: '50%',
-              background: 'var(--primary)'
-            }}></span>
-          )}
-        </button>
+        {activeTab === 'TASKS' && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            height: '40px',
+            padding: '0 12px',
+            width: '260px',
+            border: '1px solid var(--border-strong)',
+            borderRadius: 'var(--r-md)',
+            background: 'var(--bg-card)'
+          }}>
+            <Search size={17} style={{ color: 'var(--fg-4)' }} />
+            <input 
+              placeholder="원고 검색" 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                flex: 1,
+                border: 'none',
+                outline: 'none',
+                background: 'none',
+                fontSize: '13.5px'
+              }} 
+            />
+          </div>
+        )}
       </header>
 
-      {/* Main tasks list */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+      {/* Body: Conditional based on activeTab */}
+      {activeTab === 'TASKS' ? (
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px 48px' }}>
         
         {/* Greetings */}
         <div style={{ marginBottom: '18px' }}>
@@ -498,6 +513,86 @@ const MyTasks: React.FC = () => {
         )}
 
       </div>
+      ) : (
+        <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+          <div style={{ marginBottom: '22px' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700 }}>
+              참여 중인 연수 과정 <span style={{ color: 'var(--primary)' }}>{rawCourses.length}개</span>
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--fg-3)', marginTop: '4px' }}>
+              원고를 집필하고 기획자와 협의 중인 리스트입니다.
+            </div>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+            gap: '18px'
+          }}>
+            {rawCourses.map(c => (
+              <div 
+                key={c.course_id}
+                style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--r-xl)',
+                  boxShadow: 'var(--shadow-sm)',
+                  padding: '20px 22px',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    padding: '3px 8px',
+                    borderRadius: 'var(--r-pill)',
+                    backgroundColor: 'var(--primary-tint-2)',
+                    color: 'var(--primary-hover)'
+                  }}>
+                    {c.status}
+                  </span>
+                  <span style={{ fontSize: '11.5px', color: 'var(--fg-4)', fontWeight: 700 }}>
+                    {c.dev_type}
+                  </span>
+                </div>
+
+                <div style={{ fontSize: '17px', fontWeight: 700, color: 'var(--fg-1)', marginTop: '10px', lineHeight: 1.4 }}>
+                  {c.course_name}
+                </div>
+                
+                <div style={{ fontSize: '12.5px', color: 'var(--fg-3)', marginTop: '6px' }}>
+                  총 {c.lesson_count}개 차시로 구성됨
+                </div>
+
+                <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
+                  <button 
+                    onClick={() => navigate(`/courses/${c.course_id}`)}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      padding: '11px 0',
+                      border: '1px solid var(--border-strong)',
+                      borderRadius: 'var(--r-md)',
+                      backgroundColor: 'var(--bg-sunken)',
+                      color: 'var(--fg-2)',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <BookOpen size={16} /> 로드맵 및 차시 목록 보기
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

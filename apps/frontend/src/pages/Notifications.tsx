@@ -201,7 +201,15 @@ const Notifications: React.FC = () => {
               return (
                 <div
                   key={noti.id}
-                  onClick={() => navigate(noti.href)}
+                  onClick={() => {
+                    let targetUrl = noti.href;
+                    if (noti.kind === 'feedback' && !targetUrl.includes('?')) {
+                      targetUrl += '?openFeedback=true';
+                    } else if (noti.kind === 'feedback') {
+                      targetUrl += '&openFeedback=true';
+                    }
+                    navigate(targetUrl);
+                  }}
                   style={{
                     display: 'flex',
                     gap: '14px',

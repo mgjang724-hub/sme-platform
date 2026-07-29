@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   ChevronRight, 
@@ -63,6 +63,7 @@ const ScriptManage: React.FC = () => {
   const { id: courseId, lessonId } = useParams<{ id: string, lessonId: string }>();
   const { apiFetch, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Core Data
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -108,6 +109,22 @@ const ScriptManage: React.FC = () => {
       setViewRole(user.global_role === 'SME' ? 'SME' : 'PLANNER');
     }
   }, [user]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('openFeedback') === 'true') {
+      setFilterUnresolvedOnly(true);
+      setTimeout(() => {
+        const el = document.getElementById('feedback-input-area');
+        if (el) {
+          el.focus();
+          // Optional: highlight it briefly
+          el.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.4)';
+          setTimeout(() => { el.style.boxShadow = 'none'; }, 1500);
+        }
+      }, 300); // give time for render
+    }
+  }, [location.search]);
 
   useEffect(() => {
     if (previewOpen && latestVer) {
@@ -1037,6 +1054,7 @@ const ScriptManage: React.FC = () => {
           <form onSubmit={handleFeedbackSubmit} style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
             <div style={{ border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', padding: '10px 12px', backgroundColor: 'var(--bg-card)' }}>
               <textarea 
+                id="feedback-input-area"
                 placeholder={viewRole === 'PLANNER' ? '피드백 코멘트를 입력하세요...' : '기획자에게 답변이나 의견을 적어보세요...'} 
                 rows={2} 
                 value={feedbackInput}
