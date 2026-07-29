@@ -8,10 +8,7 @@ import {
   Layers, 
   Plus, 
   X, 
-  Calendar,
-  Sliders,
-  GraduationCap,
-  Users
+  Calendar
 } from 'lucide-react';
 
 interface Chapter {
@@ -27,7 +24,9 @@ const CourseWizard: React.FC = () => {
   
   const [step, setStep] = useState(0);
   const [courseName, setCourseName] = useState('');
-  const [devType, setDevType] = useState('실습형');
+  const [courseCode, setCourseCode] = useState('');
+  const [devType, setDevType] = useState('신규 개발');
+  const [vendor, setVendor] = useState('i-Scream 원격교육연수원');
   const [overview, setOverview] = useState('');
   
   // Milestones dates
@@ -121,8 +120,8 @@ const CourseWizard: React.FC = () => {
 
     const payload = {
       course_name: courseName || '새 과정',
-      courseCode: `CRS-${Date.now().toString().slice(-6)}`,
-      vendor: 'i-Scream 원격교육연수원',
+      courseCode: courseCode || `CRS-${Date.now().toString().slice(-6)}`,
+      vendor: vendor || 'i-Scream 원격교육연수원',
       dev_type: devType,
       overview,
       milestones,
@@ -278,48 +277,42 @@ const CourseWizard: React.FC = () => {
                     />
                   </div>
 
-                  <div>
-                    <label style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--fg-3)', marginBottom: '6px', display: 'block' }}>교육 유형</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                      {[
-                        { id: '실습형', label: '실습형', desc: '학습자가 직접 따라 하는 실습 중심', icon: Sliders },
-                        { id: '강의형', label: '강의형', desc: '강사 설명 중심의 정통 강의', icon: GraduationCap },
-                        { id: '청중형', label: '청중형', desc: '사례·토론·역할극 등 참여 유도', icon: Users },
-                      ].map((t) => {
-                        const active = devType === t.id;
-                        return (
-                          <button
-                            type="button"
-                            key={t.id}
-                            onClick={() => setDevType(t.id)}
-                            style={{
-                              textAlign: 'left',
-                              cursor: 'pointer',
-                              padding: '16px',
-                              borderRadius: 'var(--r-lg)',
-                              border: `1.5px solid ${active ? 'var(--primary)' : 'var(--border)'}`,
-                              background: active ? 'var(--primary-tint-2)' : 'var(--bg-card)',
-                              transition: 'border-color 0.12s, background 0.12s'
-                            }}
-                          >
-                            <span style={{
-                              width: '36px',
-                              height: '36px',
-                              borderRadius: 'var(--r-md)',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              background: active ? 'var(--primary)' : 'var(--bg-sunken)',
-                              color: active ? '#fff' : 'var(--fg-3)'
-                            }}>
-                              <t.icon size={19} />
-                            </span>
-                            <div style={{ fontSize: '14px', fontWeight: 700, marginTop: '10px', color: 'var(--fg-1)' }}>{t.label}</div>
-                            <div style={{ fontSize: '11.5px', color: 'var(--fg-3)', marginTop: '3px', lineHeight: 1.5 }}>{t.desc}</div>
-                          </button>
-                        );
-                      })}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--fg-3)', marginBottom: '6px', display: 'block' }}>과정 코드</label>
+                      <input 
+                        type="text" 
+                        value={courseCode}
+                        onChange={(e) => setCourseCode(e.target.value)}
+                        placeholder={`예: CRS-${Date.now().toString().slice(-6)}`}
+                        style={{ width: '100%', height: '42px', padding: '0 12px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', fontSize: '13.5px', outline: 'none', background: 'var(--bg-card)' }}
+                      />
                     </div>
+                    <div>
+                      <label style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--fg-3)', marginBottom: '6px', display: 'block' }}>개발 유형</label>
+                      <select 
+                        value={devType} 
+                        onChange={(e) => setDevType(e.target.value)}
+                        style={{ width: '100%', height: '42px', padding: '0 12px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', fontSize: '13.5px', outline: 'none', background: 'var(--bg-card)' }}
+                      >
+                        <option value="신규 개발">신규 개발</option>
+                        <option value="개정 개발">개정 개발</option>
+                        <option value="원고 검수">원고 검수</option>
+                        <option value="자사">자사</option>
+                        <option value="공동개발">공동개발</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--fg-3)', marginBottom: '6px', display: 'block' }}>위탁 / 개발사</label>
+                    <input 
+                      type="text" 
+                      value={vendor}
+                      onChange={(e) => setVendor(e.target.value)}
+                      placeholder="예: AX 교육기술연구소"
+                      style={{ width: '100%', height: '42px', padding: '0 12px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', fontSize: '13.5px', outline: 'none', background: 'var(--bg-card)' }}
+                    />
                   </div>
 
                   <div>
