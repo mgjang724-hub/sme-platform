@@ -688,6 +688,8 @@ const CourseList: React.FC = () => {
                       <option value="신규 개발">신규 개발</option>
                       <option value="개정 개발">개정 개발</option>
                       <option value="원고 검수">원고 검수</option>
+                      <option value="자사">자사</option>
+                      <option value="공동개발">공동개발</option>
                     </select>
                   </div>
                 </div>
