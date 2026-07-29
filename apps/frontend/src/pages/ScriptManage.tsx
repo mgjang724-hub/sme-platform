@@ -109,6 +109,10 @@ const ScriptManage: React.FC = () => {
   // UX-401: Sidebar toggle
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
+  // Learning Objectives Guideline state
+  const [guidelineText, setGuidelineText] = useState("- 학습자가 해당 차시의 주요 학습 가이드를 명확히 숙지하도록 구성한다.\n- 지나치게 전문적이거나 기계적인 번역투 어조를 지양하고 자연스러운 대화문으로 작성한다.\n- 원고 분량: 동영상 강의 약 10분 내외 분량 (A4 8~10매 기준)");
+  const [isEditingGuideline, setIsEditingGuideline] = useState(false);
+  
   // UX-301: Copyright Check
   const [isCopyrightChecked, setIsCopyrightChecked] = useState(false);
   
@@ -622,15 +626,71 @@ const ScriptManage: React.FC = () => {
             >
               <Target size={18} style={{ color: 'var(--fg-3)' }} />
               <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, color: 'var(--fg-1)' }}>학습 목표 & 원고 기준</span>
+              {tabOpen.obj && !isEditingGuideline && viewRole === 'PLANNER' && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setIsEditingGuideline(true); }}
+                  style={{
+                    marginRight: '8px',
+                    fontSize: '12px',
+                    color: 'var(--primary)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 700
+                  }}
+                >
+                  수정
+                </button>
+              )}
               {tabOpen.obj ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
             </button>
             {tabOpen.obj && (
               <div style={{ padding: '2px 18px 18px 46px', fontSize: '13.5px', color: 'var(--fg-2)', lineHeight: 1.7 }}>
-                <ul style={{ margin: 0, paddingLeft: '18px' }}>
-                  <li>학습자가 해당 차시의 주요 학습 가이드를 명확히 숙지하도록 구성한다.</li>
-                  <li>지나치게 전문적이거나 기계적인 번역투 어조를 지양하고 자연스러운 대화문으로 작성한다.</li>
-                  <li>원고 분량: 동영상 강의 약 10분 내외 분량 (A4 8~10매 기준)</li>
-                </ul>
+                {isEditingGuideline ? (
+                  <div>
+                    <textarea 
+                      value={guidelineText}
+                      onChange={(e) => setGuidelineText(e.target.value)}
+                      rows={4}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid var(--border-strong)',
+                        borderRadius: 'var(--r-md)',
+                        fontSize: '13px',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        outline: 'none'
+                      }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '8px' }}>
+                      <button 
+                        onClick={() => setIsEditingGuideline(false)}
+                        style={{ padding: '6px 12px', border: '1px solid var(--border)', background: 'var(--bg-card)', borderRadius: 'var(--r-sm)', fontSize: '12px', cursor: 'pointer' }}
+                      >
+                        취소
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setIsEditingGuideline(false);
+                          // Here you would typically save to the backend
+                        }}
+                        style={{ padding: '6px 12px', border: 'none', background: 'var(--primary)', color: '#fff', borderRadius: 'var(--r-sm)', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        저장
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                    {guidelineText.split('\n').map((line, idx) => {
+                      const trimmed = line.trim();
+                      if (!trimmed) return null;
+                      const content = trimmed.startsWith('-') ? trimmed.substring(1).trim() : trimmed;
+                      return <li key={idx}>{content}</li>;
+                    })}
+                  </ul>
+                )}
               </div>
             )}
           </div>
