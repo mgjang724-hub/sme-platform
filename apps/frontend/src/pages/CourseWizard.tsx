@@ -6,7 +6,6 @@ import {
   ArrowRight, 
   Check, 
   Layers, 
-  Download, 
   Plus, 
   X, 
   Calendar,
@@ -45,6 +44,29 @@ const CourseWizard: React.FC = () => {
     { lesson_no: 3, title: '심화 사례 연구', lessonCode: 'LSN-003', smeName: '홍길동 강사' },
     { lesson_no: 4, title: '종합 질의응답 및 퀴즈', lessonCode: 'LSN-004', smeName: '홍길동 강사' },
   ]);
+
+  const [bulkInputOpen, setBulkInputOpen] = useState(false);
+  const [bulkText, setBulkText] = useState('');
+
+  const handleBulkParse = () => {
+    if (!bulkText.trim()) return;
+    const lines = bulkText.split('\n').filter(l => l.trim() !== '');
+    const newChapters = lines.map((line, i) => {
+      const lesson_no = i + 1;
+      const lessonCode = `LSN-${String(lesson_no).padStart(3, '0')}`;
+      // Basic sanitization to remove numbers like "1. ", "1차시 ", etc. at the start
+      const cleanTitle = line.replace(/^(\d+[\.차시\s]+)+/, '').trim();
+      return {
+        lesson_no,
+        title: cleanTitle || `차시 ${lesson_no}`,
+        lessonCode,
+        smeName: '홍길동 강사'
+      };
+    });
+    setChapters(newChapters);
+    setBulkText('');
+    setBulkInputOpen(false);
+  };
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -384,44 +406,87 @@ const CourseWizard: React.FC = () => {
                 <div style={{ fontSize: '13px', color: 'var(--fg-3)', marginBottom: '20px' }}>차시명을 정하세요. 각 차시마다 SCRIPT 슬롯이 1개씩 생성돼요.</div>
 
                 <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
                   padding: '16px 18px',
                   border: '1px solid var(--border)',
                   borderRadius: 'var(--r-lg)',
                   backgroundColor: 'var(--bg-page)',
                   marginBottom: '18px'
                 }}>
-                  <span style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: 'var(--r-md)',
-                    backgroundColor: 'var(--stage-done-bg)',
-                    color: 'var(--stage-done-fg)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <Layers size={20} />
-                  </span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '13.5px', fontWeight: 700 }}>차시 대량 생성/업로드</div>
-                    <div style={{ fontSize: '12px', color: 'var(--fg-3)', marginTop: '2px' }}>엑셀 템플릿 양식을 이용해 한번에 입력할 수 있습니다.</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <span style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: 'var(--r-md)',
+                      backgroundColor: 'var(--stage-done-bg)',
+                      color: 'var(--stage-done-fg)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Layers size={20} />
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '13.5px', fontWeight: 700 }}>차시 대량 텍스트 생성</div>
+                      <div style={{ fontSize: '12px', color: 'var(--fg-3)', marginTop: '2px' }}>줄바꿈 단위로 수십 개의 차시를 한번에 생성할 수 있습니다.</div>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => setBulkInputOpen(!bulkInputOpen)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '7px',
+                        padding: '9px 14px',
+                        border: '1px solid var(--border-strong)',
+                        borderRadius: 'var(--r-md)',
+                        backgroundColor: bulkInputOpen ? 'var(--primary-tint)' : 'var(--bg-card)',
+                        color: bulkInputOpen ? 'var(--primary-hover)' : 'var(--fg-2)',
+                        fontSize: '13px',
+                        fontWeight: 700
+                      }}>
+                      <Plus size={15} /> 텍스트 붙여넣기
+                    </button>
                   </div>
-                  <button type="button" style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    padding: '9px 14px',
-                    border: '1px solid var(--border-strong)',
-                    borderRadius: 'var(--r-md)',
-                    backgroundColor: 'var(--bg-card)',
-                    fontSize: '13px',
-                    fontWeight: 700
-                  }}>
-                    <Download size={15} /> 템플릿
-                  </button>
+                  
+                  {bulkInputOpen && (
+                    <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                      <textarea
+                        value={bulkText}
+                        onChange={(e) => setBulkText(e.target.value)}
+                        placeholder="예:&#10;1차시 오프닝 - 과정 소개&#10;2차시 기초 개념 확립&#10;3차시 실무 적용 사례&#10;..."
+                        style={{
+                          width: '100%',
+                          height: '140px',
+                          padding: '14px',
+                          border: '1px solid var(--border-strong)',
+                          borderRadius: 'var(--r-md)',
+                          backgroundColor: 'var(--bg-card)',
+                          fontSize: '13px',
+                          outline: 'none',
+                          resize: 'none',
+                          lineHeight: '1.6'
+                        }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                        <button
+                          type="button"
+                          onClick={handleBulkParse}
+                          style={{
+                            padding: '9px 20px',
+                            backgroundColor: 'var(--primary)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: 'var(--r-md)',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          차시 일괄 생성 적용
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
