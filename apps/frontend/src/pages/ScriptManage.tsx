@@ -106,6 +106,9 @@ const ScriptManage: React.FC = () => {
   const [pendingSubmitType, setPendingSubmitType] = useState<'LINK' | 'LOCAL' | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   
+  // UX-401: Sidebar toggle
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
   // UX-301: Copyright Check
   const [isCopyrightChecked, setIsCopyrightChecked] = useState(false);
   
@@ -379,9 +382,27 @@ const ScriptManage: React.FC = () => {
       }}>
         {/* Breadcrumb path */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', color: 'var(--fg-4)' }}>
-          <Link to="/courses" style={{ color: 'var(--fg-4)' }}>과정 관리</Link>
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              padding: '2px 6px', 
+              border: '1px solid var(--border)', 
+              borderRadius: 'var(--r-sm)', 
+              background: 'var(--bg-card)', 
+              color: 'var(--fg-2)', 
+              cursor: 'pointer', 
+              marginRight: '6px' 
+            }}
+            title={isSidebarOpen ? '목차 숨기기' : '목차 보기'}
+          >
+            {isSidebarOpen ? '◀ 숨기기' : '▶ 목차 보기'}
+          </button>
+          <Link to="/courses" style={{ color: 'var(--fg-4)', textDecoration: 'none' }} className="hover-underline">과정 관리</Link>
           <ChevronRight size={13} />
-          <Link to={`/courses/${courseId}`} style={{ color: 'var(--fg-4)' }}>과정 상세</Link>
+          <Link to={`/courses/${courseId}`} style={{ color: 'var(--fg-4)', textDecoration: 'none' }} className="hover-underline">과정 상세</Link>
           <ChevronRight size={13} />
           <span style={{ color: 'var(--fg-2)', fontWeight: 700 }}>{currentLesson.lesson_no}차시 원고</span>
         </div>
@@ -525,61 +546,63 @@ const ScriptManage: React.FC = () => {
       <div style={{ flex: 1, display: 'flex', minHeight: 0, overflow: 'hidden' }}>
         
         {/* Left Pane: Chapters sidebar */}
-        <div style={{
-          width: '236px',
-          flexShrink: 0,
-          borderRight: '1px solid var(--border)',
-          background: 'var(--bg-card)',
-          overflowY: 'auto',
-          padding: '16px 12px'
-        }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--fg-4)', padding: '0 8px 8px' }}>
-            차시 리스트 · {lessons.length}
-          </div>
-          {lessons.map((ch) => {
-            const isCur = ch.lesson_id === lessonId;
-            return (
-              <div
-                key={ch.lesson_id}
-                onClick={() => navigate(`/courses/${courseId}/lessons/${ch.lesson_id}/script`)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '11px 10px',
-                  borderRadius: 'var(--r-md)',
-                  cursor: 'pointer',
-                  backgroundColor: isCur ? 'var(--primary-tint)' : 'transparent',
-                  marginBottom: '2px'
-                }}
-                className="chap"
-              >
-                <span style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  flexShrink: 0,
-                  backgroundColor: getDotColor(ch.derived_status)
-                }}></span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontSize: '13px',
-                    fontWeight: isCur ? 700 : 500,
-                    color: isCur ? 'var(--primary-hover)' : 'var(--fg-1)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
-                    {ch.lesson_no}차시 — {ch.title}
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--fg-4)', marginTop: '2px' }}>
-                    {ch.derived_status}
+        {isSidebarOpen && (
+          <div style={{
+            width: '236px',
+            flexShrink: 0,
+            borderRight: '1px solid var(--border)',
+            background: 'var(--bg-card)',
+            overflowY: 'auto',
+            padding: '16px 12px'
+          }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--fg-4)', padding: '0 8px 8px' }}>
+              차시 리스트 · {lessons.length}
+            </div>
+            {lessons.map((ch) => {
+              const isCur = ch.lesson_id === lessonId;
+              return (
+                <div
+                  key={ch.lesson_id}
+                  onClick={() => navigate(`/courses/${courseId}/lessons/${ch.lesson_id}/script`)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '11px 10px',
+                    borderRadius: 'var(--r-md)',
+                    cursor: 'pointer',
+                    backgroundColor: isCur ? 'var(--primary-tint)' : 'transparent',
+                    marginBottom: '2px'
+                  }}
+                  className="chap"
+                >
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    flexShrink: 0,
+                    backgroundColor: getDotColor(ch.derived_status)
+                  }}></span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: '13px',
+                      fontWeight: isCur ? 700 : 500,
+                      color: isCur ? 'var(--primary-hover)' : 'var(--fg-1)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {ch.lesson_no}차시 — {ch.title}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--fg-4)', marginTop: '2px' }}>
+                      {ch.derived_status}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Center Pane: Scripts and Upload panel */}
         <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '22px 26px 40px' }}>
@@ -950,12 +973,12 @@ const ScriptManage: React.FC = () => {
               }}
             >
               <History size={18} style={{ color: 'var(--fg-3)' }} />
-              <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, color: 'var(--fg-1)' }}>이전 제출 히스토리 ({versions.length}건)</span>
+              <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, color: 'var(--fg-1)' }}>이전 제출 히스토리 ({Math.max(0, versions.length - 1)}건)</span>
               {tabOpen.prev ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
             </button>
             {tabOpen.prev && (
               <div style={{ padding: '0 18px 8px' }}>
-                {versions.map((v) => (
+                {versions.slice(1).map((v) => (
                   <div key={v.version_id} style={{ display: 'flex', gap: '14px', padding: '12px 0', borderTop: '1px solid var(--border)' }}>
                     <div style={{ width: '56px', flexShrink: 0, textAlign: 'center' }}>
                       <span style={{
@@ -1102,14 +1125,21 @@ const ScriptManage: React.FC = () => {
                           <button 
                             onClick={() => handleResolveFeedback(f.feedback_id)}
                             style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '4px 10px',
+                              borderRadius: '999px',
+                              backgroundColor: 'var(--primary)',
+                              color: '#fff',
                               fontSize: '11px',
-                              color: 'var(--primary)',
-                              fontWeight: 700,
-                              textDecoration: 'underline',
-                              cursor: 'pointer'
+                              fontWeight: 800,
+                              border: 'none',
+                              cursor: 'pointer',
+                              boxShadow: '0 1px 2px rgba(79, 70, 229, 0.2)'
                             }}
                           >
-                            해결함 표시
+                            <CheckCircle2 size={12} /> 해결 처리
                           </button>
                         )}
                       </div>
