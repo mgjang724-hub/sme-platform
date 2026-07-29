@@ -13,7 +13,8 @@ import {
   AlertTriangle,
   MessageSquare,
   ArrowRight,
-  UserPlus
+  UserPlus,
+  Search
 } from 'lucide-react';
 
 interface Lesson {
@@ -52,6 +53,10 @@ const CourseDetail: React.FC = () => {
   const [tab, setTab] = useState<'scripts' | 'issues'>('scripts');
   const [viewRole, setViewRole] = useState<'PLANNER' | 'SME'>('PLANNER');
 
+  // UX-202: Search & Filter State
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+
   useEffect(() => {
     if (user) {
       setViewRole(user.global_role === 'SME' ? 'SME' : 'PLANNER');
@@ -87,6 +92,28 @@ const CourseDetail: React.FC = () => {
       </div>
     );
   }
+
+  const getLessonStatusCategory = (status: string) => {
+    if (status === 'SUBMITTED' || status === 'IN_REVIEW') return 'review';
+    if (status === 'REVISION_REQUESTED') return 'revision';
+    if (status === 'APPROVED') return 'done';
+    return 'todo';
+  };
+
+  const filteredLessons = course?.lessons.filter((lesson) => {
+    if (searchKeyword) {
+      const kw = searchKeyword.toLowerCase();
+      if (!lesson.title.toLowerCase().includes(kw) && !String(lesson.lesson_no).includes(kw)) {
+        return false;
+      }
+    }
+    if (statusFilter !== 'ALL') {
+      const scriptDeliv = lesson.deliverables.find((d: any) => d.deliverable_type === 'SCRIPT');
+      const st = scriptDeliv ? scriptDeliv.current_status : 'NOT_SUBMITTED';
+      if (getLessonStatusCategory(st) !== statusFilter) return false;
+    }
+    return true;
+  }) || [];
 
   const milestones = course.milestones || {};
   const membersList = Array.isArray(course.members) ? course.members : [];
@@ -364,9 +391,36 @@ const CourseDetail: React.FC = () => {
         {/* Tab 1: Scripts List */}
         {tab === 'scripts' && (
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700 }}>차시별 원고 진행상황</div>
-              <div style={{ fontSize: '12px', color: 'var(--fg-4)' }}>차시 항목을 누르면 원고 상세관리 3-Pane 뷰로 이동해요</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700 }}>차시별 원고 진행상황</div>
+                <div style={{ fontSize: '12px', color: 'var(--fg-4)' }}>차시 항목을 누르면 원고 상세관리 3-Pane 뷰로 이동해요</div>
+              </div>
+              
+              {/* UX-202: Filter UI */}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ position: 'relative' }}>
+                  <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-4)' }} />
+                  <input 
+                    type="text" 
+                    placeholder="차시명 검색"
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    style={{ padding: '6px 10px 6px 30px', width: '160px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', fontSize: '12.5px', outline: 'none' }}
+                  />
+                </div>
+                <select 
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', fontSize: '12.5px', outline: 'none', background: 'var(--bg-card)', cursor: 'pointer' }}
+                >
+                  <option value="ALL">상태 전체</option>
+                  <option value="todo">작성대기</option>
+                  <option value="review">검수중(대기)</option>
+                  <option value="revision">수정요청</option>
+                  <option value="done">승인완료</option>
+                </select>
+              </div>
             </div>
             
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-xl)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
@@ -387,7 +441,7 @@ const CourseDetail: React.FC = () => {
                 <span style={{ width: '110px', textAlign: 'right' }}>제출 기한</span>
               </div>
               
-              {course.lessons.map((lesson) => {
+              {filteredLessons.map((lesson) => {
                 const scriptDeliv = lesson.deliverables.find((d) => d.deliverable_type === 'SCRIPT');
                 const statusInfo = getStatusChipColors(scriptDeliv ? scriptDeliv.current_status : 'NOT_SUBMITTED');
                 

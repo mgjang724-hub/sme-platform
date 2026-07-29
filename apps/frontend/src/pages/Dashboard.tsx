@@ -34,7 +34,7 @@ interface DashboardData {
 }
 
 const Dashboard: React.FC = () => {
-  const { user, apiFetch } = useAuth();
+  const { user, apiFetch, unreadNotiCount } = useAuth();
   const navigate = useNavigate();
   
   const [data, setData] = useState<DashboardData | null>(null);
@@ -165,7 +165,7 @@ const Dashboard: React.FC = () => {
           cursor: 'pointer'
         }}>
           <Bell size={18} style={{ color: 'var(--fg-2)' }} />
-          {totalTasksCount > 0 && (
+          {unreadNotiCount > 0 && (
             <span style={{
               position: 'absolute',
               top: '8px',

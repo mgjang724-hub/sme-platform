@@ -22,7 +22,7 @@ interface NotificationItem {
 }
 
 const Notifications: React.FC = () => {
-  const { apiFetch, user } = useAuth();
+  const { apiFetch, user, unreadNotiCount, setUnreadNotiCount } = useAuth();
   const navigate = useNavigate();
 
   const [list, setList] = useState<NotificationItem[]>([]);
@@ -55,6 +55,7 @@ const Notifications: React.FC = () => {
     try {
       await apiFetch('/notifications/mark-all', { method: 'POST' });
       await loadNotifications();
+      setUnreadNotiCount(0);
     } catch (err) {
       alert('오류가 발생했습니다.');
     }
@@ -201,7 +202,14 @@ const Notifications: React.FC = () => {
               return (
                 <div
                   key={noti.id}
-                  onClick={() => {
+                  onClick={async () => {
+                    if (noti.unread) {
+                      try {
+                        // Mark as read locally/API (mock)
+                        setUnreadNotiCount(Math.max(0, unreadNotiCount - 1));
+                      } catch (e) {}
+                    }
+                    
                     let targetUrl = noti.href;
                     if (noti.kind === 'feedback' && !targetUrl.includes('?')) {
                       targetUrl += '?openFeedback=true';

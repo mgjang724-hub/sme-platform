@@ -99,6 +99,11 @@ const ScriptManage: React.FC = () => {
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const [filterUnresolvedOnly, setFilterUnresolvedOnly] = useState(false);
+  
+  // UX-201: Submit Confirm Modal State
+  const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
+  const [pendingSubmitType, setPendingSubmitType] = useState<'LINK' | 'LOCAL' | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const latestVer = versions[0];
   const unresolvedFeedbacks = feedbacks.filter(f => f.status === 'OPEN' || f.status === 'REOPENED');
@@ -202,7 +207,7 @@ const ScriptManage: React.FC = () => {
   }
 
   // Submit Link or Mock Upload File
-  const handleUploadSubmit = async (e: React.FormEvent) => {
+  const handleUploadSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!deliverable) return;
 
@@ -210,47 +215,52 @@ const ScriptManage: React.FC = () => {
       alert('제출할 구글 문서 링크 주소를 입력해 주세요.');
       return;
     }
+    setPendingSubmitType('LINK');
+    setIsSubmitConfirmOpen(true);
+  };
 
+  const handleLocalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !deliverable) return;
+    setPendingFile(file);
+    setPendingSubmitType('LOCAL');
+    setIsSubmitConfirmOpen(true);
+    e.target.value = ''; // Reset so same file triggers change again
+  };
+
+  const executeSubmit = async () => {
+    setIsSubmitConfirmOpen(false);
+    if (!deliverable || !pendingSubmitType) return;
+    
     setSubmittingFile(true);
     try {
-      await apiFetch(`/deliverables/${deliverable.deliverable_id}/files`, {
-        method: 'POST',
-        body: JSON.stringify({
-          kind: 'LINK',
-          url: linkUrl,
-          file_name: 'Google Docs Link'
-        })
-      });
-      setLinkUrl('');
+      if (pendingSubmitType === 'LINK') {
+        await apiFetch(`/deliverables/${deliverable.deliverable_id}/files`, {
+          method: 'POST',
+          body: JSON.stringify({
+            kind: 'LINK',
+            url: linkUrl,
+            file_name: 'Google Docs Link'
+          })
+        });
+        setLinkUrl('');
+      } else if (pendingSubmitType === 'LOCAL' && pendingFile) {
+        const formData = new FormData();
+        formData.append('file', pendingFile);
+        await apiFetch(`/deliverables/${deliverable.deliverable_id}/upload-local`, {
+          method: 'POST',
+          body: formData
+        });
+        setPendingFile(null);
+      }
       setUploadNote('');
       loadData();
-      alert('새 버전 원고가 정상 제출되었습니다.');
+      alert(pendingSubmitType === 'LINK' ? '새 버전 원고가 정상 제출되었습니다.' : '파일이 로컬 PC 서버에 성공적으로 업로드되었습니다.');
     } catch (err: any) {
       alert(err.message || '업로드 오류가 발생했습니다.');
     } finally {
       setSubmittingFile(false);
-    }
-  };
-
-  const handleLocalFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !deliverable) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    setSubmittingFile(true);
-    try {
-      await apiFetch(`/deliverables/${deliverable.deliverable_id}/upload-local`, {
-        method: 'POST',
-        body: formData
-      });
-      loadData();
-      alert('파일이 로컬 PC 서버에 성공적으로 업로드되었습니다.');
-    } catch (err: any) {
-      alert(err.message || '파일 업로드 중 오류가 발생했습니다.');
-    } finally {
-      setSubmittingFile(false);
+      setPendingSubmitType(null);
     }
   };
 
@@ -1468,6 +1478,51 @@ const ScriptManage: React.FC = () => {
                 style={{ padding: '8px 18px', borderRadius: '8px', background: '#1E293B', color: '#fff', fontWeight: 700, fontSize: '13px', border: 'none', cursor: 'pointer' }}
               >
                 닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* UX-201: Submit Confirm Modal */}
+      {isSubmitConfirmOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'var(--bg-card)',
+            padding: '24px 32px',
+            borderRadius: 'var(--r-lg)',
+            width: '400px',
+            boxShadow: 'var(--shadow-xl)'
+          }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: '18px', color: 'var(--fg-1)' }}>원고 제출 확인</h3>
+            <p style={{ margin: '0 0 24px', fontSize: '14px', color: 'var(--fg-2)', lineHeight: '1.5' }}>
+              제출 후에는 기획자가 반려하기 전까지 원고를 직접 수정할 수 없습니다.<br/>
+              <span style={{ fontWeight: 700, color: 'var(--primary)' }}>정말로 제출하시겠습니까?</span>
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button 
+                onClick={() => {
+                  setIsSubmitConfirmOpen(false);
+                  setPendingSubmitType(null);
+                  setPendingFile(null);
+                }}
+                style={{ padding: '10px 16px', border: '1px solid var(--border)', background: 'var(--bg-card)', borderRadius: 'var(--r-md)', cursor: 'pointer' }}
+              >
+                취소
+              </button>
+              <button 
+                onClick={executeSubmit}
+                style={{ padding: '10px 16px', border: 'none', background: 'var(--primary)', color: '#fff', borderRadius: 'var(--r-md)', cursor: 'pointer', fontWeight: 700 }}
+              >
+                확인 및 제출
               </button>
             </div>
           </div>

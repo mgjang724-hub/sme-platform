@@ -14,6 +14,8 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<User>;
   logout: () => void;
   apiFetch: (path: string, options?: RequestInit) => Promise<any>;
+  unreadNotiCount: number;
+  setUnreadNotiCount: (count: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +26,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [unreadNotiCount, setUnreadNotiCount] = useState<number>(0);
+
+  const fetchUnreadCount = async (currentToken: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/notifications`, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+      if (res.ok) {
+        const items = await res.json();
+        const unread = items.filter((i: any) => i.unread).length;
+        setUnreadNotiCount(unread);
+      }
+    } catch (e) {}
+  };
 
   useEffect(() => {
     const savedToken = localStorage.getItem('sme_token');
@@ -31,6 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (savedToken && savedUser) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
+      fetchUnreadCount(savedToken);
     }
     setLoading(false);
   }, []);
@@ -52,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('sme_user', JSON.stringify(data.user));
     setToken(data.access_token);
     setUser(data.user);
+    fetchUnreadCount(data.access_token);
     return data.user;
   };
 
@@ -96,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, apiFetch }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, apiFetch, unreadNotiCount, setUnreadNotiCount }}>
       {!loading && children}
     </AuthContext.Provider>
   );
