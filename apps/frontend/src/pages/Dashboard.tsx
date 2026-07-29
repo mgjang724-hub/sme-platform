@@ -150,7 +150,9 @@ const Dashboard: React.FC = () => {
             }} 
           />
         </div>
-        <button style={{
+        <button 
+          onClick={() => navigate('/notifications')}
+          style={{
           position: 'relative',
           width: '40px',
           height: '40px',
@@ -159,7 +161,8 @@ const Dashboard: React.FC = () => {
           background: 'var(--bg-card)',
           display: 'inline-flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          cursor: 'pointer'
         }}>
           <Bell size={18} style={{ color: 'var(--fg-2)' }} />
           {totalTasksCount > 0 && (
