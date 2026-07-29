@@ -53,6 +53,15 @@ export class CoursesController {
     return this.coursesService.updateStatus(courseId, req.user, status);
   }
 
+  @Patch(':id')
+  async updateCourse(
+    @Request() req: any,
+    @Param('id') courseId: string,
+    @Body() dto: any,
+  ) {
+    return this.coursesService.updateCourse(courseId, req.user, dto);
+  }
+
   @Delete(':id')
   async deleteCourse(
     @Request() req: any,

@@ -5,7 +5,8 @@ import {
   Search, 
   Plus, 
   AlertTriangle,
-  ArrowRight
+  ArrowRight,
+  X
 } from 'lucide-react';
 
 interface Course {
@@ -36,6 +37,62 @@ const CourseList: React.FC = () => {
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'DELAYED' | 'DONE' | 'ARCHIVED'>('ALL');
+
+  // Edit Course Modal State
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    course_name: '',
+    courseCode: '',
+    vendor: '',
+    dev_type: '',
+    overview: ''
+  });
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+
+  const handleOpenEditModal = (c: Course) => {
+    setEditingCourseId(c.course_id);
+    setEditForm({
+      course_name: c.course_name || '',
+      courseCode: (c as any).courseCode || '',
+      vendor: (c as any).vendor || '',
+      dev_type: (c as any).dev_type || '신규 개발',
+      overview: (c as any).overview || ''
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEditCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCourseId || !editForm.course_name.trim()) return;
+
+    setSubmittingEdit(true);
+    try {
+      const updated = await apiFetch(`/courses/${editingCourseId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(editForm)
+      });
+
+      setCourses(prev => prev.map(c => {
+        if (c.course_id === editingCourseId) {
+          return {
+            ...c,
+            course_name: editForm.course_name,
+            dev_type: editForm.dev_type,
+            ...(updated || {})
+          };
+        }
+        return c;
+      }));
+
+      setEditModalOpen(false);
+      alert('과정 정보가 성공적으로 수정되었습니다.');
+    } catch (err: any) {
+      alert(err.message || '과정 정보 수정 실패');
+    } finally {
+      setSubmittingEdit(false);
+    }
+  };
 
   const handleToggleArchive = async (courseId: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'ARCHIVED' ? 'ACTIVE' : 'ARCHIVED';
@@ -450,6 +507,23 @@ const CourseList: React.FC = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            handleOpenEditModal(c);
+                          }}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            fontSize: '12.5px',
+                            color: 'var(--fg-2)',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            padding: 0
+                          }}
+                        >
+                          수정
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleToggleArchive(c.course_id, c.status);
                           }}
                           style={{
@@ -512,8 +586,193 @@ const CourseList: React.FC = () => {
             검색 결과에 맞는 개설된 연수 과정이 없습니다.
           </div>
         )}
-
       </div>
+
+      {/* Edit Course Modal Overlay */}
+      {editModalOpen && (
+        <div 
+          onClick={() => setEditModalOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(17, 24, 39, 0.45)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            zIndex: 60
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '520px',
+              maxWidth: '100%',
+              backgroundColor: 'var(--bg-card)',
+              borderRadius: 'var(--r-2xl)',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)',
+              overflow: 'hidden'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', borderBottom: '1px solid var(--border)', background: 'var(--bg-page)' }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--fg-1)' }}>✏️ 과정 정보 수정</div>
+              <button 
+                onClick={() => setEditModalOpen(false)}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--fg-3)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditCourse} style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--fg-2)', marginBottom: '6px' }}>
+                    과정명 <span style={{ color: '#EF4444' }}>*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    value={editForm.course_name} 
+                    onChange={(e) => setEditForm({ ...editForm, course_name: e.target.value })}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid var(--border-strong)',
+                      borderRadius: 'var(--r-md)',
+                      fontSize: '13.5px',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--fg-2)', marginBottom: '6px' }}>
+                      과정 코드
+                    </label>
+                    <input 
+                      type="text" 
+                      value={editForm.courseCode} 
+                      onChange={(e) => setEditForm({ ...editForm, courseCode: e.target.value })}
+                      placeholder="CRS-2026-001"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid var(--border-strong)',
+                        borderRadius: 'var(--r-md)',
+                        fontSize: '13.5px',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--fg-2)', marginBottom: '6px' }}>
+                      개발 유형
+                    </label>
+                    <select 
+                      value={editForm.dev_type} 
+                      onChange={(e) => setEditForm({ ...editForm, dev_type: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid var(--border-strong)',
+                        borderRadius: 'var(--r-md)',
+                        fontSize: '13.5px',
+                        outline: 'none',
+                        backgroundColor: 'var(--bg-card)'
+                      }}
+                    >
+                      <option value="신규 개발">신규 개발</option>
+                      <option value="개정 개발">개정 개발</option>
+                      <option value="원고 검수">원고 검수</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--fg-2)', marginBottom: '6px' }}>
+                    위탁 / 개발사
+                  </label>
+                  <input 
+                    type="text" 
+                    value={editForm.vendor} 
+                    onChange={(e) => setEditForm({ ...editForm, vendor: e.target.value })}
+                    placeholder="i-Scream 연수원 / 자체개발"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid var(--border-strong)',
+                      borderRadius: 'var(--r-md)',
+                      fontSize: '13.5px',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--fg-2)', marginBottom: '6px' }}>
+                    과정 개요
+                  </label>
+                  <textarea 
+                    rows={3}
+                    value={editForm.overview} 
+                    onChange={(e) => setEditForm({ ...editForm, overview: e.target.value })}
+                    placeholder="과정 개발 목표 및 원고 작성 지침 요약 정보"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid var(--border-strong)',
+                      borderRadius: 'var(--r-md)',
+                      fontSize: '13.5px',
+                      outline: 'none',
+                      resize: 'vertical'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px' }}>
+                <button 
+                  type="button"
+                  onClick={() => setEditModalOpen(false)}
+                  style={{
+                    padding: '9px 16px',
+                    border: '1px solid var(--border-strong)',
+                    borderRadius: 'var(--r-md)',
+                    backgroundColor: 'var(--bg-card)',
+                    color: 'var(--fg-2)',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  취소
+                </button>
+                <button 
+                  type="submit"
+                  disabled={submittingEdit}
+                  style={{
+                    padding: '9px 18px',
+                    border: 'none',
+                    borderRadius: 'var(--r-md)',
+                    backgroundColor: 'var(--primary)',
+                    color: '#fff',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {submittingEdit ? '저장 중...' : '수정 저장'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

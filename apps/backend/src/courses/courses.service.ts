@@ -294,4 +294,31 @@ export class CoursesService {
       where: { course_id },
     });
   }
+
+  async updateCourse(course_id: string, user: any, dto: any) {
+    const course = await this.prisma.course.findUnique({
+      where: { course_id },
+    });
+
+    if (!course) {
+      throw new NotFoundException('해당 과정을 찾을 수 없습니다.');
+    }
+
+    if (course.planner_id !== user.user_id && user.global_role !== GlobalRole.ADMIN) {
+      throw new ForbiddenException('과정 기획자나 관리자만 정보 수정을 할 수 있습니다.');
+    }
+
+    const { course_name, courseCode, vendor, dev_type, overview } = dto;
+
+    return this.prisma.course.update({
+      where: { course_id },
+      data: {
+        ...(course_name && { course_name }),
+        ...(courseCode && { courseCode }),
+        ...(vendor !== undefined && { vendor }),
+        ...(dev_type !== undefined && { dev_type }),
+        ...(overview !== undefined && { overview }),
+      },
+    });
+  }
 }
