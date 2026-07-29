@@ -607,7 +607,7 @@ const ScriptManage: React.FC = () => {
               }}
             >
               <Target size={18} style={{ color: 'var(--fg-3)' }} />
-              <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, color: 'var(--fg-1)' }}>학습 목표 & 원고 기준</span>
+              <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, color: 'var(--fg-1)' }}>원고 작성 가이드</span>
               {tabOpen.obj && !isEditingGuideline && viewRole === 'PLANNER' && (
                 <button 
                   onClick={(e) => { e.stopPropagation(); setIsEditingGuideline(true); }}
