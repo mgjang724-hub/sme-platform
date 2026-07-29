@@ -488,24 +488,6 @@ const ScriptManage: React.FC = () => {
             {viewRole === 'PLANNER' ? (
               <>
                 <button 
-                  onClick={() => setTabOpen({ ...tabOpen, upload: true })}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '9px 14px',
-                    borderRadius: 'var(--r-md)',
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border-strong)',
-                    color: 'var(--fg-1)',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Upload size={16} /> 검수본/수정본 파일 업로드
-                </button>
-                <button 
                   onClick={handleApproveDeliverable}
                   style={{
                     display: 'inline-flex',
