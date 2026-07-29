@@ -20,7 +20,8 @@ import {
   GitCompare,
   Clock,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Lock as LockIcon
 } from 'lucide-react';
 
 interface Lesson {
@@ -104,6 +105,12 @@ const ScriptManage: React.FC = () => {
   const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
   const [pendingSubmitType, setPendingSubmitType] = useState<'LINK' | 'LOCAL' | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  
+  // UX-301: Copyright Check
+  const [isCopyrightChecked, setIsCopyrightChecked] = useState(false);
+  
+  // UX-302: Supplementary File
+  const [supplementaryFile, setSupplementaryFile] = useState<File | null>(null);
 
   const latestVer = versions[0];
   const unresolvedFeedbacks = feedbacks.filter(f => f.status === 'OPEN' || f.status === 'REOPENED');
@@ -230,6 +237,7 @@ const ScriptManage: React.FC = () => {
 
   const executeSubmit = async () => {
     setIsSubmitConfirmOpen(false);
+    setIsCopyrightChecked(false);
     if (!deliverable || !pendingSubmitType) return;
     
     setSubmittingFile(true);
@@ -247,14 +255,16 @@ const ScriptManage: React.FC = () => {
       } else if (pendingSubmitType === 'LOCAL' && pendingFile) {
         const formData = new FormData();
         formData.append('file', pendingFile);
+        if (supplementaryFile) formData.append('supplementary', supplementaryFile);
         await apiFetch(`/deliverables/${deliverable.deliverable_id}/upload-local`, {
           method: 'POST',
           body: formData
         });
         setPendingFile(null);
+        setSupplementaryFile(null);
+        setUploadNote('');
+        loadData();
       }
-      setUploadNote('');
-      loadData();
       alert(pendingSubmitType === 'LINK' ? '새 버전 원고가 정상 제출되었습니다.' : '파일이 로컬 PC 서버에 성공적으로 업로드되었습니다.');
     } catch (err: any) {
       alert(err.message || '업로드 오류가 발생했습니다.');
@@ -601,15 +611,36 @@ const ScriptManage: React.FC = () => {
               </div>
             )}
           </div>
-
-          {/* New version / feedback file submission */}
-          <div style={{
-            background: 'var(--bg-card)',
-            border: `1.5px solid ${tabOpen.upload ? 'var(--primary)' : 'var(--border)'}`,
-            borderRadius: 'var(--r-lg)',
-            marginBottom: '16px',
-            overflow: 'hidden'
-          }}>
+          
+          {/* UX-303: Prototype Lock logic */}
+          {(() => {
+            const protoLesson = lessons.find(l => l.lesson_no === 1);
+            const isProtoApproved = protoLesson?.deliverables?.find((d: any) => d.deliverable_type === 'SCRIPT')?.current_status === 'APPROVED';
+            const isLocked = currentLesson?.lesson_no !== 1 && !isProtoApproved && viewRole === 'SME';
+            
+            return isLocked ? (
+              <div style={{
+                background: 'var(--bg-card)',
+                border: '1.5px solid var(--border)',
+                borderRadius: 'var(--r-lg)',
+                padding: '24px',
+                textAlign: 'center',
+                marginBottom: '16px'
+              }}>
+                <LockIcon size={28} style={{ color: 'var(--fg-4)', margin: '0 auto 12px' }} />
+                <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--fg-1)' }}>원고 제출이 잠겨있습니다.</div>
+                <div style={{ fontSize: '13px', color: 'var(--fg-3)', marginTop: '6px' }}>
+                  1차시(샘플 원고)가 최종 승인된 이후에 나머지 차시 원고를 제출할 수 있습니다.
+                </div>
+              </div>
+            ) : (
+              <div style={{
+                background: 'var(--bg-card)',
+                border: `1.5px solid ${tabOpen.upload ? 'var(--primary)' : 'var(--border)'}`,
+                borderRadius: 'var(--r-lg)',
+                marginBottom: '16px',
+                overflow: 'hidden'
+              }}>
             <button 
               onClick={() => setTabOpen({ ...tabOpen, upload: !tabOpen.upload })}
               style={{
@@ -704,7 +735,34 @@ const ScriptManage: React.FC = () => {
                     }}
                   />
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px' }}>
+                  <div style={{ marginTop: '16px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--fg-1)', marginBottom: '8px' }}>부속 자료 첨부 (선택)</div>
+                    <div style={{ fontSize: '11.5px', color: 'var(--fg-4)', marginBottom: '10px' }}>
+                      원고에 삽입된 이미지 원본이나 수업 결과물 사진(압축파일)을 첨부해주세요.
+                    </div>
+                    <label htmlFor="supplementary-file-upload" style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '8px 14px',
+                      borderRadius: 'var(--r-md)',
+                      background: 'var(--bg-card)',
+                      border: '1px solid var(--border-strong)',
+                      cursor: 'pointer',
+                      fontSize: '12.5px',
+                      color: 'var(--fg-2)'
+                    }}>
+                      <Upload size={14} /> {supplementaryFile ? supplementaryFile.name : '파일 선택'}
+                    </label>
+                    <input 
+                      type="file" 
+                      id="supplementary-file-upload" 
+                      onChange={(e) => setSupplementaryFile(e.target.files?.[0] || null)} 
+                      style={{ display: 'none' }} 
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
                     <button 
                       type="button"
                       onClick={() => alert('원고 내용이 임시 저장되었습니다.')}
@@ -746,6 +804,8 @@ const ScriptManage: React.FC = () => {
                 </form>
               )}
             </div>
+            );
+          })()}
 
           {/* Latest Version Section */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '14px 2px 10px' }}>
@@ -1507,10 +1567,24 @@ const ScriptManage: React.FC = () => {
               제출 후에는 기획자가 반려하기 전까지 원고를 직접 수정할 수 없습니다.<br/>
               <span style={{ fontWeight: 700, color: 'var(--primary)' }}>정말로 제출하시겠습니까?</span>
             </p>
+            <div style={{ marginBottom: '24px', padding: '12px 16px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={isCopyrightChecked}
+                  onChange={(e) => setIsCopyrightChecked(e.target.checked)}
+                  style={{ marginTop: '2px' }}
+                />
+                <span style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.4' }}>
+                  본 원고 및 부속 자료에 포함된 타인의 저작물(이미지, 영상, 글 등)에 대해 <strong style={{ color: '#1E293B' }}>저작권 및 초상권 사용 허가를 모두 확인</strong>하였으며, 이로 인해 발생하는 문제는 제출자에게 책임이 있음에 동의합니다. (필수)
+                </span>
+              </label>
+            </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
               <button 
                 onClick={() => {
                   setIsSubmitConfirmOpen(false);
+                  setIsCopyrightChecked(false);
                   setPendingSubmitType(null);
                   setPendingFile(null);
                 }}
@@ -1520,7 +1594,8 @@ const ScriptManage: React.FC = () => {
               </button>
               <button 
                 onClick={executeSubmit}
-                style={{ padding: '10px 16px', border: 'none', background: 'var(--primary)', color: '#fff', borderRadius: 'var(--r-md)', cursor: 'pointer', fontWeight: 700 }}
+                disabled={!isCopyrightChecked}
+                style={{ padding: '10px 16px', border: 'none', background: isCopyrightChecked ? 'var(--primary)' : 'var(--fg-4)', color: '#fff', borderRadius: 'var(--r-md)', cursor: isCopyrightChecked ? 'pointer' : 'not-allowed', fontWeight: 700 }}
               >
                 확인 및 제출
               </button>
