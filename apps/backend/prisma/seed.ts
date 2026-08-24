@@ -162,6 +162,103 @@ async function main() {
   }
 
   console.log('5 Lessons & Deliverables initialized.');
+
+  // Create Course 2
+  const course2 = await prisma.course.create({
+    data: {
+      course_name: '인공지능 활용 수업 설계 입문',
+      lesson_count: 3,
+      current_stage: '원고',
+      status: CourseStatus.ACTIVE,
+      planner_id: planner.user_id,
+      courseCode: 'CRS-2026-002',
+      vendor: 'AX 교육기술연구소',
+      dev_type: '신규 개발',
+      overview: '생성형 AI를 활용한 교수학습 설계 기초 과정입니다.',
+    },
+  });
+
+  await prisma.courseMember.create({
+    data: {
+      course_id: course2.course_id,
+      user_id: planner.user_id,
+      role_in_course: 'PLANNER',
+    },
+  });
+
+  await prisma.courseMember.create({
+    data: {
+      course_id: course2.course_id,
+      user_id: sme.user_id,
+      role_in_course: 'SME',
+      access_scope: JSON.stringify({ lessons: [1, 2, 3] }),
+    },
+  });
+
+  const lessonData2 = [
+    { no: 1, title: '생성형 AI의 이해', code: 'LSN-201' },
+    { no: 2, title: '프롬프트 엔지니어링 기초', code: 'LSN-202' },
+    { no: 3, title: '수업 적용 사례 분석', code: 'LSN-203' },
+  ];
+
+  for (const l of lessonData2) {
+    const lesson = await prisma.lesson.create({
+      data: {
+        course_id: course2.course_id,
+        lesson_no: l.no,
+        title: l.title,
+        derived_status: 'NOT_SUBMITTED',
+        lessonCode: l.code,
+      },
+    });
+
+    await prisma.deliverable.create({
+      data: {
+        lesson_id: lesson.lesson_id,
+        deliverable_type: DeliverableType.SCRIPT,
+        owner_role: 'SME',
+        current_status: 'NOT_SUBMITTED',
+      },
+    });
+  }
+
+  // Create a realistic mock submission for Lesson 1
+  const lesson1Deliverable = await prisma.deliverable.findFirst({
+    where: { lesson: { lesson_no: 1, course_id: course.course_id } }
+  });
+
+  if (lesson1Deliverable) {
+    const fileVersion = await prisma.fileVersion.create({
+      data: {
+        deliverable_id: lesson1Deliverable.deliverable_id,
+        storage_path: '/uploads/mock_preview.txt',
+        preview_path: '/uploads/mock_preview.txt',
+        stage: 'DRAFT',
+        round_no: 1,
+        kind: 'FILE',
+        uploaded_by: sme.user_id,
+      },
+    });
+
+    await prisma.deliverable.update({
+      where: { deliverable_id: lesson1Deliverable.deliverable_id },
+      data: { current_status: 'REVIEWING' }
+    });
+
+    await prisma.feedback.create({
+      data: {
+        deliverable_id: lesson1Deliverable.deliverable_id,
+        file_version_id: fileVersion.version_id,
+        content: '도입부의 학습 목표가 2022 개정 교육과정의 방향성과 약간 다릅니다. 이 부분을 조금 더 명확하게 수정해 주실 수 있을까요?',
+        assignee_id: sme.user_id,
+        created_by: planner.user_id,
+        status: 'OPEN',
+      }
+    });
+
+    console.log('Mock submission and feedback added for Lesson 1.');
+  }
+
   console.log('Seeding completed successfully!');
 }
 
