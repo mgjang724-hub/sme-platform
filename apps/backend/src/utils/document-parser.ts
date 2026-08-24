@@ -16,7 +16,8 @@ export function extractTextFromDoc(filePath: string): string {
       if (!matches) return '';
       
       return matches
-        .map(m => m.replace(/<hp:t(?:\s+[^>]*)?>/g, '').replace(/<\/hp:t>/g, ''))
+        .map(m => m.replace(/<[^>]+>/g, ''))
+        .filter(text => text.trim().length > 0)
         .join('\n');
     }
 
@@ -30,8 +31,9 @@ export function extractTextFromDoc(filePath: string): string {
       if (!matches) return '';
       
       return matches
-        .map(m => m.replace(/<w:t(?:\s+[^>]*)?>/g, '').replace(/<\/w:t>/g, ''))
-        .join(' ');
+        .map(m => m.replace(/<[^>]+>/g, ''))
+        .filter(text => text.trim().length > 0)
+        .join('\n');
     }
   } catch (err) {
     console.error('Failed to extract text from document', err);
