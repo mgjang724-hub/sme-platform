@@ -9,6 +9,7 @@ import { uploadWithProgress } from '../lib/upload';
 import ScriptViewer, { QuotePrompt } from '../components/ScriptViewer';
 import { getScriptStatus } from '../lib/status';
 import { useIsMobile, useIsNarrow } from '../hooks/useMediaQuery';
+import { ACCEPTED_FORMATS, describeMissingPreview } from '../lib/preview';
 import { MOBILE_BAR_HEIGHT } from '../components/AppSidebar';
 import PreviewModal from '../components/script/PreviewModal';
 import AiAnalysisModal from '../components/script/AiAnalysisModal';
@@ -29,6 +30,8 @@ import {
   Eye, 
   FileText,
   Flag,
+  CheckCircle2,
+  AlertCircle,
   Sparkles,
   GitCompare,
   Lock as LockIcon
@@ -816,11 +819,11 @@ const ScriptManage: React.FC = () => {
               {tabOpen.upload && (
                 <form onSubmit={handleUploadSubmit} style={{ padding: '18px' }}>
                   <FileDropzone
-                    accept={['.docx', '.hwp', '.hwpx', '.pdf']}
+                    accept={[...ACCEPTED_FORMATS]}
                     onFileSelected={handleFileSelected}
                     progress={uploadProgress}
                     disabled={submittingFile && uploadProgress === null}
-                    hint=".docx, .hwp, .hwpx, .pdf 형식을 지원합니다"
+                    hint="docx · hwpx · hwp · pdf 를 올릴 수 있습니다"
                     onInvalidFile={(msg) => toast.error('올릴 수 없는 파일 형식입니다', msg)}
                   />
                   {pendingFile && uploadProgress === null && (
@@ -829,10 +832,35 @@ const ScriptManage: React.FC = () => {
                     </div>
                   )}
 
+                  {/* 형식에 따라 되는 것이 다르다는 점을 제출 전에 알린다. */}
+                  <div style={{
+                    marginTop: '10px', padding: '10px 12px',
+                    backgroundColor: 'var(--bg-sunken)', borderRadius: 'var(--r-md)',
+                    fontSize: '11.5px', lineHeight: 1.65, color: 'var(--fg-3)',
+                  }}>
+                    <div style={{ display: 'flex', gap: '7px' }}>
+                      <CheckCircle2 size={13} strokeWidth={2.4} color="var(--success)" aria-hidden="true" style={{ flex: 'none', marginTop: '2px' }} />
+                      <span>
+                        <b style={{ color: 'var(--fg-2)' }}>docx · hwpx</b> — 본문 미리보기와 문장 인용 피드백까지 됩니다.
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '7px', marginTop: '5px' }}>
+                      <AlertCircle size={13} strokeWidth={2.4} color="var(--warning)" aria-hidden="true" style={{ flex: 'none', marginTop: '2px' }} />
+                      <span>
+                        <b style={{ color: 'var(--fg-2)' }}>hwp · pdf</b> — 파일 전달만 됩니다. 한컴오피스에서 [다른 이름으로 저장] → hwpx 로 올리면 미리보기를 쓸 수 있습니다.
+                      </span>
+                    </div>
+                  </div>
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '12px 0', color: 'var(--fg-4)', fontSize: '12px' }}>
                     <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
                     또는 구글 문서(Google Docs) 공유 링크 입력
                     <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '7px', marginBottom: '8px', fontSize: '11.5px', lineHeight: 1.65, color: 'var(--fg-3)' }}>
+                    <AlertCircle size={13} strokeWidth={2.4} color="var(--warning)" aria-hidden="true" style={{ flex: 'none', marginTop: '2px' }} />
+                    <span>링크로 제출하면 본문 미리보기와 문장 인용 피드백은 쓸 수 없습니다. 기획자는 문서를 직접 열어 확인하게 됩니다.</span>
                   </div>
 
                   <div style={{
@@ -1114,11 +1142,18 @@ const ScriptManage: React.FC = () => {
                     loading={loadingPreview}
                     highlight={focusedQuote}
                     onSelectQuote={handleQuoteSelection}
-                    fallback={
-                      <p style={{ margin: 0, fontSize: '13px', color: 'var(--fg-3)', lineHeight: 1.9 }}>
-                        이 버전은 본문 미리보기를 만들 수 없는 형식입니다. 위의 [바로가기]로 원본 파일을 열어 확인해 주세요.
-                      </p>
-                    }
+                    fallback={(() => {
+                      const { reason, hint } = describeMissingPreview(latestVer);
+                      return (
+                        <div style={{ display: 'flex', gap: '9px', alignItems: 'flex-start' }}>
+                          <AlertCircle size={15} strokeWidth={2.2} color="var(--fg-4)" aria-hidden="true" style={{ flex: 'none', marginTop: '3px' }} />
+                          <p style={{ margin: 0, fontSize: '13px', color: 'var(--fg-3)', lineHeight: 1.8 }}>
+                            <b style={{ color: 'var(--fg-2)' }}>{reason}</b><br />
+                            {hint}
+                          </p>
+                        </div>
+                      );
+                    })()}
                   />
                 </div>
               </div>
