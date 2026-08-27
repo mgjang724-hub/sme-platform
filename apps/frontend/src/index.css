@@ -189,3 +189,83 @@ textarea:focus-visible,
     animation: none;
   }
 }
+
+/* ─────────────────────────────────────────────
+   휴대폰 서랍 메뉴
+   ───────────────────────────────────────────── */
+.drawer-backdrop {
+  animation: fade-in 0.15s ease;
+}
+
+.drawer-panel {
+  animation: drawer-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes drawer-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+/* 좁은 화면에서는 hover로 밀려나는 연출이 오히려 방해가 된다. */
+@media (hover: none) {
+  .sidebar-item:hover,
+  .qrow:hover,
+  .noti:hover,
+  .up:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-backdrop,
+  .drawer-panel {
+    animation: none;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   좁은 화면 공통 조정
+   ───────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* 가로 스크롤이 생기지 않도록 한다. */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* 표는 스스로 가로 스크롤되게 두고, 페이지는 밀리지 않게 한다. */
+  table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  /* 손가락으로 누를 수 있는 최소 크기를 확보한다. */
+  button,
+  [role='button'] {
+    min-height: 34px;
+  }
+}
+
+/* 고정 열 수 그리드는 좁은 화면에서 한 줄에 하나씩 쌓는다.
+   페이지들이 인라인 스타일로 열 수를 지정하므로 !important가 필요하다. */
+@media (max-width: 767px) {
+  .rgrid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+/* 태블릿에서는 4열까지는 과하므로 2열로 줄인다. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .rgrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* 좁은 화면에서는 좌우 여백을 줄여 본문 폭을 확보한다. */
+@media (max-width: 767px) {
+  .page-pad {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+}

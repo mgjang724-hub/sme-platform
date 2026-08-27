@@ -41,8 +41,8 @@ const Settings: React.FC = () => {
       </header>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
-        <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+      <div className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+        <div style={{ maxWidth: 'min(640px, 100%)', margin: '0 auto' }}>
           
           <form onSubmit={handleSave} style={{
             background: 'var(--bg-card)',

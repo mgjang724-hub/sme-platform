@@ -61,7 +61,7 @@ const MyCourses: React.FC = () => {
       </header>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+      <div className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
         <div style={{ marginBottom: '22px' }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700 }}>
             참여 중인 연수 과정 <span style={{ color: 'var(--primary)' }}>{courses.length}개</span>
@@ -74,7 +74,7 @@ const MyCourses: React.FC = () => {
         {/* Grid */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))',
           gap: '18px'
         }}>
           {courses.map(c => (

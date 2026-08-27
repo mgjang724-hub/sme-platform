@@ -180,7 +180,7 @@ const Dashboard: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+      <div className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
         
         {/* Greeting Banner */}
         <div style={{
@@ -219,13 +219,13 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* 3-KPI Grid */}
-        <div style={{
+        <div className="rgrid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '16px',
           marginBottom: '26px'
         }}>
-          <div style={{
+          <div className="page-pad" style={{
             position: 'relative',
             overflow: 'hidden',
             background: 'var(--bg-card)',
@@ -245,7 +245,7 @@ const Dashboard: React.FC = () => {
             <div style={{ fontSize: '12px', color: 'var(--fg-4)', marginTop: '4px' }}>강사가 반영 완료한 피드백</div>
           </div>
 
-          <div style={{
+          <div className="page-pad" style={{
             position: 'relative',
             overflow: 'hidden',
             background: 'var(--bg-card)',
@@ -265,7 +265,7 @@ const Dashboard: React.FC = () => {
             <div style={{ fontSize: '12px', color: 'var(--fg-4)', marginTop: '4px' }}>최종 승인 대기 중 원고</div>
           </div>
 
-          <div style={{
+          <div className="page-pad" style={{
             position: 'relative',
             overflow: 'hidden',
             background: 'var(--bg-card)',

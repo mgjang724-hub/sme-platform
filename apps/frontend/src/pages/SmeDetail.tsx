@@ -83,7 +83,7 @@ const SmeDetail: React.FC = () => {
 
       {/* Content */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 44px' }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{ maxWidth: 'min(1000px, 100%)', margin: '0 auto' }}>
           
           {/* Profile Card */}
           <div style={{
@@ -161,7 +161,7 @@ const SmeDetail: React.FC = () => {
           </div>
 
           {/* Workload Stats Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '24px' }}>
+          <div className="rgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '24px' }}>
             {stats.map((s, idx) => (
               <div key={idx} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-xs)', padding: '16px 18px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: s.fg }}>
@@ -182,7 +182,7 @@ const SmeDetail: React.FC = () => {
             <div style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700, marginBottom: '12px' }}>
               참여 과정 <span style={{ fontSize: '13px', color: 'var(--fg-4)', fontWeight: 600 }}>2개</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="rgrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               {courses.map((c, idx) => (
                 <div 
                   key={idx} 
@@ -211,7 +211,7 @@ const SmeDetail: React.FC = () => {
           </div>
 
           {/* Scripts list and activity */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px', alignItems: 'start' }}>
+          <div className="rgrid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px', alignItems: 'start' }}>
             {/* Assigned scripts */}
             <div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700, marginBottom: '12px' }}>

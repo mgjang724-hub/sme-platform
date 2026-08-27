@@ -164,8 +164,8 @@ const Notifications: React.FC = () => {
       </header>
 
       {/* Body */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px 48px' }}>
-        <div style={{ maxWidth: '820px', margin: '0 auto' }}>
+      <div className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '24px 32px 48px' }}>
+        <div style={{ maxWidth: 'min(820px, 100%)', margin: '0 auto' }}>
           
           {/* Category Filters */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>

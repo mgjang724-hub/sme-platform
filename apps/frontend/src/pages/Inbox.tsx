@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { useUi } from '../context/UiContext';
 import { 
   Send, 
@@ -39,6 +40,9 @@ const Inbox: React.FC = () => {
   const [threads, setThreads] = useState<QnaThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIdx, setSelectedIdx] = useState(0);
+  // 휴대폰에서는 목록과 대화를 한 번에 하나씩 보여준다.
+  const isMobile = useIsMobile();
+  const [mobileView, setMobileView] = useState<'LIST' | 'DETAIL'>('LIST');
   const [viewRole, setViewRole] = useState<'PLANNER' | 'SME'>('PLANNER');
 
   // Compose / forms
@@ -210,11 +214,11 @@ const Inbox: React.FC = () => {
         
         {/* Left Side: Threads list */}
         <div style={{
-          width: '360px',
+          width: isMobile ? '100%' : 'min(360px, 100%)',
           flexShrink: 0,
-          borderRight: '1px solid var(--border)',
+          borderRight: isMobile ? 'none' : '1px solid var(--border)',
           background: 'var(--bg-card)',
-          display: 'flex',
+          display: isMobile && mobileView !== 'LIST' ? 'none' : 'flex',
           flexDirection: 'column',
           minHeight: 0
         }}>
@@ -236,7 +240,7 @@ const Inbox: React.FC = () => {
               return (
                 <button
                   key={t.thread_id}
-                  onClick={() => setSelectedIdx(idx)}
+                  onClick={() => { setSelectedIdx(idx); setMobileView('DETAIL'); }}
                   style={{
                     width: '100%',
                     textAlign: 'left',
@@ -315,8 +319,24 @@ const Inbox: React.FC = () => {
 
         {/* Right Side: Message Thread Chat */}
         {cur ? (
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: 'var(--bg-page)' }}>
-            <div style={{ flexShrink: 0, padding: '20px 30px', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-card)' }}>
+          <div style={{
+            flex: 1,
+            minWidth: 0,
+            display: isMobile && mobileView !== 'DETAIL' ? 'none' : 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
+            backgroundColor: 'var(--bg-page)',
+          }}>
+            <div style={{ flexShrink: 0, padding: isMobile ? '14px 16px' : '20px 30px', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-card)' }}>
+              {isMobile && (
+                <button
+                  type="button"
+                  onClick={() => setMobileView('LIST')}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginBottom: '10px', fontSize: '12.5px', fontWeight: 700, color: 'var(--primary-hover)' }}
+                >
+                  ← 문의 목록
+                </button>
+              )}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{
                   width: '44px',
@@ -464,7 +484,7 @@ const Inbox: React.FC = () => {
           zIndex: 50
         }}>
           <form onSubmit={handleCreateThread} style={{
-            width: '480px',
+            width: 'min(480px, 100%)',
             maxWidth: '100%',
             backgroundColor: 'var(--bg-card)',
             borderRadius: 'var(--r-xl)',

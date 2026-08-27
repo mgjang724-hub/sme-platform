@@ -376,7 +376,7 @@ const GuideCenter: React.FC = () => {
       </header>
 
       {/* Main Body Area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+      <div className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
         
         {/* VIEW 1: Guide List (S09) */}
         {view === 'list' && (
@@ -405,7 +405,7 @@ const GuideCenter: React.FC = () => {
             {/* Guides Cards Grid */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(360px, 100%), 1fr))',
               gap: '18px'
             }}>
               {guides.map((g) => {
@@ -492,7 +492,7 @@ const GuideCenter: React.FC = () => {
 
         {/* VIEW 2: Guide Detail (S10) */}
         {view === 'detail' && selectedGuide && (
-          <div style={{ maxWidth: '1040px', margin: '0 auto', display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
+          <div style={{ maxWidth: 'min(1040px, 100%)', margin: '0 auto', display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
             
             {/* Sticky Table of Contents (TOC) */}
             <nav className="toc" style={{ position: 'sticky', top: '20px', width: '200px', flex: 'none', paddingTop: '6px' }}>
@@ -663,7 +663,7 @@ const GuideCenter: React.FC = () => {
               </div>
 
               {/* Bottom Q&A Form (Matches S10 inquiry footer) */}
-              <div style={{ marginTop: '36px', padding: '22px 24px', borderRadius: 'var(--r-xl)', background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
+              <div className="page-pad" style={{ marginTop: '36px', padding: '22px 24px', borderRadius: 'var(--r-xl)', background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <HelpCircle size={18} style={{ color: 'var(--primary-hover)' }} />
                   <span style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700 }}>더 궁금한 점이 있으신가요?</span>
@@ -696,7 +696,7 @@ const GuideCenter: React.FC = () => {
 
         {/* VIEW 3: Guide Create/Edit Form (S11) */}
         {view === 'form' && (
-          <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+          <div style={{ maxWidth: 'min(720px, 100%)', margin: '0 auto' }}>
             <form onSubmit={handleSaveGuide} style={{
               background: 'var(--bg-card)',
               border: '1px solid var(--border)',

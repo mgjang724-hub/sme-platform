@@ -339,7 +339,7 @@ const Calendar: React.FC = () => {
 
         {/* Right Upcoming Side Panel */}
         <div style={{
-          width: '320px',
+          width: 'min(320px, 100%)',
           flexShrink: 0,
           borderLeft: '1px solid var(--border)',
           background: 'var(--bg-card)',
@@ -435,7 +435,7 @@ const Calendar: React.FC = () => {
           backdropFilter: 'blur(3px)'
         }}>
           <div style={{
-            width: '420px',
+            width: 'min(420px, 100%)',
             backgroundColor: 'var(--bg-card)',
             border: '1px solid var(--border)',
             borderRadius: 'var(--r-lg)',

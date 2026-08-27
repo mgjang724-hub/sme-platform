@@ -334,7 +334,7 @@ const CourseDetail: React.FC = () => {
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px 44px' }}>
         
         {/* Roadmap Roadmap Timeline */}
-        <div style={{
+        <div className="page-pad" style={{
           background: 'var(--bg-card)',
           border: '1px solid var(--border)',
           borderRadius: 'var(--r-xl)',
@@ -493,7 +493,7 @@ const CourseDetail: React.FC = () => {
 
         {/* Tab 2: Issues and guides */}
         {tab === 'issues' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '18px' }}>
+          <div className="rgrid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '18px' }}>
             
             {/* Left Pane: Issues List */}
             <div>

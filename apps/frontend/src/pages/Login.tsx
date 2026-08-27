@@ -63,7 +63,7 @@ const Login: React.FC = () => {
       {/* Decorative background bubbles */}
       <div style={{
         position: 'absolute',
-        width: '520px',
+        width: 'min(520px, 100%)',
         height: '520px',
         borderRadius: '50%',
         background: 'var(--primary-tint)',
@@ -73,7 +73,7 @@ const Login: React.FC = () => {
       }}></div>
       <div style={{
         position: 'absolute',
-        width: '360px',
+        width: 'min(360px, 100%)',
         height: '360px',
         borderRadius: '50%',
         background: 'var(--primary-tint-2)',
@@ -85,7 +85,7 @@ const Login: React.FC = () => {
       {/* Login Card */}
       <form onSubmit={handleSubmit} style={{
         position: 'relative',
-        width: '400px',
+        width: 'min(400px, 100%)',
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--r-2xl)',
@@ -137,7 +137,7 @@ const Login: React.FC = () => {
         {/* Role Select Button Grid */}
         <div style={{ marginTop: '26px' }}>
           <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--fg-3)', marginBottom: '8px' }}>역할 선택</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div className="rgrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <button
               type="button"
               onClick={() => handleRoleChange('PLANNER')}

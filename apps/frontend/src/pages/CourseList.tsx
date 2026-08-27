@@ -330,7 +330,7 @@ const CourseList: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+      <div className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
         
         {/* Filter Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
@@ -409,7 +409,7 @@ const CourseList: React.FC = () => {
         {/* Course Cards Grid */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(360px, 100%), 1fr))',
           gap: '18px'
         }}>
           {filtered.map((c) => {
@@ -629,7 +629,7 @@ const CourseList: React.FC = () => {
           <div 
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: '520px',
+              width: 'min(520px, 100%)',
               maxWidth: '100%',
               backgroundColor: 'var(--bg-card)',
               borderRadius: 'var(--r-2xl)',
@@ -669,7 +669,7 @@ const CourseList: React.FC = () => {
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="rgrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--fg-2)', marginBottom: '6px' }}>
                       과정 코드

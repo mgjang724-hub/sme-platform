@@ -3,7 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { UiProvider } from './context/UiContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import AppSidebar from './components/AppSidebar';
+import AppSidebar, { MOBILE_BAR_HEIGHT } from './components/AppSidebar';
+import { useIsMobile } from './hooks/useMediaQuery';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import CourseList from './pages/CourseList';
@@ -23,11 +24,22 @@ import Settings from './pages/Settings';
 
 const AppContent: React.FC = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
       {user && <AppSidebar />}
-      <main style={{ flex: 1, backgroundColor: 'var(--bg-page)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <main style={{
+        flex: 1,
+        // flex 자식은 기본값이 min-width:auto라 내용이 넓으면 화면 밖으로 밀린다.
+        minWidth: 0,
+        backgroundColor: 'var(--bg-page)',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        // 휴대폰에서는 사이드바가 상단 고정 바로 바뀌므로 그만큼 비워 준다.
+        paddingTop: user && isMobile ? MOBILE_BAR_HEIGHT + 'px' : 0,
+      }}>
         <Routes>
           <Route path="/login" element={<Login />} />
           

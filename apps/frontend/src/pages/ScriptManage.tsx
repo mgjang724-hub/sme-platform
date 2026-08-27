@@ -8,6 +8,8 @@ import FileDropzone, { SelectedFileChip } from '../components/FileDropzone';
 import { uploadWithProgress } from '../lib/upload';
 import ScriptViewer, { QuotePrompt } from '../components/ScriptViewer';
 import { getScriptStatus, resolveLessonStatus } from '../lib/status';
+import { useIsMobile, useIsNarrow } from '../hooks/useMediaQuery';
+import { MOBILE_BAR_HEIGHT } from '../components/AppSidebar';
 import { 
   ChevronRight, 
   Upload, 
@@ -143,7 +145,11 @@ const ScriptManage: React.FC = () => {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   
   // UX-401: Sidebar toggle
+  const isMobile = useIsMobile();
+  const isNarrow = useIsNarrow();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // 좁은 화면에서는 원고와 피드백을 나란히 둘 수 없어 탭으로 전환한다.
+  const [mobileTab, setMobileTab] = useState<'SCRIPT' | 'FEEDBACK'>('SCRIPT');
   
   // Learning Objectives Guideline state
   const [guidelineText, setGuidelineText] = useState("- 학습자가 해당 차시의 주요 학습 가이드를 명확히 숙지하도록 구성한다.\n- 지나치게 전문적이거나 기계적인 번역투 어조를 지양하고 자연스러운 대화문으로 작성한다.\n- 원고 분량: 동영상 강의 약 10분 내외 분량 (A4 8~10매 기준)");
@@ -155,11 +161,17 @@ const ScriptManage: React.FC = () => {
   // UX-302: Supplementary File
   const [supplementaryFile, setSupplementaryFile] = useState<File | null>(null);
 
+  // 폭이 좁아지면 차시 목록은 기본으로 접어 본문 자리를 확보한다.
+  useEffect(() => {
+    setIsSidebarOpen(!isNarrow);
+  }, [isNarrow]);
+
   // 열려 있는 모달은 Esc 키로 닫는다.
   useEscapeKey(previewOpen, () => setPreviewOpen(false));
   useEscapeKey(aiModalOpen, () => setAiModalOpen(false));
   useEscapeKey(diffModalOpen, () => setDiffModalOpen(false));
   useEscapeKey(isSubmitConfirmOpen, () => setIsSubmitConfirmOpen(false));
+  useEscapeKey(isMobile && isSidebarOpen, () => setIsSidebarOpen(false));
 
   const latestVer = versions[0];
   const unresolvedFeedbacks = feedbacks.filter(f => f.status === 'OPEN' || f.status === 'REOPENED');
@@ -456,12 +468,15 @@ const ScriptManage: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'var(--font-sans)' }}>
+    <div style={{
+      height: isMobile ? `calc(100vh - ${MOBILE_BAR_HEIGHT}px)` : '100vh',
+      display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'var(--font-sans)',
+    }}>
       
       {/* Header */}
       <header style={{
         flexShrink: 0,
-        padding: '14px 28px 0',
+        padding: isMobile ? '12px 16px 0' : '14px 28px 0',
         background: 'var(--bg-card)',
         borderBottom: '1px solid var(--border)'
       }}>
@@ -493,7 +508,15 @@ const ScriptManage: React.FC = () => {
         </div>
 
         {/* Header Controls */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px', marginTop: '10px', paddingBottom: '14px' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: isMobile ? 'stretch' : 'flex-end',
+          flexDirection: isMobile ? 'column' : 'row',
+          flexWrap: 'wrap',
+          gap: isMobile ? '10px' : '16px',
+          marginTop: '10px',
+          paddingBottom: '14px',
+        }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '21px', fontWeight: 700, margin: 0 }}>
@@ -611,19 +634,69 @@ const ScriptManage: React.FC = () => {
         </div>
       </header>
 
+      {/* 휴대폰: 원고와 피드백을 탭으로 오간다 */}
+      {isMobile && (
+        <div role="tablist" aria-label="원고와 피드백 전환" style={{
+          flexShrink: 0, display: 'flex', gap: '6px', padding: '8px 16px',
+          background: 'var(--bg-card)', borderBottom: '1px solid var(--border)',
+        }}>
+          {([['SCRIPT', '원고'], ['FEEDBACK', '피드백']] as const).map(([key, label]) => {
+            const active = mobileTab === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setMobileTab(key)}
+                style={{
+                  flex: 1, padding: '9px 10px', borderRadius: 'var(--r-md)',
+                  fontSize: '13px', fontWeight: 700,
+                  backgroundColor: active ? 'var(--primary-tint)' : 'var(--bg-sunken)',
+                  color: active ? 'var(--primary-hover)' : 'var(--fg-3)',
+                }}
+              >
+                {label}
+                {key === 'FEEDBACK' && unresolvedFeedbacks.length > 0 && (
+                  <span style={{
+                    marginLeft: '6px', padding: '1px 6px', borderRadius: 'var(--r-pill)',
+                    backgroundColor: 'var(--error)', color: '#fff', fontSize: '10.5px', fontWeight: 800,
+                  }}>
+                    {unresolvedFeedbacks.length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* 3-Pane Body */}
       <div style={{ flex: 1, display: 'flex', minHeight: 0, overflow: 'hidden' }}>
         
         {/* Left Pane: Chapters sidebar */}
+        {isSidebarOpen && isMobile && (
+          <div
+            onClick={() => setIsSidebarOpen(false)}
+            style={{ position: 'fixed', inset: 0, zIndex: 800, backgroundColor: 'rgba(17, 24, 39, 0.42)' }}
+            aria-hidden="true"
+          />
+        )}
         {isSidebarOpen && (
-          <div style={{
-            width: '236px',
-            flexShrink: 0,
-            borderRight: '1px solid var(--border)',
-            background: 'var(--bg-card)',
-            overflowY: 'auto',
-            padding: '16px 12px'
-          }}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: isMobile ? 'min(260px, 80vw)' : '236px',
+              flexShrink: 0,
+              borderRight: '1px solid var(--border)',
+              background: 'var(--bg-card)',
+              overflowY: 'auto',
+              padding: '16px 12px',
+              ...(isMobile ? {
+                position: 'fixed', top: MOBILE_BAR_HEIGHT, bottom: 0, left: 0, zIndex: 810,
+                boxShadow: 'var(--shadow-lg)',
+              } : {}),
+            }}>
             <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--fg-4)', padding: '0 8px 8px' }}>
               차시 리스트 · {lessons.length}
             </div>
@@ -674,7 +747,13 @@ const ScriptManage: React.FC = () => {
         )}
 
         {/* Center Pane: Scripts and Upload panel */}
-        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '22px 26px 40px' }}>
+        <div style={{
+          flex: 1,
+          minWidth: 0,
+          overflowY: 'auto',
+          padding: isMobile ? '16px 14px 32px' : '22px 26px 40px',
+          display: isMobile && mobileTab !== 'SCRIPT' ? 'none' : 'block',
+        }}>
           
           {/* Target guidelines */}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', marginBottom: '16px' }}>
@@ -1198,11 +1277,11 @@ const ScriptManage: React.FC = () => {
 
         {/* Right Pane: Feedbacks threads list */}
         <div style={{
-          width: '378px',
+          width: isMobile ? '100%' : isNarrow ? '320px' : '378px',
           flexShrink: 0,
-          borderLeft: '1px solid var(--border)',
+          borderLeft: isMobile ? 'none' : '1px solid var(--border)',
           background: 'var(--bg-card)',
-          display: 'flex',
+          display: isMobile && mobileTab !== 'FEEDBACK' ? 'none' : 'flex',
           flexDirection: 'column',
           minHeight: 0
         }}>
@@ -1477,7 +1556,7 @@ const ScriptManage: React.FC = () => {
           <div 
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: '720px',
+              width: 'min(720px, 100%)',
               maxWidth: '100%',
               maxHeight: '100%',
               display: 'flex',
@@ -1523,7 +1602,7 @@ const ScriptManage: React.FC = () => {
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '28px 32px', backgroundColor: 'var(--bg-page)' }}>
-              <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '36px 40px', boxShadow: 'var(--shadow-xs)' }}>
+              <div style={{ maxWidth: 'min(600px, 100%)', margin: '0 auto', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '36px 40px', boxShadow: 'var(--shadow-xs)' }}>
                 <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '19px', fontWeight: 700, margin: '0 0 16px', color: 'var(--fg-1)' }}>
                   {currentLesson.lesson_no}차시 — {currentLesson.title}
                 </h2>
@@ -1594,7 +1673,7 @@ const ScriptManage: React.FC = () => {
           <div 
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: '760px',
+              width: 'min(760px, 100%)',
               maxWidth: '100%',
               maxHeight: '90vh',
               display: 'flex',
@@ -1638,7 +1717,7 @@ const ScriptManage: React.FC = () => {
               ) : aiData ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                   {/* Top Stats Cards */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                  <div className="rgrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                     <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
                       <Clock size={28} style={{ color: '#4F46E5' }} />
                       <div>
@@ -1735,7 +1814,7 @@ const ScriptManage: React.FC = () => {
           <div 
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: '840px',
+              width: 'min(840px, 100%)',
               maxWidth: '100%',
               maxHeight: '90vh',
               display: 'flex',
@@ -1835,7 +1914,7 @@ const ScriptManage: React.FC = () => {
             background: 'var(--bg-card)',
             padding: '24px 32px',
             borderRadius: 'var(--r-lg)',
-            width: '400px',
+            width: 'min(400px, 100%)',
             boxShadow: 'var(--shadow-xl)'
           }}>
             <h3 style={{ margin: '0 0 16px', fontSize: '18px', color: 'var(--fg-1)' }}>원고 제출 확인</h3>

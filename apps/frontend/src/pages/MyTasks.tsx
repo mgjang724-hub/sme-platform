@@ -251,7 +251,7 @@ const MyTasks: React.FC = () => {
 
       {/* Body: Conditional based on activeTab */}
       {activeTab === 'TASKS' ? (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px 48px' }}>
+        <div className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '24px 32px 48px' }}>
         
         {/* Greetings */}
         <div style={{ marginBottom: '18px' }}>
@@ -264,13 +264,13 @@ const MyTasks: React.FC = () => {
         </div>
 
         {/* 3-KPI Grid */}
-        <div style={{
+        <div className="rgrid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '16px',
           marginBottom: '24px'
         }}>
-          <div style={{
+          <div className="page-pad" style={{
             position: 'relative',
             overflow: 'hidden',
             background: 'var(--bg-card)',
@@ -291,7 +291,7 @@ const MyTasks: React.FC = () => {
             <div style={{ position: 'relative', fontSize: '12.5px', color: 'var(--fg-3)', marginTop: '2px' }}>전체 {totalCount}차시 중 최종 승인 완료</div>
           </div>
 
-          <div style={{
+          <div className="page-pad" style={{
             position: 'relative',
             overflow: 'hidden',
             background: 'var(--bg-card)',
@@ -312,7 +312,7 @@ const MyTasks: React.FC = () => {
             <div style={{ position: 'relative', fontSize: '12.5px', color: 'var(--fg-3)', marginTop: '2px' }}>새 피드백 또는 수정 요청</div>
           </div>
 
-          <div style={{
+          <div className="page-pad" style={{
             position: 'relative',
             overflow: 'hidden',
             background: 'var(--bg-card)',
@@ -410,7 +410,7 @@ const MyTasks: React.FC = () => {
         {/* Task Cards Grid */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))',
           gap: '16px'
         }}>
           {filtered.map((t, idx) => {
@@ -514,7 +514,7 @@ const MyTasks: React.FC = () => {
 
       </div>
       ) : (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+        <div className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
           <div style={{ marginBottom: '22px' }}>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700 }}>
               참여 중인 연수 과정 <span style={{ color: 'var(--primary)' }}>{rawCourses.length}개</span>
@@ -526,7 +526,7 @@ const MyTasks: React.FC = () => {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))',
             gap: '18px'
           }}>
             {rawCourses.map(c => (

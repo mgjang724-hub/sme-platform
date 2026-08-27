@@ -127,11 +127,11 @@ const Members: React.FC = () => {
       </header>
 
       {/* Main Container */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '22px' }}>
+      <div className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+        <div className="rgrid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '22px' }}>
           
           {/* Left Pane: Members Table */}
-          <div style={{
+          <div className="page-pad" style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
             borderRadius: 'var(--r-xl)',
@@ -191,7 +191,7 @@ const Members: React.FC = () => {
           </div>
 
           {/* Right Pane: Add Member Form */}
-          <div style={{
+          <div className="page-pad" style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
             borderRadius: 'var(--r-xl)',

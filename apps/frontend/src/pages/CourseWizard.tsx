@@ -187,7 +187,7 @@ const CourseWizard: React.FC = () => {
 
       {/* Main Wizard Area */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '28px 32px 40px' }}>
-        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
+        <div style={{ maxWidth: 'min(760px, 100%)', margin: '0 auto' }}>
           
           {/* Stepper progress */}
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '26px' }}>
@@ -235,7 +235,7 @@ const CourseWizard: React.FC = () => {
           </div>
 
           {/* Form Card */}
-          <div style={{
+          <div className="page-pad" style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
             borderRadius: 'var(--r-xl)',
@@ -283,7 +283,7 @@ const CourseWizard: React.FC = () => {
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="rgrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div>
                       <label style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--fg-3)', marginBottom: '6px', display: 'block' }}>과정 코드</label>
                       <input 
@@ -350,7 +350,7 @@ const CourseWizard: React.FC = () => {
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700, marginBottom: '4px' }}>일정 · 마일스톤</div>
                 <div style={{ fontSize: '13px', color: 'var(--fg-3)', marginBottom: '22px' }}>원고 작성부터 촬영까지의 주요 일정을 정하세요.</div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="rgrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   {[
                     { label: '킥오프', val: kickoffDate, setter: setKickoffDate, color: 'var(--stage-plan-fg)' },
                     { label: '원고 제출 마감', val: scriptDeadline, setter: setScriptDeadline, color: 'var(--stage-script-fg)' },

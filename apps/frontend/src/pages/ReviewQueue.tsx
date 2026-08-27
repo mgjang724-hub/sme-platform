@@ -127,7 +127,7 @@ const ReviewQueue: React.FC = () => {
       </header>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
+      <div className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '26px 32px 40px' }}>
         
         <div style={{ marginBottom: '20px' }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 700 }}>
@@ -139,7 +139,7 @@ const ReviewQueue: React.FC = () => {
         </div>
 
         {/* 3-KPI Stats */}
-        <div style={{
+        <div className="rgrid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '16px',
