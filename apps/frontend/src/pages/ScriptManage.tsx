@@ -394,23 +394,30 @@ const ScriptManage: React.FC = () => {
   // Approve Deliverable (Final approve)
   const handleApproveDeliverable = async () => {
     if (!deliverable) return;
+    // 미반영 피드백이 남아 있어도 막지는 않는다. 판단은 기획자가 하되 놓치지 않도록 알린다.
+    const pending = unresolvedFeedbacks.length;
+    const lines = [
+      '승인하면 원고가 잠기고, 강사는 더 이상 새 버전을 올리거나 수정할 수 없습니다.',
+      '지금까지의 피드백 기록은 그대로 남습니다.',
+    ];
+    if (pending > 0) {
+      lines.unshift(`아직 반영되지 않은 피드백이 ${pending}건 남아 있습니다.`);
+    }
+
     const ok = await confirm({
       title: '이 원고를 최종 승인할까요?',
-      message: '승인하면 원고가 잠기고, 강사는 더 이상 새 버전을 올리거나 수정할 수 없습니다.\n지금까지의 피드백 기록은 그대로 남습니다.',
+      message: lines.join('\n'),
       confirmLabel: '최종 승인',
+      tone: pending > 0 ? 'danger' : 'default',
       acknowledgeLabel: '이 원고를 최종본으로 확정합니다.',
     });
     if (!ok) return;
 
     try {
-      await apiFetch(`/deliverables/${deliverable.deliverable_id}/files`, {
+      await apiFetch(`/deliverables/${deliverable.deliverable_id}/approve`, {
         method: 'POST',
-        body: JSON.stringify({
-          kind: 'LINK',
-          url: versions[0]?.storage_path || 'google-docs-approved',
-        })
       });
-      toast.success('원고를 최종 승인했습니다', '과정 상세 화면으로 이동합니다.');
+      toast.success('원고를 최종 승인했습니다', `v${latestVer?.round_no}가 최종본으로 확정되었습니다.`);
       navigate(`/courses/${courseId}`);
     } catch (err: any) {
       toast.error('승인 처리에 실패했습니다', err.message || '잠시 후 다시 시도해 주세요.');

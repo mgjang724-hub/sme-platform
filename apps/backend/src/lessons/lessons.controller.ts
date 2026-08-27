@@ -30,6 +30,14 @@ export class LessonsController {
     return this.lessonsService.uploadLocalFile(req.user, deliverableId, file);
   }
 
+  @Post('deliverables/:id/approve')
+  async approveDeliverable(
+    @Request() req: any,
+    @Param('id') deliverableId: string,
+  ) {
+    return this.lessonsService.approveDeliverable(req.user, deliverableId);
+  }
+
   @Get('deliverables/:id/files')
   async getVersions(@Param('id') deliverableId: string) {
     return this.lessonsService.getVersions(deliverableId);

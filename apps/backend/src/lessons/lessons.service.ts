@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -71,6 +71,10 @@ export class LessonsService {
 
     if (!deliverable) {
       throw new NotFoundException('해당 산출물을 찾을 수 없습니다.');
+    }
+
+    if (deliverable.current_status === 'APPROVED') {
+      throw new BadRequestException('최종 승인된 원고입니다. 기획자가 반려해야 새 버전을 올릴 수 있습니다.');
     }
 
     const lastRound = deliverable.fileVersions[0]?.round_no || 0;
@@ -148,6 +152,61 @@ export class LessonsService {
     }
   }
 
+  /**
+   * 원고를 최종 승인한다.
+   * 최신 버전을 확정본으로 못박고(Approval 기록 + is_final), 이후 업로드를 막는다.
+   */
+  async approveDeliverable(user: any, deliverableId: string) {
+    if (user.global_role !== 'PLANNER' && user.global_role !== 'ADMIN') {
+      throw new ForbiddenException('기획자 또는 관리자만 원고를 승인할 수 있습니다.');
+    }
+
+    const deliverable = await this.prisma.deliverable.findUnique({
+      where: { deliverable_id: deliverableId },
+      include: {
+        fileVersions: {
+          orderBy: { round_no: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    if (!deliverable) {
+      throw new NotFoundException('해당 산출물을 찾을 수 없습니다.');
+    }
+    if (deliverable.current_status === 'APPROVED') {
+      throw new BadRequestException('이미 최종 승인된 원고입니다.');
+    }
+
+    const latest = deliverable.fileVersions[0];
+    if (!latest) {
+      throw new BadRequestException('제출된 원고가 없어 승인할 수 없습니다.');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.approval.create({
+        data: {
+          file_version_id: latest.version_id,
+          approved_by: user.user_id,
+          lock_applied: true,
+        },
+      });
+
+      await tx.fileVersion.update({
+        where: { version_id: latest.version_id },
+        data: { is_final: true },
+      });
+
+      return tx.deliverable.update({
+        where: { deliverable_id: deliverableId },
+        data: {
+          current_status: 'APPROVED',
+          final_file_version_id: latest.version_id,
+        },
+      });
+    });
+  }
+
   async getVersions(deliverableId: string) {
     return this.prisma.fileVersion.findMany({
       where: { deliverable_id: deliverableId },
@@ -177,6 +236,10 @@ export class LessonsService {
 
     if (!deliverable) {
       throw new NotFoundException('해당 산출물을 찾을 수 없습니다.');
+    }
+
+    if (deliverable.current_status === 'APPROVED') {
+      throw new BadRequestException('최종 승인된 원고입니다. 기획자가 반려해야 새 버전을 올릴 수 있습니다.');
     }
 
     const lastRound = deliverable.fileVersions[0]?.round_no || 0;
