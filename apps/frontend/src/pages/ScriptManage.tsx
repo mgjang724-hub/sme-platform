@@ -7,9 +7,15 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import FileDropzone, { SelectedFileChip } from '../components/FileDropzone';
 import { uploadWithProgress } from '../lib/upload';
 import ScriptViewer, { QuotePrompt } from '../components/ScriptViewer';
-import { getScriptStatus, resolveLessonStatus } from '../lib/status';
+import { getScriptStatus } from '../lib/status';
 import { useIsMobile, useIsNarrow } from '../hooks/useMediaQuery';
 import { MOBILE_BAR_HEIGHT } from '../components/AppSidebar';
+import PreviewModal from '../components/script/PreviewModal';
+import AiAnalysisModal from '../components/script/AiAnalysisModal';
+import DiffModal from '../components/script/DiffModal';
+import SubmitConfirmModal from '../components/script/SubmitConfirmModal';
+import LessonNavList from '../components/script/LessonNavList';
+import FeedbackPanel, { type Feedback } from '../components/script/FeedbackPanel';
 import { 
   ChevronRight, 
   Upload, 
@@ -21,15 +27,10 @@ import {
   ChevronUp, 
   ExternalLink, 
   Eye, 
-  X,
   FileText,
   Flag,
-  MessageSquare,
   Sparkles,
   GitCompare,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
   Lock as LockIcon
 } from 'lucide-react';
 
@@ -51,22 +52,6 @@ interface FileVersion {
   created_at: string;
   uploader?: {
     name: string;
-  };
-}
-
-interface Feedback {
-  feedback_id: string;
-  content: string;
-  /** 'QUOTE'면 location_value에 원고에서 인용한 문장이 들어 있다. */
-  location_type?: string | null;
-  location_value?: string | null;
-  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'REOPENED' | 'FORCE_CLOSED';
-  created_at: string;
-  due_date: string | null;
-  creator: {
-    user_id: string;
-    name: string;
-    global_role: string;
   };
 }
 
@@ -370,10 +355,6 @@ const ScriptManage: React.FC = () => {
     }
   };
 
-  const handleFeedbackSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await submitFeedback();
-  };
 
   /** 본문에서 문장을 드래그하면 인용 제안 바를 띄운다. */
   const handleQuoteSelection = (quote: string) => {
@@ -674,76 +655,14 @@ const ScriptManage: React.FC = () => {
       {/* 3-Pane Body */}
       <div style={{ flex: 1, display: 'flex', minHeight: 0, overflow: 'hidden' }}>
         
-        {/* Left Pane: Chapters sidebar */}
-        {isSidebarOpen && isMobile && (
-          <div
-            onClick={() => setIsSidebarOpen(false)}
-            style={{ position: 'fixed', inset: 0, zIndex: 800, backgroundColor: 'rgba(17, 24, 39, 0.42)' }}
-            aria-hidden="true"
-          />
-        )}
         {isSidebarOpen && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: isMobile ? 'min(260px, 80vw)' : '236px',
-              flexShrink: 0,
-              borderRight: '1px solid var(--border)',
-              background: 'var(--bg-card)',
-              overflowY: 'auto',
-              padding: '16px 12px',
-              ...(isMobile ? {
-                position: 'fixed', top: MOBILE_BAR_HEIGHT, bottom: 0, left: 0, zIndex: 810,
-                boxShadow: 'var(--shadow-lg)',
-              } : {}),
-            }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--fg-4)', padding: '0 8px 8px' }}>
-              차시 리스트 · {lessons.length}
-            </div>
-            {lessons.map((ch) => {
-              const isCur = ch.lesson_id === lessonId;
-              return (
-                <div
-                  key={ch.lesson_id}
-                  onClick={() => navigate(`/courses/${courseId}/lessons/${ch.lesson_id}/script`)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '11px 10px',
-                    borderRadius: 'var(--r-md)',
-                    cursor: 'pointer',
-                    backgroundColor: isCur ? 'var(--primary-tint)' : 'transparent',
-                    marginBottom: '2px'
-                  }}
-                  className="chap"
-                >
-                  <span style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    flexShrink: 0,
-                    backgroundColor: getScriptStatus(resolveLessonStatus(ch)).dot
-                  }}></span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontSize: '13px',
-                      fontWeight: isCur ? 700 : 500,
-                      color: isCur ? 'var(--primary-hover)' : 'var(--fg-1)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}>
-                      {ch.lesson_no}차시 — {ch.title}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--fg-4)', marginTop: '2px' }}>
-                      {getScriptStatus(resolveLessonStatus(ch)).label}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <LessonNavList
+            lessons={lessons}
+            currentLessonId={lessonId}
+            onSelect={(id) => navigate(`/courses/${courseId}/lessons/${id}/script`)}
+            isMobile={isMobile}
+            onDismiss={() => setIsSidebarOpen(false)}
+          />
         )}
 
         {/* Center Pane: Scripts and Upload panel */}
@@ -1275,689 +1194,71 @@ const ScriptManage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Pane: Feedbacks threads list */}
-        <div style={{
-          width: isMobile ? '100%' : isNarrow ? '320px' : '378px',
-          flexShrink: 0,
-          borderLeft: isMobile ? 'none' : '1px solid var(--border)',
-          background: 'var(--bg-card)',
-          display: isMobile && mobileTab !== 'FEEDBACK' ? 'none' : 'flex',
-          flexDirection: 'column',
-          minHeight: 0
-        }}>
-          {/* Feedbacks Header */}
-          <div style={{
-            padding: '16px 20px',
-            borderBottom: '1px solid var(--border)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            flexShrink: 0
-          }}>
-            <MessageSquare size={18} style={{ color: 'var(--primary-hover)' }} />
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700 }}>피드백 & 대화</span>
-            {unresolvedFeedbacks.length > 0 && (
-              <span style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                padding: '2px 8px',
-                borderRadius: '999px',
-                backgroundColor: 'var(--error-bg)',
-                color: 'var(--error-fg)'
-              }}>
-                미반영 {unresolvedFeedbacks.length}
-              </span>
-            )}
-            <button
-              onClick={() => setFilterUnresolvedOnly(!filterUnresolvedOnly)}
-              style={{
-                marginLeft: 'auto',
-                fontSize: '11px',
-                fontWeight: 700,
-                color: filterUnresolvedOnly ? 'var(--primary-hover)' : 'var(--fg-3)',
-                border: '1px solid ' + (filterUnresolvedOnly ? 'var(--primary)' : 'var(--border-strong)'),
-                borderRadius: 'var(--r-pill)',
-                padding: '3px 8px',
-                background: filterUnresolvedOnly ? 'var(--primary-tint)' : 'var(--bg-card)',
-                cursor: 'pointer'
-              }}
-            >
-              {filterUnresolvedOnly ? '✓ 미반영만 보기' : '미반영만 보기'}
-            </button>
-          </div>
-
-          {/* Feedback Messages List */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {displayedFeedbacks.length === 0 ? (
-              <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--fg-4)', fontSize: '12.5px' }}>
-                {filterUnresolvedOnly ? '미반영된 피드백이 없습니다. 모든 피드백이 완료되었습니다!' : '등록된 피드백이나 댓글이 없습니다.'}
-              </div>
-            ) : (
-              displayedFeedbacks.map((f) => {
-                const isCreatorPlanner = f.creator.global_role === 'PLANNER' || f.creator.global_role === 'ADMIN';
-                const avatarInit = f.creator.name.charAt(0);
-                
-                return (
-                  <div key={f.feedback_id} style={{ display: 'flex', gap: '10px' }}>
-                    <span style={{
-                      width: '30px',
-                      height: '30px',
-                      borderRadius: '50%',
-                      flexShrink: 0,
-                      backgroundColor: isCreatorPlanner ? '#FFD8C9' : '#D5E3F2',
-                      color: isCreatorPlanner ? '#B7521F' : '#245C92',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '12px',
-                      fontWeight: 700
-                    }}>
-                      {avatarInit}
-                    </span>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                        <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--fg-1)' }}>{f.creator.name}</span>
-                        <span style={{ fontSize: '11px', color: 'var(--fg-4)' }}>
-                          {new Date(f.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      
-                      {f.location_value && (
-                        <button
-                          type="button"
-                          onClick={() => focusFeedbackQuote(f.location_value as string)}
-                          title="원고에서 이 부분 보기"
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '6px', width: '100%',
-                            marginTop: '6px', padding: '7px 10px',
-                            borderLeft: '3px solid var(--warning)',
-                            borderRadius: '0 var(--r-sm) var(--r-sm) 0',
-                            backgroundColor: 'var(--warning-bg)',
-                            textAlign: 'left',
-                          }}
-                        >
-                          <Target size={12} strokeWidth={2.2} color="var(--warning-fg)" aria-hidden="true" style={{ flex: 'none' }} />
-                          <span style={{ flex: 1, minWidth: 0, fontSize: '11.5px', color: 'var(--warning-fg)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            “{f.location_value}”
-                          </span>
-                          <span style={{ flex: 'none', fontSize: '11px', fontWeight: 800, color: 'var(--warning-fg)' }}>원고에서 보기</span>
-                        </button>
-                      )}
-
-                      <div style={{
-                        marginTop: '6px',
-                        padding: '10px 12px',
-                        borderRadius: 'var(--r-md)',
-                        backgroundColor: isCreatorPlanner ? '#FFF7F5' : 'var(--bg-page)',
-                        border: '1px solid ' + (isCreatorPlanner ? '#FBD9D0' : 'var(--border)'),
-                        fontSize: '13px',
-                        color: 'var(--fg-2)',
-                        lineHeight: 1.6
-                      }}>
-                        {f.content}
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px' }}>
-                        {f.status === 'RESOLVED' ? (
-                          <span style={{ fontSize: '10px', fontWeight: 800, padding: '2px 7px', borderRadius: '999px', backgroundColor: 'var(--success-bg)', color: 'var(--success-fg)' }}>
-                            반영완료
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '10px', fontWeight: 800, padding: '2px 7px', borderRadius: '999px', backgroundColor: 'var(--error-bg)', color: 'var(--error-fg)' }}>
-                            미반영
-                          </span>
-                        )}
-
-                        {/* 강사가 수정을 마쳤을 때 스스로 표시한다 */}
-                        {viewRole === 'SME' && (f.status === 'OPEN' || f.status === 'REOPENED') && (
-                          <button 
-                            onClick={() => handleResolveFeedback(f.feedback_id)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: '4px 10px',
-                              borderRadius: '999px',
-                              backgroundColor: 'var(--primary)',
-                              color: '#fff',
-                              fontSize: '11px',
-                              fontWeight: 800,
-                              border: 'none',
-                              cursor: 'pointer',
-                              boxShadow: '0 1px 2px rgba(79, 70, 229, 0.2)'
-                            }}
-                          >
-                            <CheckCircle2 size={12} /> 반영 완료
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Respond compose box */}
-          <form onSubmit={handleFeedbackSubmit} style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
-            {attachedQuote && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px',
-                padding: '8px 11px', borderLeft: '3px solid var(--warning)',
-                borderRadius: '0 var(--r-sm) var(--r-sm) 0', backgroundColor: 'var(--warning-bg)',
-              }}>
-                <Target size={13} strokeWidth={2.2} color="var(--warning-fg)" aria-hidden="true" style={{ flex: 'none' }} />
-                <span style={{ flex: 1, minWidth: 0, fontSize: '11.5px', fontWeight: 600, color: 'var(--warning-fg)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  “{attachedQuote}” 부분에 대한 피드백
-                </span>
-                <button
-                  type="button"
-                  onClick={() => { setAttachedQuote(null); setFocusedQuote(null); }}
-                  aria-label="인용 해제"
-                  style={{ flex: 'none', fontSize: '11px', fontWeight: 800, color: 'var(--warning-fg)' }}
-                >
-                  해제
-                </button>
-              </div>
-            )}
-            {feedbackRestored && (
-              <div
-                role="status"
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px',
-                  padding: '8px 11px', borderRadius: 'var(--r-sm)',
-                  backgroundColor: 'var(--info-bg)', color: 'var(--info-fg)', fontSize: '12px', fontWeight: 700,
-                }}
-              >
-                <Clock size={13} strokeWidth={2.2} aria-hidden="true" />
-                <span style={{ flex: 1 }}>작성 중이던 내용을 불러왔습니다.</span>
-                <button
-                  type="button"
-                  onClick={ackFeedbackRestore}
-                  style={{ color: 'inherit', fontSize: '12px', fontWeight: 700, textDecoration: 'underline' }}
-                >
-                  확인
-                </button>
-              </div>
-            )}
-            <div style={{ border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', padding: '10px 12px', backgroundColor: 'var(--bg-card)' }}>
-              <label htmlFor="feedback-input-area" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
-                {viewRole === 'PLANNER' ? '피드백 코멘트' : '기획자에게 보낼 의견'}
-              </label>
-              <textarea 
-                id="feedback-input-area"
-                placeholder={viewRole === 'PLANNER' ? '피드백 코멘트를 입력하세요...' : '기획자에게 답변이나 의견을 적어보세요...'} 
-                rows={2} 
-                value={feedbackInput}
-                onChange={(e) => setFeedbackInput(e.target.value)}
-                onKeyDown={(e) => {
-                  // Ctrl(⌘) + Enter 로 바로 전송한다.
-                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    e.preventDefault();
-                    void submitFeedback();
-                  }
-                }}
-                required
-                style={{
-                  width: '100%',
-                  border: 'none',
-                  outline: 'none',
-                  resize: 'none',
-                  fontSize: '13px',
-                  background: 'none'
-                }}
-              />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
-                <span style={{ marginRight: 'auto', fontSize: '11.5px', color: 'var(--fg-4)' }}>
-                  Ctrl + Enter 로 전송 · 작성 중인 내용은 자동 저장됩니다
-                </span>
-                <button 
-                  type="submit"
-                  disabled={submittingFeedback || !feedbackInput.trim()}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '7px 14px',
-                    borderRadius: 'var(--r-sm)',
-                    background: (submittingFeedback || !feedbackInput.trim()) ? 'var(--border-strong)' : 'var(--primary)',
-                    color: '#fff',
-                    fontSize: '12.5px',
-                    fontWeight: 700,
-                    cursor: (submittingFeedback || !feedbackInput.trim()) ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  <Send size={13} /> {submittingFeedback ? '전송 중…' : '전송'}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
+        <FeedbackPanel
+          feedbacks={displayedFeedbacks}
+          unresolvedCount={unresolvedFeedbacks.length}
+          filterUnresolvedOnly={filterUnresolvedOnly}
+          onToggleFilter={() => setFilterUnresolvedOnly(!filterUnresolvedOnly)}
+          viewRole={viewRole}
+          onResolve={handleResolveFeedback}
+          onFocusQuote={focusFeedbackQuote}
+          value={feedbackInput}
+          onChange={setFeedbackInput}
+          onSubmit={() => { void submitFeedback(); }}
+          submitting={submittingFeedback}
+          attachedQuote={attachedQuote}
+          onDetachQuote={() => { setAttachedQuote(null); setFocusedQuote(null); }}
+          restored={feedbackRestored}
+          onAckRestore={ackFeedbackRestore}
+          hidden={isMobile && mobileTab !== 'FEEDBACK'}
+          width={isMobile ? '100%' : isNarrow ? '320px' : '378px'}
+          showBorder={!isMobile}
+        />
 
       </div>
 
-      {/* Preview Modal Overlay */}
       {previewOpen && (
-        <div 
-          onClick={() => setPreviewOpen(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(17, 24, 39, 0.4)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '40px',
-            zIndex: 50
-          }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: 'min(720px, 100%)',
-              maxWidth: '100%',
-              maxHeight: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              backgroundColor: 'var(--bg-card)',
-              borderRadius: 'var(--r-2xl)',
-              boxShadow: 'var(--shadow-lg)',
-              overflow: 'hidden'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 22px', borderBottom: '1px solid var(--border)' }}>
-              <span style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: 'var(--r-md)',
-                backgroundColor: 'var(--primary-tint-2)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--primary-hover)'
-              }}>
-                <FileText size={19} />
-              </span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '14.5px', fontWeight: 700 }}>{latestVer?.storage_path}</div>
-                <div style={{ fontSize: '12px', color: 'var(--fg-3)' }}>본문 실시간 미리보기 · 읽기 전용</div>
-              </div>
-              <button 
-                onClick={() => setPreviewOpen(false)}
-                style={{
-                  width: '34px',
-                  height: '34px',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--r-md)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--fg-3)'
-                }}
-              >
-                <X size={17} />
-              </button>
-            </div>
-
-            <div style={{ flex: 1, overflowY: 'auto', padding: '28px 32px', backgroundColor: 'var(--bg-page)' }}>
-              <div style={{ maxWidth: 'min(600px, 100%)', margin: '0 auto', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '36px 40px', boxShadow: 'var(--shadow-xs)' }}>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '19px', fontWeight: 700, margin: '0 0 16px', color: 'var(--fg-1)' }}>
-                  {currentLesson.lesson_no}차시 — {currentLesson.title}
-                </h2>
-                <div style={{ fontSize: '14px', lineHeight: '1.95', color: 'var(--fg-2)', whiteSpace: 'pre-wrap' }}>
-                  {loadingPreview ? (
-                    <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--fg-3)' }}>
-                      문서 본문을 실시간 추출하여 로딩 중입니다...
-                    </div>
-                  ) : previewText !== null ? (
-                    <div 
-                      onMouseUp={() => { const t = window.getSelection()?.toString().trim(); if (t && t.length > 2) handleQuoteSelection(t); }}
-                      style={{ cursor: 'text' }}
-                    >
-                      {previewText}
-                      <p style={{ margin: '20px 0 0', color: 'var(--fg-4)' }}>— 본문 미리보기 끝 — (문장을 드래그하여 바로 피드백을 남겨보세요)</p>
-                    </div>
-                  ) : (
-                    <div
-                      onMouseUp={() => { const t = window.getSelection()?.toString().trim(); if (t && t.length > 2) handleQuoteSelection(t); }}
-                      style={{ cursor: 'text' }}
-                    >
-                      <p style={{ margin: '0 0 14px' }}><b>(도입 질문)</b> “여러분은 오늘 하루 어떤 수업을 설계하셨나요? 학교자율시간을 적극 활용해 본 수업 사례들을 기반으로 교육과정을 기획하고 배정해보겠습니다.”</p>
-                      <p style={{ margin: '0 0 12px' }}><b>[핵심 개념]</b> 학교자율시간은 교육부가 시도 교육청과 각 학교에 재량권을 주어 자율적으로 신설하는 특화 수업 시수입니다.</p>
-                      <p style={{ margin: '0 0 12px' }}>이 시간을 활용하여 인공지능, 예술융합, 디지털 리터러시 등 다양한 과목들을 연수 및 수업 설계로 확장할 수 있습니다.</p>
-                      <p style={{ margin: 0, color: 'var(--fg-4)' }}>— 본문 미리보기 끝 — (문장을 드래그하여 바로 피드백을 남겨보세요)</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ padding: '14px 22px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button 
-                onClick={() => setPreviewOpen(false)}
-                style={{
-                  padding: '9px 16px',
-                  border: '1px solid var(--border-strong)',
-                  borderRadius: 'var(--r-md)',
-                  backgroundColor: 'var(--bg-card)',
-                  color: 'var(--fg-2)',
-                  fontSize: '13px',
-                  fontWeight: 700
-                }}
-              >
-                닫기
-              </button>
-            </div>
-          </div>
-        </div>
+        <PreviewModal
+          onClose={() => setPreviewOpen(false)}
+          fileName={latestVer?.storage_path}
+          lessonNo={currentLesson.lesson_no}
+          lessonTitle={currentLesson.title}
+          loading={loadingPreview}
+          text={previewText}
+          onQuote={handleQuoteSelection}
+        />
       )}
 
-      {/* AI Analysis Modal Overlay */}
       {aiModalOpen && (
-        <div 
-          onClick={() => setAiModalOpen(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(17, 24, 39, 0.45)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '30px',
-            zIndex: 60
-          }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: 'min(760px, 100%)',
-              maxWidth: '100%',
-              maxHeight: '90vh',
-              display: 'flex',
-              flexDirection: 'column',
-              backgroundColor: 'var(--bg-card)',
-              borderRadius: 'var(--r-2xl)',
-              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)',
-              overflow: 'hidden'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 24px', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)' }}>
-              <span style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                backgroundColor: '#4F46E5',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff'
-              }}>
-                <Sparkles size={20} />
-              </span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '16px', fontWeight: 800, color: '#312E81' }}>✨ AI 원고 자동 검수 & 요약 리포트</div>
-                <div style={{ fontSize: '12px', color: '#4338CA' }}>v{latestVer?.round_no} 원고 실시간 AI 가독성 및 시간 측정 분석</div>
-              </div>
-              <button 
-                onClick={() => setAiModalOpen(false)}
-                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#4338CA' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', backgroundColor: '#F8FAFC' }}>
-              {aiLoading ? (
-                <div style={{ padding: '60px 0', textAlign: 'center', color: '#64748B' }}>
-                  AI가 원고 본문의 발화 속도, 맞춤법, 어조 및 요약문을 분석 중입니다...
-                </div>
-              ) : aiData ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                  {/* Top Stats Cards */}
-                  <div className="rgrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-                      <Clock size={28} style={{ color: '#4F46E5' }} />
-                      <div>
-                        <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>예상 강의 소요 시간</div>
-                        <div style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginTop: '2px' }}>
-                          {aiData.estimated_time}
-                        </div>
-                        <div style={{ fontSize: '11.5px', color: '#94A3B8', marginTop: '2px' }}>
-                          총 {aiData.char_count?.toLocaleString()}자 (공백 제외 {aiData.char_count_no_space?.toLocaleString()}자)
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-                      <CheckCircle2 size={28} style={{ color: '#10B981' }} />
-                      <div>
-                        <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>원고 품질 정합성 점수</div>
-                        <div style={{ fontSize: '20px', fontWeight: 800, color: '#047857', marginTop: '2px' }}>
-                          {aiData.overall_score}점 <span style={{ fontSize: '13px', fontWeight: 500, color: '#94A3B8' }}>/ 100점</span>
-                        </div>
-                        <div style={{ fontSize: '11.5px', color: '#94A3B8', marginTop: '2px' }}>
-                          연수원 표준 원고 가이드 충족
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 3-Line Summary Card */}
-                  <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#1E293B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <FileText size={16} style={{ color: '#4F46E5' }} /> AI 3줄 핵심 요약
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {aiData.summary?.map((line: string, idx: number) => (
-                        <div key={idx} style={{ display: 'flex', gap: '8px', fontSize: '13px', color: '#334155', lineHeight: '1.6' }}>
-                          <span style={{ color: '#4F46E5', fontWeight: 800 }}>•</span>
-                          <span>{line}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Proofreading & Recommendations */}
-                  <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#1E293B', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <AlertCircle size={16} style={{ color: '#F59E0B' }} /> AI 맞춤법 & 문체 교정 리포트
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {aiData.proofread_points?.map((pt: any, idx: number) => (
-                        <div key={idx} style={{ padding: '12px 14px', background: '#F8FAFC', borderRadius: '8px', borderLeft: `4px solid ${pt.type === 'sentence_length' ? '#EF4444' : pt.type === 'tone' ? '#F59E0B' : '#10B981'}` }}>
-                          <div style={{ fontSize: '13px', fontWeight: 700, color: '#1E293B' }}>{pt.title}</div>
-                          <div style={{ fontSize: '12.5px', color: '#475569', marginTop: '4px', lineHeight: 1.5 }}>{pt.description}</div>
-                          {pt.suggestion && (
-                            <div style={{ fontSize: '12px', color: '#4F46E5', marginTop: '6px', fontWeight: 600, background: '#EEF2FF', padding: '6px 10px', borderRadius: '6px' }}>
-                              💡 {pt.suggestion}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div style={{ padding: '14px 24px', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'flex-end' }}>
-              <button 
-                onClick={() => setAiModalOpen(false)}
-                style={{ padding: '8px 18px', borderRadius: '8px', background: '#1E293B', color: '#fff', fontWeight: 700, fontSize: '13px', border: 'none', cursor: 'pointer' }}
-              >
-                닫기
-              </button>
-            </div>
-          </div>
-        </div>
+        <AiAnalysisModal
+          onClose={() => setAiModalOpen(false)}
+          loading={aiLoading}
+          data={aiData}
+          roundNo={latestVer?.round_no}
+        />
       )}
 
-      {/* Diff Viewer Modal Overlay */}
       {diffModalOpen && (
-        <div 
-          onClick={() => setDiffModalOpen(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(17, 24, 39, 0.45)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '30px',
-            zIndex: 60
-          }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: 'min(840px, 100%)',
-              maxWidth: '100%',
-              maxHeight: '90vh',
-              display: 'flex',
-              flexDirection: 'column',
-              backgroundColor: 'var(--bg-card)',
-              borderRadius: 'var(--r-2xl)',
-              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)',
-              overflow: 'hidden'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 24px', borderBottom: '1px solid var(--border)', background: '#F8FAFC' }}>
-              <GitCompare size={20} style={{ color: 'var(--primary)' }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--fg-1)' }}>
-                  🔍 원고 버전 변경점 대조 (v{diffData?.v1?.round_no || 1} ↔ v{diffData?.v2?.round_no || 2})
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--fg-3)' }}>
-                  이전 버전 대비 신규 수정/추가된 문장을 대조합니다.
-                </div>
-              </div>
-              <button 
-                onClick={() => setDiffModalOpen(false)}
-                style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--fg-3)' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', fontFamily: 'monospace', fontSize: '13px', lineHeight: '1.7', backgroundColor: '#0F172A', color: '#E2E8F0' }}>
-              {diffLoading ? (
-                <div style={{ padding: '60px 0', textAlign: 'center', color: '#94A3B8' }}>
-                  두 버전 간의 차이점(Diff)을 파싱하여 비교 중입니다...
-                </div>
-              ) : diffData?.diff ? (
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  {diffData.diff.map((line: any, idx: number) => {
-                    const isAdded = line.type === 'added';
-                    const isRemoved = line.type === 'removed';
-                    return (
-                      <div 
-                        key={idx}
-                        style={{
-                          display: 'flex',
-                          padding: '2px 8px',
-                          backgroundColor: isAdded ? 'rgba(16, 185, 129, 0.2)' : isRemoved ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                          color: isAdded ? '#34D399' : isRemoved ? '#F87171' : '#CBD5E1',
-                          borderLeft: `3px solid ${isAdded ? '#10B981' : isRemoved ? '#EF4444' : 'transparent'}`
-                        }}
-                      >
-                        <span style={{ width: '40px', color: '#64748B', userSelect: 'none', flexShrink: 0 }}>
-                          {line.line_no_v1 || ''}
-                        </span>
-                        <span style={{ width: '40px', color: '#64748B', userSelect: 'none', flexShrink: 0 }}>
-                          {line.line_no_v2 || ''}
-                        </span>
-                        <span style={{ width: '20px', fontWeight: 800, userSelect: 'none', flexShrink: 0 }}>
-                          {isAdded ? '+' : isRemoved ? '-' : ' '}
-                        </span>
-                        <span style={{ textDecoration: isRemoved ? 'line-through' : 'none', flex: 1, whiteSpace: 'pre-wrap' }}>
-                          {line.text}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </div>
-
-            <div style={{ padding: '14px 24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC' }}>
-              <div style={{ display: 'flex', gap: '16px', fontSize: '12px' }}>
-                <span style={{ color: '#059669', fontWeight: 700 }}>+ 추가된 문장</span>
-                <span style={{ color: '#DC2626', fontWeight: 700 }}>- 삭제된 문장</span>
-              </div>
-              <button 
-                onClick={() => setDiffModalOpen(false)}
-                style={{ padding: '8px 18px', borderRadius: '8px', background: '#1E293B', color: '#fff', fontWeight: 700, fontSize: '13px', border: 'none', cursor: 'pointer' }}
-              >
-                닫기
-              </button>
-            </div>
-          </div>
-        </div>
+        <DiffModal
+          onClose={() => setDiffModalOpen(false)}
+          loading={diffLoading}
+          data={diffData}
+        />
       )}
 
-      {/* UX-201: Submit Confirm Modal */}
       {isSubmitConfirmOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'var(--bg-card)',
-            padding: '24px 32px',
-            borderRadius: 'var(--r-lg)',
-            width: 'min(400px, 100%)',
-            boxShadow: 'var(--shadow-xl)'
-          }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: '18px', color: 'var(--fg-1)' }}>원고 제출 확인</h3>
-            <p style={{ margin: '0 0 24px', fontSize: '14px', color: 'var(--fg-2)', lineHeight: '1.5' }}>
-              제출 후에는 기획자가 반려하기 전까지 원고를 직접 수정할 수 없습니다.<br/>
-              <span style={{ fontWeight: 700, color: 'var(--primary)' }}>정말로 제출하시겠습니까?</span>
-            </p>
-            <div style={{ marginBottom: '24px', padding: '12px 16px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  checked={isCopyrightChecked}
-                  onChange={(e) => setIsCopyrightChecked(e.target.checked)}
-                  style={{ marginTop: '2px' }}
-                />
-                <span style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.4' }}>
-                  <b style={{ display: 'block', marginBottom: '4px', color: 'var(--fg-1)' }}>저작권·초상권을 확인했습니다 (필수)</b>
-                  원고와 부속 자료에 들어간 타인의 이미지·영상·글에 대해 사용 허가를 받았으며, 문제가 생기면 제출자에게 책임이 있음에 동의합니다.
-                </span>
-              </label>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button 
-                onClick={() => {
-                  setIsSubmitConfirmOpen(false);
-                  setIsCopyrightChecked(false);
-                  setPendingSubmitType(null);
-                  setPendingFile(null);
-                }}
-                style={{ padding: '10px 16px', border: '1px solid var(--border)', background: 'var(--bg-card)', borderRadius: 'var(--r-md)', cursor: 'pointer' }}
-              >
-                취소
-              </button>
-              <button 
-                onClick={executeSubmit}
-                disabled={!isCopyrightChecked}
-                style={{ padding: '10px 16px', border: 'none', background: isCopyrightChecked ? 'var(--primary)' : 'var(--fg-4)', color: '#fff', borderRadius: 'var(--r-md)', cursor: isCopyrightChecked ? 'pointer' : 'not-allowed', fontWeight: 700 }}
-              >
-                확인 및 제출
-              </button>
-            </div>
-          </div>
-        </div>
+        <SubmitConfirmModal
+          onCancel={() => {
+            setIsSubmitConfirmOpen(false);
+            setIsCopyrightChecked(false);
+            setPendingSubmitType(null);
+            setPendingFile(null);
+          }}
+          onConfirm={executeSubmit}
+          acknowledged={isCopyrightChecked}
+          onAcknowledgedChange={setIsCopyrightChecked}
+          fileName={pendingFile?.name}
+        />
       )}
 
     </div>
