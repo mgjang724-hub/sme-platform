@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUi } from '../context/UiContext';
+import { useDraft } from '../hooks/useDraft';
+import { useEscapeKey } from '../hooks/useEscapeKey';
+import FileDropzone, { SelectedFileChip } from '../components/FileDropzone';
+import { uploadWithProgress } from '../lib/upload';
+import ScriptViewer, { QuotePrompt } from '../components/ScriptViewer';
+import { getScriptStatus, resolveLessonStatus } from '../lib/status';
 import { 
   ChevronRight, 
   Upload, 
@@ -48,6 +55,9 @@ interface FileVersion {
 interface Feedback {
   feedback_id: string;
   content: string;
+  /** 'QUOTE'면 location_value에 원고에서 인용한 문장이 들어 있다. */
+  location_type?: string | null;
+  location_value?: string | null;
   status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'REOPENED' | 'FORCE_CLOSED';
   created_at: string;
   due_date: string | null;
@@ -62,7 +72,8 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 const ScriptManage: React.FC = () => {
   const { id: courseId, lessonId } = useParams<{ id: string, lessonId: string }>();
-  const { apiFetch, user } = useAuth();
+  const { apiFetch, user, token } = useAuth();
+  const { toast, confirm } = useUi();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -93,10 +104,35 @@ const ScriptManage: React.FC = () => {
   const [diffData, setDiffData] = useState<any | null>(null);
 
   // Form Inputs
-  const [linkUrl, setLinkUrl] = useState('');
-  const [uploadNote, setUploadNote] = useState('');
-  const [feedbackInput, setFeedbackInput] = useState('');
+  // 입력 중인 내용은 localStorage에 자동 저장된다. 세션이 만료되거나 실수로 창을 닫아도 남는다.
+  const draftScope = deliverable?.deliverable_id ?? null;
+  const {
+    value: linkUrl,
+    setValue: setLinkUrl,
+    clear: clearLinkDraft,
+  } = useDraft(draftScope && `link:${draftScope}`);
+  const {
+    value: uploadNote,
+    setValue: setUploadNote,
+    clear: clearNoteDraft,
+  } = useDraft(draftScope && `note:${draftScope}`);
+  const {
+    value: feedbackInput,
+    setValue: setFeedbackInput,
+    clear: clearFeedbackDraft,
+    restored: feedbackRestored,
+    acknowledgeRestore: ackFeedbackRestore,
+  } = useDraft(draftScope && `feedback:${draftScope}`);
+
+  // 본문에서 드래그해 고른 문장 (아직 피드백으로 확정하지 않은 상태)
+  const [pendingQuote, setPendingQuote] = useState<string | null>(null);
+  // 피드백에 붙여 보낼 인용문
+  const [attachedQuote, setAttachedQuote] = useState<string | null>(null);
+  // 원고 본문에서 강조해 보여줄 인용문
+  const [focusedQuote, setFocusedQuote] = useState<string | null>(null);
+
   const [submittingFile, setSubmittingFile] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const [filterUnresolvedOnly, setFilterUnresolvedOnly] = useState(false);
@@ -118,6 +154,12 @@ const ScriptManage: React.FC = () => {
   
   // UX-302: Supplementary File
   const [supplementaryFile, setSupplementaryFile] = useState<File | null>(null);
+
+  // 열려 있는 모달은 Esc 키로 닫는다.
+  useEscapeKey(previewOpen, () => setPreviewOpen(false));
+  useEscapeKey(aiModalOpen, () => setAiModalOpen(false));
+  useEscapeKey(diffModalOpen, () => setDiffModalOpen(false));
+  useEscapeKey(isSubmitConfirmOpen, () => setIsSubmitConfirmOpen(false));
 
   const latestVer = versions[0];
   const unresolvedFeedbacks = feedbacks.filter(f => f.status === 'OPEN' || f.status === 'REOPENED');
@@ -146,7 +188,7 @@ const ScriptManage: React.FC = () => {
   }, [location.search]);
 
   useEffect(() => {
-    if (previewOpen && latestVer) {
+    if (latestVer) {
       if (latestVer.preview_path) {
         setLoadingPreview(true);
         fetch(`${API_BASE}${latestVer.preview_path}`)
@@ -167,7 +209,7 @@ const ScriptManage: React.FC = () => {
         setPreviewText(null);
       }
     }
-  }, [previewOpen, latestVer]);
+  }, [latestVer]);
 
   // Load all course lessons & detail data
   const loadData = async () => {
@@ -226,20 +268,18 @@ const ScriptManage: React.FC = () => {
     if (!deliverable) return;
 
     if (!linkUrl.trim()) {
-      alert('제출할 구글 문서 링크 주소를 입력해 주세요.');
+      toast.error('구글 문서 링크를 입력해 주세요', '문서 공유 설정을 "링크가 있는 모든 사용자"로 바꾼 뒤 주소를 붙여 넣어 주세요.');
       return;
     }
     setPendingSubmitType('LINK');
     setIsSubmitConfirmOpen(true);
   };
 
-  const handleLocalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !deliverable) return;
+  const handleFileSelected = (file: File) => {
+    if (!deliverable) return;
     setPendingFile(file);
     setPendingSubmitType('LOCAL');
     setIsSubmitConfirmOpen(true);
-    e.target.value = ''; // Reset so same file triggers change again
   };
 
   const executeSubmit = async () => {
@@ -258,33 +298,42 @@ const ScriptManage: React.FC = () => {
             file_name: 'Google Docs Link'
           })
         });
-        setLinkUrl('');
+        clearLinkDraft();
+        clearNoteDraft();
+        loadData();
+        toast.success('원고를 제출했습니다', '기획자에게 검토 요청 알림이 전달됩니다.');
       } else if (pendingSubmitType === 'LOCAL' && pendingFile) {
         const formData = new FormData();
         formData.append('file', pendingFile);
         if (supplementaryFile) formData.append('supplementary', supplementaryFile);
-        await apiFetch(`/deliverables/${deliverable.deliverable_id}/upload-local`, {
-          method: 'POST',
-          body: formData
-        });
+
+        setUploadProgress(0);
+        await uploadWithProgress(
+          `/deliverables/${deliverable.deliverable_id}/upload-local`,
+          formData,
+          token,
+          setUploadProgress,
+        );
+
+        const uploadedName = pendingFile.name;
         setPendingFile(null);
         setSupplementaryFile(null);
-        setUploadNote('');
+        clearNoteDraft();
         loadData();
+        toast.success('원고를 제출했습니다', `${uploadedName} · 기획자에게 검토 요청 알림이 전달됩니다.`);
       }
-      alert(pendingSubmitType === 'LINK' ? '새 버전 원고가 정상 제출되었습니다.' : '파일이 로컬 PC 서버에 성공적으로 업로드되었습니다.');
     } catch (err: any) {
-      alert(err.message || '업로드 오류가 발생했습니다.');
+      toast.error('원고를 제출하지 못했습니다', err.message || '네트워크 상태를 확인한 뒤 다시 시도해 주세요.');
     } finally {
       setSubmittingFile(false);
+      setUploadProgress(null);
       setPendingSubmitType(null);
     }
   };
 
   // Submit feedback
-  const handleFeedbackSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!deliverable || !feedbackInput.trim()) return;
+  const submitFeedback = async () => {
+    if (!deliverable || !feedbackInput.trim() || submittingFeedback) return;
 
     setSubmittingFeedback(true);
     try {
@@ -292,15 +341,47 @@ const ScriptManage: React.FC = () => {
         method: 'POST',
         body: JSON.stringify({
           content: feedbackInput,
+          file_version_id: latestVer?.version_id,
+          // 인용한 문장을 함께 저장해 두면, 받는 쪽에서 원고의 해당 위치로 바로 이동할 수 있다.
+          location_type: attachedQuote ? 'QUOTE' : undefined,
+          location_value: attachedQuote || undefined,
         })
       });
-      setFeedbackInput('');
+      clearFeedbackDraft();
+      setAttachedQuote(null);
       loadData();
+      toast.success('피드백을 남겼습니다', viewRole === 'PLANNER' ? '강사에게 알림이 전달됩니다.' : '기획자에게 알림이 전달됩니다.');
     } catch (err: any) {
-      alert(err.message || '피드백 전송 오류');
+      toast.error('피드백을 보내지 못했습니다', err.message || '작성한 내용은 그대로 남아 있습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       setSubmittingFeedback(false);
     }
+  };
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitFeedback();
+  };
+
+  /** 본문에서 문장을 드래그하면 인용 제안 바를 띄운다. */
+  const handleQuoteSelection = (quote: string) => {
+    setPendingQuote(quote);
+  };
+
+  /** 제안 바에서 [이 문장에 피드백]을 누른 경우 */
+  const attachPendingQuote = () => {
+    if (!pendingQuote) return;
+    setAttachedQuote(pendingQuote);
+    setFocusedQuote(pendingQuote);
+    setPendingQuote(null);
+    setPreviewOpen(false);
+    document.getElementById('feedback-input-area')?.focus();
+  };
+
+  /** 피드백 카드의 인용문을 누르면 원고 본문에서 그 위치를 강조한다. */
+  const focusFeedbackQuote = (quote: string) => {
+    setFocusedQuote(quote);
+    setTabOpen(prev => ({ ...prev, prev: true }));
   };
 
   // Resolve Feedback
@@ -311,16 +392,22 @@ const ScriptManage: React.FC = () => {
         body: JSON.stringify({ status: 'RESOLVED' })
       });
       loadData();
+      toast.success('반영 완료로 표시했습니다', '기획자가 확인 후 최종 승인합니다.');
     } catch (err: any) {
-      alert(err.message || '피드백 상태 변경 오류');
+      toast.error('상태를 바꾸지 못했습니다', err.message || '잠시 후 다시 시도해 주세요.');
     }
   };
 
   // Approve Deliverable (Final approve)
   const handleApproveDeliverable = async () => {
     if (!deliverable) return;
-    const confirmMsg = `[최종본 승인/확정 안내]\n\n원고를 최종 승인 및 확정하시겠습니까?\n\n- 확정 후에는 원고가 락(Lock) 처리되어 강사의 신규 업로드 및 편집이 차단됩니다.\n- 기획팀 검토 결과 최종 원고로 수록됩니다.`;
-    if (!window.confirm(confirmMsg)) return;
+    const ok = await confirm({
+      title: '이 원고를 최종 승인할까요?',
+      message: '승인하면 원고가 잠기고, 강사는 더 이상 새 버전을 올리거나 수정할 수 없습니다.\n지금까지의 피드백 기록은 그대로 남습니다.',
+      confirmLabel: '최종 승인',
+      acknowledgeLabel: '이 원고를 최종본으로 확정합니다.',
+    });
+    if (!ok) return;
 
     try {
       await apiFetch(`/deliverables/${deliverable.deliverable_id}/files`, {
@@ -330,19 +417,13 @@ const ScriptManage: React.FC = () => {
           url: versions[0]?.storage_path || 'google-docs-approved',
         })
       });
-      alert('원고가 최종 승인 및 확정 완료되었습니다.');
+      toast.success('원고를 최종 승인했습니다', '과정 상세 화면으로 이동합니다.');
       navigate(`/courses/${courseId}`);
     } catch (err: any) {
-      alert(err.message);
+      toast.error('승인 처리에 실패했습니다', err.message || '잠시 후 다시 시도해 주세요.');
     }
   };
 
-  const getDotColor = (status: string) => {
-    if (status === 'APPROVED') return '#10B981'; // Green
-    if (status === 'SUBMITTED' || status === 'IN_REVIEW') return '#F59E0B'; // Orange
-    if (status === 'REVISION_REQUESTED') return '#EF4444'; // Red
-    return '#9CA3AF'; // Gray
-  };
 
   const handleOpenAiAnalysis = async () => {
     setAiModalOpen(true);
@@ -352,7 +433,7 @@ const ScriptManage: React.FC = () => {
       const data = await apiFetch(`/deliverables/file-versions/${versionId}/ai-analysis`);
       setAiData(data);
     } catch (err: any) {
-      alert(err.message || 'AI 분석 데이터를 불러오지 못했습니다.');
+      toast.error('AI 분석을 불러오지 못했습니다', err.message || '잠시 후 다시 시도해 주세요.');
       setAiModalOpen(false);
     } finally {
       setAiLoading(false);
@@ -367,7 +448,7 @@ const ScriptManage: React.FC = () => {
       const data = await apiFetch(`/deliverables/${deliverable.deliverable_id}/diff`);
       setDiffData(data);
     } catch (err: any) {
-      alert(err.message || '버전 비교 데이터를 불러오지 못했습니다.');
+      toast.error('버전 비교를 불러오지 못했습니다', err.message || '비교할 버전이 2개 이상 있는지 확인해 주세요.');
       setDiffModalOpen(false);
     } finally {
       setDiffLoading(false);
@@ -423,10 +504,10 @@ const ScriptManage: React.FC = () => {
                 fontWeight: 800,
                 padding: '3px 8px',
                 borderRadius: 'var(--r-pill)',
-                backgroundColor: getDotColor(deliverable?.current_status) + '22',
-                color: getDotColor(deliverable?.current_status)
+                backgroundColor: getScriptStatus(deliverable?.current_status).bg,
+                color: getScriptStatus(deliverable?.current_status).fg
               }}>
-                {deliverable?.current_status || 'NOT_SUBMITTED'}
+                {getScriptStatus(deliverable?.current_status).label}
               </span>
             </div>
             <div style={{ fontSize: '12.5px', color: 'var(--fg-3)', marginTop: '5px' }}>
@@ -434,7 +515,8 @@ const ScriptManage: React.FC = () => {
             </div>
           </div>
 
-          {/* Role Preview Switcher */}
+          {/* 역할 미리보기 전환 — 데모·점검용이므로 관리자에게만 보인다 */}
+          {user?.global_role === 'ADMIN' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px', borderRadius: '999px', background: 'var(--bg-sunken)' }}>
             <button 
               onClick={() => setViewRole('PLANNER')}
@@ -463,6 +545,7 @@ const ScriptManage: React.FC = () => {
               강사 화면
             </button>
           </div>
+          )}
 
           {/* Action buttons per role */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -567,7 +650,7 @@ const ScriptManage: React.FC = () => {
                     height: '8px',
                     borderRadius: '50%',
                     flexShrink: 0,
-                    backgroundColor: getDotColor(ch.derived_status)
+                    backgroundColor: getScriptStatus(resolveLessonStatus(ch)).dot
                   }}></span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
@@ -581,7 +664,7 @@ const ScriptManage: React.FC = () => {
                       {ch.lesson_no}차시 — {ch.title}
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--fg-4)', marginTop: '2px' }}>
-                      {ch.derived_status}
+                      {getScriptStatus(resolveLessonStatus(ch)).label}
                     </div>
                   </div>
                 </div>
@@ -727,29 +810,19 @@ const ScriptManage: React.FC = () => {
               
               {tabOpen.upload && (
                 <form onSubmit={handleUploadSubmit} style={{ padding: '18px' }}>
-                   <label htmlFor="local-file-upload" style={{ cursor: 'pointer', display: 'block' }}>
-                    <div style={{
-                      border: '1.5px dashed var(--border-strong)',
-                      borderRadius: 'var(--r-md)',
-                      padding: '22px',
-                      textAlign: 'center',
-                      backgroundColor: 'var(--bg-page)'
-                    }}>
-                      <Upload size={26} style={{ color: 'var(--fg-4)', margin: '0 auto' }} />
-                      <div style={{ fontSize: '13.5px', color: 'var(--fg-2)', fontWeight: 700, marginTop: '8px' }}>
-                        드래그 앤 드롭 또는 클릭하여 파일 업로드
-                      </div>
-                      <div style={{ fontSize: '11px', color: 'var(--fg-4)', marginTop: '3px' }}>
-                        .docx, .hwp, .pdf 형식 지원
-                      </div>
-                    </div>
-                  </label>
-                  <input 
-                    type="file" 
-                    id="local-file-upload" 
-                    onChange={handleLocalFileChange} 
-                    style={{ display: 'none' }} 
+                  <FileDropzone
+                    accept={['.docx', '.hwp', '.hwpx', '.pdf']}
+                    onFileSelected={handleFileSelected}
+                    progress={uploadProgress}
+                    disabled={submittingFile && uploadProgress === null}
+                    hint=".docx, .hwp, .hwpx, .pdf 형식을 지원합니다"
+                    onInvalidFile={(msg) => toast.error('올릴 수 없는 파일 형식입니다', msg)}
                   />
+                  {pendingFile && uploadProgress === null && (
+                    <div style={{ marginTop: '8px' }}>
+                      <SelectedFileChip file={pendingFile} onRemove={() => setPendingFile(null)} />
+                    </div>
+                  )}
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '12px 0', color: 'var(--fg-4)', fontSize: '12px' }}>
                     <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
@@ -805,8 +878,8 @@ const ScriptManage: React.FC = () => {
                     <div style={{ fontSize: '11.5px', color: 'var(--fg-4)', marginBottom: '10px' }}>
                       원고에 삽입된 이미지 원본이나 수업 결과물 사진(압축파일)을 첨부해주세요.
                     </div>
-                    <label htmlFor="supplementary-file-upload" style={{
-                      display: 'inline-flex',
+                    <label htmlFor="supplementary-file-upload" data-legacy-picker style={{
+                      display: 'none',
                       alignItems: 'center',
                       gap: '6px',
                       padding: '8px 14px',
@@ -825,12 +898,22 @@ const ScriptManage: React.FC = () => {
                       onChange={(e) => setSupplementaryFile(e.target.files?.[0] || null)} 
                       style={{ display: 'none' }} 
                     />
+                    {supplementaryFile ? (
+                      <SelectedFileChip file={supplementaryFile} onRemove={() => setSupplementaryFile(null)} />
+                    ) : (
+                      <FileDropzone
+                        accept={['.zip', '.png', '.jpg', '.jpeg', '.pdf']}
+                        onFileSelected={setSupplementaryFile}
+                        hint="이미지 원본이나 사진 묶음(.zip)을 끌어다 놓으세요"
+                        onInvalidFile={(msg) => toast.error('올릴 수 없는 파일 형식입니다', msg)}
+                      />
+                    )}
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
                     <button 
                       type="button"
-                      onClick={() => alert('원고 내용이 임시 저장되었습니다.')}
+                      onClick={() => toast.success('임시 저장했습니다', '작성 중인 링크와 메모는 자동으로 저장되며, 다시 들어와도 이어서 쓸 수 있습니다.')}
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -988,11 +1071,51 @@ const ScriptManage: React.FC = () => {
                 )}
               </div>
 
-              {/* Preview Box */}
-              <div style={{ margin: '0 20px 18px', padding: '16px 18px', backgroundColor: 'var(--bg-page)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', fontSize: '13px', color: 'var(--fg-3)', lineHeight: '1.8' }}>
-                <div style={{ fontWeight: 700, color: 'var(--fg-2)', marginBottom: '6px' }}>[미리보기] {currentLesson.lesson_no}차시 원고</div>
-                <p style={{ margin: 0 }}>(인트로) “여러분 안녕하세요. 오늘은 학교자율시간 교육과정 개발의 실제에 대해 다루겠습니다.”</p>
-                <div style={{ color: 'var(--fg-4)', marginTop: '6px' }}>— 이하 본문 미리보기 참조 (자세한 내용은 미리보기 팝업 클릭) —</div>
+              {/* 원고 본문 — 피드백을 보면서 함께 읽을 수 있도록 화면에 그대로 둔다 */}
+              <div style={{ margin: '0 20px 18px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--fg-1)' }}>
+                    {currentLesson.lesson_no}차시 원고 본문
+                  </span>
+                  {focusedQuote && (
+                    <button
+                      type="button"
+                      onClick={() => setFocusedQuote(null)}
+                      style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--primary-hover)' }}
+                    >
+                      강조 해제
+                    </button>
+                  )}
+                  <span style={{ marginLeft: 'auto', fontSize: '11.5px', color: 'var(--fg-4)' }}>
+                    문장을 드래그하면 그 부분에 피드백을 남길 수 있습니다
+                  </span>
+                </div>
+
+                {pendingQuote && (
+                  <QuotePrompt
+                    quote={pendingQuote.length > 60 ? `${pendingQuote.slice(0, 60)}…` : pendingQuote}
+                    onUse={attachPendingQuote}
+                    onDismiss={() => setPendingQuote(null)}
+                  />
+                )}
+
+                <div style={{
+                  maxHeight: '420px', overflowY: 'auto',
+                  padding: '16px 18px',
+                  backgroundColor: 'var(--bg-page)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)',
+                }}>
+                  <ScriptViewer
+                    text={previewText}
+                    loading={loadingPreview}
+                    highlight={focusedQuote}
+                    onSelectQuote={handleQuoteSelection}
+                    fallback={
+                      <p style={{ margin: 0, fontSize: '13px', color: 'var(--fg-3)', lineHeight: 1.9 }}>
+                        이 버전은 본문 미리보기를 만들 수 없는 형식입니다. 위의 [바로가기]로 원본 파일을 열어 확인해 주세요.
+                      </p>
+                    }
+                  />
+                </div>
               </div>
             </div>
           ) : (
@@ -1161,6 +1284,28 @@ const ScriptManage: React.FC = () => {
                         </span>
                       </div>
                       
+                      {f.location_value && (
+                        <button
+                          type="button"
+                          onClick={() => focusFeedbackQuote(f.location_value as string)}
+                          title="원고에서 이 부분 보기"
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '6px', width: '100%',
+                            marginTop: '6px', padding: '7px 10px',
+                            borderLeft: '3px solid var(--warning)',
+                            borderRadius: '0 var(--r-sm) var(--r-sm) 0',
+                            backgroundColor: 'var(--warning-bg)',
+                            textAlign: 'left',
+                          }}
+                        >
+                          <Target size={12} strokeWidth={2.2} color="var(--warning-fg)" aria-hidden="true" style={{ flex: 'none' }} />
+                          <span style={{ flex: 1, minWidth: 0, fontSize: '11.5px', color: 'var(--warning-fg)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            “{f.location_value}”
+                          </span>
+                          <span style={{ flex: 'none', fontSize: '11px', fontWeight: 800, color: 'var(--warning-fg)' }}>원고에서 보기</span>
+                        </button>
+                      )}
+
                       <div style={{
                         marginTop: '6px',
                         padding: '10px 12px',
@@ -1185,7 +1330,7 @@ const ScriptManage: React.FC = () => {
                           </span>
                         )}
 
-                        {/* Resolve button for SME */}
+                        {/* 강사가 수정을 마쳤을 때 스스로 표시한다 */}
                         {viewRole === 'SME' && (f.status === 'OPEN' || f.status === 'REOPENED') && (
                           <button 
                             onClick={() => handleResolveFeedback(f.feedback_id)}
@@ -1204,7 +1349,7 @@ const ScriptManage: React.FC = () => {
                               boxShadow: '0 1px 2px rgba(79, 70, 229, 0.2)'
                             }}
                           >
-                            <CheckCircle2 size={12} /> 해결 처리
+                            <CheckCircle2 size={12} /> 반영 완료
                           </button>
                         )}
                       </div>
@@ -1217,13 +1362,63 @@ const ScriptManage: React.FC = () => {
 
           {/* Respond compose box */}
           <form onSubmit={handleFeedbackSubmit} style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+            {attachedQuote && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px',
+                padding: '8px 11px', borderLeft: '3px solid var(--warning)',
+                borderRadius: '0 var(--r-sm) var(--r-sm) 0', backgroundColor: 'var(--warning-bg)',
+              }}>
+                <Target size={13} strokeWidth={2.2} color="var(--warning-fg)" aria-hidden="true" style={{ flex: 'none' }} />
+                <span style={{ flex: 1, minWidth: 0, fontSize: '11.5px', fontWeight: 600, color: 'var(--warning-fg)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  “{attachedQuote}” 부분에 대한 피드백
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { setAttachedQuote(null); setFocusedQuote(null); }}
+                  aria-label="인용 해제"
+                  style={{ flex: 'none', fontSize: '11px', fontWeight: 800, color: 'var(--warning-fg)' }}
+                >
+                  해제
+                </button>
+              </div>
+            )}
+            {feedbackRestored && (
+              <div
+                role="status"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px',
+                  padding: '8px 11px', borderRadius: 'var(--r-sm)',
+                  backgroundColor: 'var(--info-bg)', color: 'var(--info-fg)', fontSize: '12px', fontWeight: 700,
+                }}
+              >
+                <Clock size={13} strokeWidth={2.2} aria-hidden="true" />
+                <span style={{ flex: 1 }}>작성 중이던 내용을 불러왔습니다.</span>
+                <button
+                  type="button"
+                  onClick={ackFeedbackRestore}
+                  style={{ color: 'inherit', fontSize: '12px', fontWeight: 700, textDecoration: 'underline' }}
+                >
+                  확인
+                </button>
+              </div>
+            )}
             <div style={{ border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', padding: '10px 12px', backgroundColor: 'var(--bg-card)' }}>
+              <label htmlFor="feedback-input-area" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
+                {viewRole === 'PLANNER' ? '피드백 코멘트' : '기획자에게 보낼 의견'}
+              </label>
               <textarea 
                 id="feedback-input-area"
                 placeholder={viewRole === 'PLANNER' ? '피드백 코멘트를 입력하세요...' : '기획자에게 답변이나 의견을 적어보세요...'} 
                 rows={2} 
                 value={feedbackInput}
                 onChange={(e) => setFeedbackInput(e.target.value)}
+                onKeyDown={(e) => {
+                  // Ctrl(⌘) + Enter 로 바로 전송한다.
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    void submitFeedback();
+                  }
+                }}
                 required
                 style={{
                   width: '100%',
@@ -1234,23 +1429,27 @@ const ScriptManage: React.FC = () => {
                   background: 'none'
                 }}
               />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
+                <span style={{ marginRight: 'auto', fontSize: '11.5px', color: 'var(--fg-4)' }}>
+                  Ctrl + Enter 로 전송 · 작성 중인 내용은 자동 저장됩니다
+                </span>
                 <button 
                   type="submit"
-                  disabled={submittingFeedback}
+                  disabled={submittingFeedback || !feedbackInput.trim()}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
                     padding: '7px 14px',
                     borderRadius: 'var(--r-sm)',
-                    background: 'var(--primary)',
+                    background: (submittingFeedback || !feedbackInput.trim()) ? 'var(--border-strong)' : 'var(--primary)',
                     color: '#fff',
                     fontSize: '12.5px',
-                    fontWeight: 700
+                    fontWeight: 700,
+                    cursor: (submittingFeedback || !feedbackInput.trim()) ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  <Send size={13} /> 전송
+                  <Send size={13} /> {submittingFeedback ? '전송 중…' : '전송'}
                 </button>
               </div>
             </div>
@@ -1335,16 +1534,7 @@ const ScriptManage: React.FC = () => {
                     </div>
                   ) : previewText !== null ? (
                     <div 
-                      onMouseUp={() => {
-                        const sel = window.getSelection();
-                        const text = sel?.toString().trim();
-                        if (text && text.length > 2) {
-                          if (window.confirm(`선택한 문장을 피드백으로 남기시겠습니까?\n\n"${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`)) {
-                            setFeedbackInput(prev => `${prev ? prev + '\n' : ''}> "${text}"\n\n`);
-                            setPreviewOpen(false);
-                          }
-                        }
-                      }}
+                      onMouseUp={() => { const t = window.getSelection()?.toString().trim(); if (t && t.length > 2) handleQuoteSelection(t); }}
                       style={{ cursor: 'text' }}
                     >
                       {previewText}
@@ -1352,16 +1542,7 @@ const ScriptManage: React.FC = () => {
                     </div>
                   ) : (
                     <div
-                      onMouseUp={() => {
-                        const sel = window.getSelection();
-                        const text = sel?.toString().trim();
-                        if (text && text.length > 2) {
-                          if (window.confirm(`선택한 문장을 피드백으로 인용하시겠습니까?\n\n"${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`)) {
-                            setFeedbackInput(prev => `${prev ? prev + '\n' : ''}> "${text}"\n\n`);
-                            setPreviewOpen(false);
-                          }
-                        }
-                      }}
+                      onMouseUp={() => { const t = window.getSelection()?.toString().trim(); if (t && t.length > 2) handleQuoteSelection(t); }}
                       style={{ cursor: 'text' }}
                     >
                       <p style={{ margin: '0 0 14px' }}><b>(도입 질문)</b> “여러분은 오늘 하루 어떤 수업을 설계하셨나요? 학교자율시간을 적극 활용해 본 수업 사례들을 기반으로 교육과정을 기획하고 배정해보겠습니다.”</p>
@@ -1671,7 +1852,8 @@ const ScriptManage: React.FC = () => {
                   style={{ marginTop: '2px' }}
                 />
                 <span style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.4' }}>
-                  본 원고 및 부속 자료에 포함된 타인의 저작물(이미지, 영상, 글 등)에 대해 <strong style={{ color: '#1E293B' }}>저작권 및 초상권 사용 허가를 모두 확인</strong>하였으며, 이로 인해 발생하는 문제는 제출자에게 책임이 있음에 동의합니다. (필수)
+                  <b style={{ display: 'block', marginBottom: '4px', color: 'var(--fg-1)' }}>저작권·초상권을 확인했습니다 (필수)</b>
+                  원고와 부속 자료에 들어간 타인의 이미지·영상·글에 대해 사용 허가를 받았으며, 문제가 생기면 제출자에게 책임이 있음에 동의합니다.
                 </span>
               </label>
             </div>
