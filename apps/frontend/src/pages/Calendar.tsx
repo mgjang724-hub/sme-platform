@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -34,6 +35,9 @@ const Calendar: React.FC = () => {
   const [formDescription, setFormDescription] = useState('');
   const [formError, setFormError] = useState('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // 모달은 Esc 키로 닫는다.
+  useEscapeKey(isModalOpen, () => setIsModalOpen(false));
 
   useEffect(() => {
     if (user) {

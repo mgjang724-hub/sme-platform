@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useUi } from './UiContext';
+import { clearAllDrafts } from '../hooks/useDraft';
 
 export interface User {
   user_id: string;
@@ -23,6 +25,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { toast } = useUi();
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,11 +76,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return data.user;
   };
 
-  const logout = () => {
+  /** 토큰만 비운다. 작성 중이던 초안은 그대로 남긴다. */
+  const clearSession = () => {
     localStorage.removeItem('sme_token');
     localStorage.removeItem('sme_user');
     setToken(null);
     setUser(null);
+  };
+
+  /** 사용자가 직접 로그아웃한 경우. 남아 있는 초안까지 정리한다. */
+  const logout = () => {
+    clearSession();
+    clearAllDrafts();
   };
 
   const apiFetch = async (path: string, options: RequestInit = {}): Promise<any> => {
@@ -97,7 +107,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (res.status === 401) {
-      logout();
+      // 세션이 끊겨도 작성 중이던 글은 지우지 않는다. 다시 로그인하면 복원된다.
+      clearSession();
+      toast.error(
+        '로그인 세션이 만료되었습니다',
+        '작성 중이던 내용은 임시저장해 두었습니다. 다시 로그인하면 이어서 쓸 수 있습니다.',
+      );
       throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
     }
 

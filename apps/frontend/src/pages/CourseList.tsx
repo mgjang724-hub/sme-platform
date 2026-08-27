@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useUi } from '../context/UiContext';
 import { 
   Search, 
   Plus, 
@@ -29,6 +31,7 @@ interface Course {
 
 const CourseList: React.FC = () => {
   const { apiFetch, user } = useAuth();
+  const { toast, confirm } = useUi();
   const navigate = useNavigate();
 
   const [courses, setCourses] = useState<Course[]>([]);
@@ -86,9 +89,9 @@ const CourseList: React.FC = () => {
       }));
 
       setEditModalOpen(false);
-      alert('과정 정보가 성공적으로 수정되었습니다.');
+      toast.success('과정 정보를 수정했습니다.');
     } catch (err: any) {
-      alert(err.message || '과정 정보 수정 실패');
+      toast.error('과정 정보를 수정하지 못했습니다', err.message || '입력한 내용을 확인한 뒤 다시 시도해 주세요.');
     } finally {
       setSubmittingEdit(false);
     }
@@ -96,11 +99,20 @@ const CourseList: React.FC = () => {
 
   const handleToggleArchive = async (courseId: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'ARCHIVED' ? 'ACTIVE' : 'ARCHIVED';
-    const confirmMsg = nextStatus === 'ARCHIVED' 
-      ? '이 과정을 보관함으로 이동하시겠습니까?\n보관된 과정은 [보관됨] 탭에서만 조회됩니다.'
-      : '이 과정을 보관함에서 해제(복원)하시겠습니까?';
-    
-    if (!window.confirm(confirmMsg)) return;
+    const archiving = nextStatus === 'ARCHIVED';
+
+    const ok = await confirm(archiving
+      ? {
+          title: '이 과정을 보관함으로 옮길까요?',
+          message: '보관한 과정은 [보관됨] 탭에서만 보입니다.\n원고와 피드백은 그대로 남고, 언제든 다시 꺼낼 수 있습니다.',
+          confirmLabel: '보관하기',
+        }
+      : {
+          title: '이 과정을 다시 진행 중으로 되돌릴까요?',
+          message: '과정 목록에 다시 나타납니다.',
+          confirmLabel: '복원하기',
+        });
+    if (!ok) return;
 
     try {
       await apiFetch(`/courses/${courseId}/status`, {
@@ -115,15 +127,21 @@ const CourseList: React.FC = () => {
         }
         return c;
       }));
-    } catch (err) {
-      alert('상태 업데이트에 실패했습니다.');
+      toast.success(archiving ? '과정을 보관함으로 옮겼습니다.' : '과정을 복원했습니다.');
+    } catch (err: any) {
+      toast.error('상태를 바꾸지 못했습니다', err.message || '잠시 후 다시 시도해 주세요.');
     }
   };
 
   const handleDeleteCourse = async (courseId: string, courseName: string) => {
-    if (!window.confirm(`[경고] "${courseName}" 과정을 삭제하시겠습니까?\n과정 삭제 시 관련된 모든 차시, 원고 산출물, 피드백 히스토리가 완전히 영구 삭제되며 복구할 수 없습니다.`)) {
-      return;
-    }
+    const ok = await confirm({
+      title: `"${courseName}" 과정을 삭제할까요?`,
+      message: '이 과정의 모든 차시, 제출된 원고, 피드백 기록이 함께 삭제됩니다.\n삭제하면 되돌릴 수 없습니다. 잠시 감춰두려면 대신 [보관]을 사용하세요.',
+      confirmLabel: '영구 삭제',
+      tone: 'danger',
+      acknowledgeLabel: '되돌릴 수 없다는 점을 이해했습니다.',
+    });
+    if (!ok) return;
 
     try {
       await apiFetch(`/courses/${courseId}`, {
@@ -132,10 +150,14 @@ const CourseList: React.FC = () => {
       
       // Remove from state locally
       setCourses(prev => prev.filter(c => c.course_id !== courseId));
-    } catch (err) {
-      alert('과정 삭제에 실패했습니다.');
+      toast.success(`"${courseName}" 과정을 삭제했습니다.`);
+    } catch (err: any) {
+      toast.error('과정을 삭제하지 못했습니다', err.message || '잠시 후 다시 시도해 주세요.');
     }
   };
+
+  // 모달은 Esc 키로 닫는다.
+  useEscapeKey(editModalOpen, () => setEditModalOpen(false));
 
   useEffect(() => {
     const fetchCourses = async () => {

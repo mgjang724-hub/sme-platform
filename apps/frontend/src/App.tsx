@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { UiProvider } from './context/UiContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppSidebar from './components/AppSidebar';
 import Login from './pages/Login';
@@ -140,9 +141,11 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <UiProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </UiProvider>
     </BrowserRouter>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useUi } from '../context/UiContext';
 import { 
   Search, 
   Plus, 
@@ -27,6 +28,7 @@ interface Guide {
 
 const GuideCenter: React.FC = () => {
   const { apiFetch, user } = useAuth();
+  const { toast, confirm } = useUi();
   const [viewRole, setViewRole] = useState<'PLANNER' | 'SME'>('PLANNER');
 
   useEffect(() => {
@@ -88,7 +90,7 @@ const GuideCenter: React.FC = () => {
       setSelectedGuide(result);
       setView('detail');
     } catch (err: any) {
-      alert(err.message || '상세 보기를 가져올 수 없습니다.');
+      toast.error('안내 글을 열지 못했습니다', err.message || '잠시 후 다시 시도해 주세요.');
     }
   };
 
@@ -139,16 +141,22 @@ const GuideCenter: React.FC = () => {
         setView('list');
       }
       loadGuides();
+      toast.success(editId ? '안내 글을 수정했습니다.' : '안내 글을 등록했습니다.');
     } catch (err: any) {
-      alert(err.message || '가이드 저장 실패');
+      toast.error('안내 글을 저장하지 못했습니다', err.message || '입력한 내용을 확인한 뒤 다시 시도해 주세요.');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteGuide = async (id: string) => {
-    const confirm = window.confirm('정말로 이 가이드 글을 삭제하시겠습니까?');
-    if (!confirm) return;
+    const ok = await confirm({
+      title: '이 안내 글을 삭제할까요?',
+      message: '삭제한 글은 되돌릴 수 없습니다.\n강사에게도 더 이상 보이지 않습니다.',
+      confirmLabel: '삭제',
+      tone: 'danger',
+    });
+    if (!ok) return;
 
     try {
       await apiFetch(`/guides/${id}`, {
@@ -156,8 +164,9 @@ const GuideCenter: React.FC = () => {
       });
       setView('list');
       loadGuides();
+      toast.success('안내 글을 삭제했습니다.');
     } catch (err: any) {
-      alert(err.message || '가이드 삭제 실패');
+      toast.error('안내 글을 삭제하지 못했습니다', err.message || '잠시 후 다시 시도해 주세요.');
     }
   };
 
@@ -673,7 +682,7 @@ const GuideCenter: React.FC = () => {
                   <div style={{ flex: 1, minWidth: '280px' }}>
                     <textarea placeholder="문의 내용을 남겨주세요. 담당 기획자에게 전달됩니다." rows={2} style={{ width: '100%', padding: '11px 13px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', fontSize: '13.5px', resize: 'vertical', outline: 'none', background: 'var(--bg-card)' }}></textarea>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
-                      <button type="button" onClick={() => alert('문의사항이 전송되었습니다.')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 16px', border: 'none', borderRadius: 'var(--r-md)', background: 'var(--primary)', color: '#fff', fontSize: '13.5px', fontWeight: 700, cursor: 'pointer' }}>
+                      <button type="button" onClick={() => toast.success('문의를 전송했습니다', '담당 기획자가 확인하면 알림으로 알려드립니다.')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 16px', border: 'none', borderRadius: 'var(--r-md)', background: 'var(--primary)', color: '#fff', fontSize: '13.5px', fontWeight: 700, cursor: 'pointer' }}>
                         <Send size={15} /> 문의 보내기
                       </button>
                     </div>

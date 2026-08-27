@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUi } from '../context/UiContext';
 import { 
   Check, 
   MessageSquare, 
@@ -23,6 +24,7 @@ interface NotificationItem {
 
 const Notifications: React.FC = () => {
   const { apiFetch, user, unreadNotiCount, setUnreadNotiCount } = useAuth();
+  const { toast } = useUi();
   const navigate = useNavigate();
 
   const [list, setList] = useState<NotificationItem[]>([]);
@@ -56,8 +58,9 @@ const Notifications: React.FC = () => {
       await apiFetch('/notifications/mark-all', { method: 'POST' });
       await loadNotifications();
       setUnreadNotiCount(0);
-    } catch (err) {
-      alert('오류가 발생했습니다.');
+      toast.success('모든 알림을 읽음 처리했습니다.');
+    } catch (err: any) {
+      toast.error('읽음 처리에 실패했습니다', err.message || '잠시 후 다시 시도해 주세요.');
     }
   };
 

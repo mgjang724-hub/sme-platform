@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useUi } from '../context/UiContext';
 import { 
   Send, 
   Paperclip, 
@@ -32,6 +34,7 @@ interface QnaThread {
 
 const Inbox: React.FC = () => {
   const { apiFetch, user } = useAuth();
+  const { toast } = useUi();
 
   const [threads, setThreads] = useState<QnaThread[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +51,9 @@ const Inbox: React.FC = () => {
   const [newCategory, setNewCategory] = useState('원고 작성 가이드');
   const [newText, setNewText] = useState('');
   const [creatingThread, setCreatingThread] = useState(false);
+
+  // 모달은 Esc 키로 닫는다.
+  useEscapeKey(showNewThread, () => setShowNewThread(false));
 
   useEffect(() => {
     if (user) {
@@ -83,8 +89,9 @@ const Inbox: React.FC = () => {
       });
       setReplyText('');
       await loadInbox();
-    } catch (err) {
-      alert('전송 중 오류가 발생했습니다.');
+      toast.success('답변을 보냈습니다.');
+    } catch (err: any) {
+      toast.error('답변을 보내지 못했습니다', err.message || '네트워크 상태를 확인한 뒤 다시 시도해 주세요.');
     } finally {
       setSendingReply(false);
     }
@@ -109,8 +116,9 @@ const Inbox: React.FC = () => {
       setShowNewThread(false);
       await loadInbox();
       setSelectedIdx(0);
-    } catch (err) {
-      alert('문의 등록 중 오류가 발생했습니다.');
+      toast.success('문의를 등록했습니다', '담당 기획자가 확인하면 알림으로 알려드립니다.');
+    } catch (err: any) {
+      toast.error('문의를 등록하지 못했습니다', err.message || '네트워크 상태를 확인한 뒤 다시 시도해 주세요.');
     } finally {
       setCreatingThread(false);
     }

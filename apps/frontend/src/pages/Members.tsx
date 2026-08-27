@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUi } from '../context/UiContext';
 import { 
   ChevronRight, 
   UserPlus, 
@@ -23,6 +24,7 @@ interface Member {
 const Members: React.FC = () => {
   const { id: courseId } = useParams<{ id: string }>();
   const { apiFetch } = useAuth();
+  const { toast, confirm } = useUi();
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,11 +63,12 @@ const Members: React.FC = () => {
           role_in_course: roleInCourse
         })
       });
+      const invited = email;
       setEmail('');
       loadMembers();
-      alert('참여자가 정상적으로 추가되었습니다.');
+      toast.success('참여자를 추가했습니다', `${invited} 님이 이 과정에 참여할 수 있습니다.`);
     } catch (err: any) {
-      alert(err.message || '참여자를 추가하는 중 오류가 발생했습니다.');
+      toast.error('참여자를 추가하지 못했습니다', err.message || '이메일 주소를 다시 확인해 주세요.');
     } finally {
       setSubmitting(false);
     }
@@ -73,8 +76,13 @@ const Members: React.FC = () => {
 
   const handleRevokeMember = async (userId: string) => {
     if (!courseId) return;
-    const confirm = window.confirm('해당 유저의 과정 접근 권한을 회수하시겠습니까?');
-    if (!confirm) return;
+    const ok = await confirm({
+      title: '이 참여자의 접근 권한을 회수할까요?',
+      message: '회수하면 이 과정의 원고와 피드백을 더 이상 볼 수 없습니다.\n이미 작성한 피드백과 업로드한 원고는 그대로 남습니다.',
+      confirmLabel: '권한 회수',
+      tone: 'danger',
+    });
+    if (!ok) return;
 
     try {
       await apiFetch(`/courses/${courseId}/members/${userId}/revoke`, {
@@ -82,8 +90,9 @@ const Members: React.FC = () => {
         body: JSON.stringify({ reason: '기획자 요청에 의한 권한 회수' })
       });
       loadMembers();
+      toast.success('접근 권한을 회수했습니다.');
     } catch (err: any) {
-      alert(err.message || '권한 회수 처리 중 오류가 발생했습니다.');
+      toast.error('권한을 회수하지 못했습니다', err.message || '잠시 후 다시 시도해 주세요.');
     }
   };
 

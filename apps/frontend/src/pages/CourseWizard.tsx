@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUi } from '../context/UiContext';
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -20,6 +21,7 @@ interface Chapter {
 
 const CourseWizard: React.FC = () => {
   const { apiFetch } = useAuth();
+  const { toast } = useUi();
   const navigate = useNavigate();
   
   const [step, setStep] = useState(0);
@@ -615,16 +617,19 @@ const CourseWizard: React.FC = () => {
                       />
                       <button
                         onClick={() => {
-                          if (inviteEmail.trim() && inviteEmail.includes('@')) {
-                            const newEmail = inviteEmail.trim();
-                            if (!invitedSmes.includes(newEmail)) {
-                              setInvitedSmes([...invitedSmes, newEmail]);
-                            }
-                            alert(`${newEmail} 님에게 과정 초대 메일을 발송했습니다.`);
-                            setInviteEmail('');
-                          } else {
-                            alert('올바른 이메일 주소를 입력해주세요.');
+                          const newEmail = inviteEmail.trim();
+                          if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+                            toast.error('이메일 주소를 확인해 주세요', 'name@example.com 형식으로 입력해 주세요.');
+                            return;
                           }
+                          if (invitedSmes.includes(newEmail)) {
+                            toast.info('이미 초대 목록에 있는 강사입니다.', newEmail);
+                            setInviteEmail('');
+                            return;
+                          }
+                          setInvitedSmes([...invitedSmes, newEmail]);
+                          toast.success('초대 메일을 보냈습니다', `${newEmail} 님이 수락하면 과정에 참여합니다.`);
+                          setInviteEmail('');
                         }}
                         style={{
                           padding: '0 12px',

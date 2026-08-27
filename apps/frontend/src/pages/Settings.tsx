@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useUi } from '../context/UiContext';
 import { 
   User, 
   Bell, 
@@ -9,6 +10,7 @@ import {
 
 const Settings: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useUi();
 
   const [name, setName] = useState(user?.name || '');
   const [email] = useState(user?.email || '');
@@ -18,7 +20,7 @@ const Settings: React.FC = () => {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('설정이 저장되었습니다.');
+    toast.success('설정이 저장되었습니다.');
   };
 
   return (
@@ -132,7 +134,7 @@ const Settings: React.FC = () => {
 
                 <button 
                   type="button"
-                  onClick={() => alert('비밀번호 재설정 이메일이 발송되었습니다.')}
+                  onClick={() => toast.success('비밀번호 재설정 메일을 보냈습니다', `${email} 주소로 발송했습니다. 메일함을 확인해 주세요.`)}
                   style={{
                     padding: '9px 14px',
                     border: '1px solid var(--border-strong)',
