@@ -1,5 +1,7 @@
-import { PrismaClient, GlobalRole, CourseStatus, DeliverableType } from '@prisma/client';
+import { PrismaClient, GlobalRole, CourseStatus, DeliverableType, FeedbackStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { LESSON1_V1, LESSON2_V1, LESSON2_V2, LESSON3_V1 } from './fixtures/scripts';
+import { writeScriptFiles } from './fixtures/docx';
 
 const prisma = new PrismaClient();
 
@@ -222,42 +224,149 @@ async function main() {
     });
   }
 
-  // Create a realistic mock submission for Lesson 1
-  const lesson1Deliverable = await prisma.deliverable.findFirst({
-    where: { lesson: { lesson_no: 1, course_id: course.course_id } }
-  });
+  // ── 시연용 제출 상태 ──────────────────────────────────────
+  // 1차시: 최종 승인 완료(잠김)  2차시: 검수 대기 + 미반영 피드백
+  // 3차시: 수정 요청            4·5차시: 작성 대기
+  // 원고는 실제 docx로 만들어 두어 미리보기와 문장 인용 피드백이 그대로 동작한다.
 
-  if (lesson1Deliverable) {
-    const fileVersion = await prisma.fileVersion.create({
+  const deliverableOf = async (lessonNo: number) =>
+    prisma.deliverable.findFirst({
+      where: { lesson: { lesson_no: lessonNo, course_id: course.course_id } },
+    });
+
+  const submit = async (
+    deliverableId: string,
+    fixture: { fileName: string; paragraphs: string[] },
+    roundNo: number,
+    seq: number,
+  ) => {
+    const { storagePath, previewPath } = writeScriptFiles(
+      fixture.fileName,
+      fixture.paragraphs,
+      roundNo,
+      seq,
+    );
+    return prisma.fileVersion.create({
       data: {
-        deliverable_id: lesson1Deliverable.deliverable_id,
-        storage_path: '/uploads/mock_preview.txt',
-        preview_path: '/uploads/mock_preview.txt',
+        deliverable_id: deliverableId,
+        storage_path: storagePath,
+        preview_path: previewPath,
         stage: 'DRAFT',
-        round_no: 1,
+        round_no: roundNo,
         kind: 'FILE',
         uploaded_by: sme.user_id,
       },
     });
+  };
+
+  // ── 1차시: 제출 → 피드백 반영 → 최종 승인 ──
+  const d1 = await deliverableOf(1);
+  if (d1) {
+    const v1 = await submit(d1.deliverable_id, LESSON1_V1, 1, 1);
+
+    await prisma.feedback.createMany({
+      data: [
+        {
+          deliverable_id: d1.deliverable_id,
+          file_version_id: v1.version_id,
+          location_type: 'QUOTE',
+          location_value: '학교자율시간은 빈 시간을 채우는 일이 아니라',
+          content: '이 표현이 이번 과정의 핵심 메시지입니다. 정리 부분에서 한 번 더 짚어 주시면 좋겠습니다.',
+          assignee_id: sme.user_id,
+          created_by: planner.user_id,
+          status: FeedbackStatus.RESOLVED,
+        },
+        {
+          deliverable_id: d1.deliverable_id,
+          file_version_id: v1.version_id,
+          content: '도입 질문이 자연스럽습니다. 이대로 진행해 주세요.',
+          assignee_id: sme.user_id,
+          created_by: planner.user_id,
+          status: FeedbackStatus.RESOLVED,
+        },
+      ],
+    });
+
+    // 기획자가 최종 승인한 상태로 둔다. 이후 업로드는 잠긴다.
+    await prisma.approval.create({
+      data: {
+        file_version_id: v1.version_id,
+        approved_by: planner.user_id,
+        lock_applied: true,
+      },
+    });
+    await prisma.fileVersion.update({
+      where: { version_id: v1.version_id },
+      data: { is_final: true },
+    });
+    await prisma.deliverable.update({
+      where: { deliverable_id: d1.deliverable_id },
+      data: { current_status: 'APPROVED', final_file_version_id: v1.version_id },
+    });
+  }
+
+  // ── 2차시: 1차 제출 후 수정본까지 올라온 상태, 검수 대기 ──
+  const d2 = await deliverableOf(2);
+  if (d2) {
+    await submit(d2.deliverable_id, LESSON2_V1, 1, 2);
+    const v2 = await submit(d2.deliverable_id, LESSON2_V2, 2, 3);
+
+    await prisma.feedback.createMany({
+      data: [
+        {
+          deliverable_id: d2.deliverable_id,
+          file_version_id: v2.version_id,
+          location_type: 'QUOTE',
+          location_value: '각 교과의 최소 시수는 보장되어야 합니다.',
+          content: '최소 시수의 구체적인 수치를 예시로 하나 넣어 주시면 이해가 훨씬 쉬울 것 같습니다.',
+          assignee_id: sme.user_id,
+          created_by: planner.user_id,
+          status: FeedbackStatus.OPEN,
+        },
+        {
+          deliverable_id: d2.deliverable_id,
+          file_version_id: v2.version_id,
+          location_type: 'QUOTE',
+          location_value: '표는 교과와 창의적 체험활동으로 나뉘어 있습니다.',
+          content: '앞 버전의 긴 문장을 나눠 주셔서 훨씬 잘 읽힙니다. 반영 확인했습니다.',
+          assignee_id: sme.user_id,
+          created_by: planner.user_id,
+          status: FeedbackStatus.RESOLVED,
+        },
+      ],
+    });
 
     await prisma.deliverable.update({
-      where: { deliverable_id: lesson1Deliverable.deliverable_id },
-      data: { current_status: 'REVIEWING' }
+      where: { deliverable_id: d2.deliverable_id },
+      data: { current_status: 'SUBMITTED' },
     });
+  }
+
+  // ── 3차시: 수정 요청을 받은 상태 ──
+  const d3 = await deliverableOf(3);
+  if (d3) {
+    const v1 = await submit(d3.deliverable_id, LESSON3_V1, 1, 4);
 
     await prisma.feedback.create({
       data: {
-        deliverable_id: lesson1Deliverable.deliverable_id,
-        file_version_id: fileVersion.version_id,
-        content: '도입부의 학습 목표가 2022 개정 교육과정의 방향성과 약간 다릅니다. 이 부분을 조금 더 명확하게 수정해 주실 수 있을까요?',
+        deliverable_id: d3.deliverable_id,
+        file_version_id: v1.version_id,
+        location_type: 'QUOTE',
+        location_value: '평가할 수 없는 성취기준은 실제로는 성취기준이 아닙니다.',
+        content: '중요한 문장인데 근거가 없어 단정적으로 읽힙니다. 성취기준-평가 연계 예시를 한 개만 붙여 주세요.',
         assignee_id: sme.user_id,
         created_by: planner.user_id,
-        status: 'OPEN',
-      }
+        status: FeedbackStatus.OPEN,
+      },
     });
 
-    console.log('Mock submission and feedback added for Lesson 1.');
+    await prisma.deliverable.update({
+      where: { deliverable_id: d3.deliverable_id },
+      data: { current_status: 'REVISION_REQUESTED' },
+    });
   }
+
+  console.log('시연용 제출 상태 구성 완료 (1차시 승인 / 2차시 검수대기 / 3차시 수정요청).');
 
   console.log('Seeding completed successfully!');
 }
