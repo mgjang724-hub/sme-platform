@@ -22,6 +22,10 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      # true 로 바꾸고 재배포하면 데모 데이터를 새로 채운다. 기존 데이터는 지워진다.
+      # 시연 준비가 끝나면 다시 false 로 되돌려 두는 것을 권한다.
+      - key: SEED_RESET
+        value: "false"
 
 databases:
   - name: sme-db

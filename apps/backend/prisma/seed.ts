@@ -2,29 +2,61 @@ import { PrismaClient, GlobalRole, CourseStatus, DeliverableType, FeedbackStatus
 import * as bcrypt from 'bcrypt';
 import { LESSON1_V1, LESSON2_V1, LESSON2_V2, LESSON3_V1 } from './fixtures/scripts';
 import { writeScriptFiles } from './fixtures/docx';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  const userCount = await prisma.user.count();
-  if (userCount > 0) {
-    console.log('Database already contains users. Skipping seeding.');
-    return;
-  }
+/** SEED_RESET=true 로 켰을 때만 기존 데이터를 지운다. 실수로 지워지지 않게 값을 명시적으로 본다. */
+function isResetRequested(): boolean {
+  const raw = String(process.env.SEED_RESET || '').trim().toLowerCase();
+  return raw === 'true' || raw === '1' || raw === 'yes';
+}
 
-  console.log('Seeding database...');
+/** 프리즈마가 관리하지 않고 파일로 저장되는 도메인. 지우면 서버가 뜰 때 기본값으로 다시 만든다. */
+const JSON_STORES = ['guides.json', 'inbox.json', 'notifications.json', 'calendar_events.json'];
 
-  // Clean existing data
+async function clearEverything() {
+  // 외래키 때문에 지우는 순서가 중요하다.
   await prisma.decisionLog.deleteMany({});
   await prisma.approval.deleteMany({});
   await prisma.feedbackAttachment.deleteMany({});
   await prisma.feedback.deleteMany({});
+  // 산출물이 붙잡고 있는 확정본 참조를 먼저 풀어야 버전을 지울 수 있다.
+  await prisma.deliverable.updateMany({ data: { final_file_version_id: null } });
   await prisma.fileVersion.deleteMany({});
   await prisma.deliverable.deleteMany({});
   await prisma.lesson.deleteMany({});
   await prisma.courseMember.deleteMany({});
   await prisma.course.deleteMany({});
   await prisma.user.deleteMany({});
+
+  for (const name of JSON_STORES) {
+    const file = path.join(process.cwd(), name);
+    if (fs.existsSync(file)) {
+      fs.unlinkSync(file);
+      console.log(`  ${name} 삭제 (서버 시작 시 기본값으로 다시 생성됨)`);
+    }
+  }
+}
+
+async function main() {
+  const userCount = await prisma.user.count();
+  const reset = isResetRequested();
+
+  if (userCount > 0 && !reset) {
+    console.log('이미 데이터가 있어 시딩을 건너뜁니다.');
+    console.log('데모 데이터를 새로 채우려면 SEED_RESET=true 로 실행하세요. (기존 데이터는 지워집니다)');
+    return;
+  }
+
+  if (userCount > 0) {
+    console.log(`SEED_RESET=true — 기존 데이터(사용자 ${userCount}명)를 지우고 데모 데이터를 다시 채웁니다.`);
+  } else {
+    console.log('빈 데이터베이스입니다. 데모 데이터를 채웁니다.');
+  }
+
+  await clearEverything();
 
   // 1. Create Users
   const passwordHash = await bcrypt.hash('test1234', 10);
