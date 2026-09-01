@@ -18,6 +18,7 @@ apps/backend/uploads/
 apps/backend/inbox.json
 apps/backend/notifications.json
 apps/backend/guides.json
+apps/backend/calendar_events.json
 
 # Environment variables
 .env
