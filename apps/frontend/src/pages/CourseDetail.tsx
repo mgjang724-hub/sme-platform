@@ -174,11 +174,53 @@ const CourseDetail: React.FC = () => {
   };
 
   // Mock Issues matching S06
-  const issues = [
-    { icon: AlertTriangle, accent: '#EF4444', title: '3차시 원고 마감 2일 지연', desc: '역할극 지문 수정으로 재제출 진행 중. 강사 일정 재확인 필요.' },
-    { icon: MessageSquare, accent: '#F59E0B', title: '2차시 검수 답변 대기', desc: '박도현 강사 답변 대기 · 2일 경과' },
-    { icon: Clapperboard, accent: '#9C3A6B', title: '촬영 일정 미확정', desc: '3차시 역할극 별도 촬영 — 출연 2인 일정 조율 필요' },
-  ];
+  // 지금 손이 필요한 차시를 실제 상태에서 뽑는다. 차시당 한 줄로 정리한다.
+  const issues = (course.lessons || []).flatMap((lesson: any) => {
+    const deliv = (lesson.deliverables || []).find((d: any) => d.deliverable_type === 'SCRIPT');
+    if (!deliv) return [];
+
+    const openFeedbacks = deliv.feedbacks || [];
+    const overdue = openFeedbacks.filter(
+      (f: any) => f.due_date && new Date(f.due_date).getTime() < Date.now(),
+    );
+    const label = `${lesson.lesson_no}차시 — ${lesson.title}`;
+
+    if (overdue.length > 0) {
+      return [{
+        icon: AlertTriangle,
+        accent: 'var(--error)',
+        title: `${label} · 기한이 지난 피드백 ${overdue.length}건`,
+        desc: overdue[0].content,
+      }];
+    }
+    if (deliv.current_status === 'REVISION_REQUESTED') {
+      return [{
+        icon: AlertTriangle,
+        accent: 'var(--error)',
+        title: `${label} · 수정 요청 중`,
+        desc: openFeedbacks.length > 0
+          ? openFeedbacks[0].content
+          : '강사가 수정본을 올려야 검수를 이어갈 수 있습니다.',
+      }];
+    }
+    if (openFeedbacks.length > 0) {
+      return [{
+        icon: MessageSquare,
+        accent: 'var(--warning)',
+        title: `${label} · 미반영 피드백 ${openFeedbacks.length}건`,
+        desc: openFeedbacks[0].content,
+      }];
+    }
+    if (deliv.current_status === 'SUBMITTED' || deliv.current_status === 'IN_REVIEW') {
+      return [{
+        icon: ClipboardCheck,
+        accent: 'var(--info)',
+        title: `${label} · 검수 대기`,
+        desc: '강사가 제출한 원고입니다. 검토 후 피드백이나 최종 승인을 남겨 주세요.',
+      }];
+    }
+    return [];
+  });
 
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -444,6 +486,7 @@ const CourseDetail: React.FC = () => {
               {filteredLessons.map((lesson) => {
                 const scriptDeliv = lesson.deliverables.find((d) => d.deliverable_type === 'SCRIPT');
                 const statusInfo = getStatusChipColors(scriptDeliv ? scriptDeliv.current_status : 'NOT_SUBMITTED');
+                const latestRound = scriptDeliv?.fileVersions?.[0]?.round_no;
                 
                 return (
                   <div
@@ -475,8 +518,8 @@ const CourseDetail: React.FC = () => {
                         color: statusInfo.fg,
                       }}>{statusInfo.label}</span>
                     </div>
-                    <div style={{ width: '60px', fontFamily: 'var(--font-num)', fontSize: '13px', color: 'var(--fg-2)' }}>
-                      v1
+                    <div style={{ width: '60px', fontFamily: 'var(--font-num)', fontSize: '13px', color: latestRound ? 'var(--fg-2)' : 'var(--fg-4)' }}>
+                      {latestRound ? `v${latestRound}` : '—'}
                     </div>
                     <div style={{ width: '110px', fontSize: '12.5px', color: 'var(--fg-3)' }}>
                       {instructorNames.split(',')[0]}
@@ -501,6 +544,19 @@ const CourseDetail: React.FC = () => {
                 이슈사항
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {issues.length === 0 && (
+                  <div style={{
+                    padding: '28px 18px', textAlign: 'center',
+                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                    borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-xs)',
+                  }}>
+                    <Check size={22} style={{ color: 'var(--success)', margin: '0 auto 8px' }} />
+                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--fg-1)' }}>지금 처리할 이슈가 없습니다.</div>
+                    <div style={{ fontSize: '12.5px', color: 'var(--fg-3)', marginTop: '4px', lineHeight: 1.6 }}>
+                      미반영 피드백이나 검수 대기 중인 원고가 생기면 여기에 모아 보여 드립니다.
+                    </div>
+                  </div>
+                )}
                 {issues.map((i, idx) => (
                   <div 
                     key={idx} 

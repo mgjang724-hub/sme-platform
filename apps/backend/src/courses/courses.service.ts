@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { GlobalRole, CourseStatus, DeliverableType } from '@prisma/client';
+import { GlobalRole, CourseStatus, DeliverableType, FeedbackStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -122,7 +122,22 @@ export class CoursesService {
         lessons: {
           orderBy: { lesson_no: 'asc' },
           include: {
-            deliverables: true,
+            deliverables: {
+              include: {
+                // 목록에서 최신 버전 번호를 보여 주기 위해 마지막 제출본만 함께 준다.
+                fileVersions: {
+                  orderBy: { round_no: 'desc' },
+                  take: 1,
+                  select: { version_id: true, round_no: true, kind: true, created_at: true },
+                },
+                // 아직 반영되지 않은 피드백. 과정 상세의 이슈 목록을 만드는 데 쓴다.
+                feedbacks: {
+                  where: { status: { in: [FeedbackStatus.OPEN, FeedbackStatus.REOPENED] } },
+                  orderBy: { created_at: 'asc' },
+                  select: { feedback_id: true, content: true, due_date: true, created_at: true },
+                },
+              },
+            },
           },
         },
       },
