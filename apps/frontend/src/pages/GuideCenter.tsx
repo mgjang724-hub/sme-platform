@@ -60,6 +60,10 @@ const GuideCenter: React.FC = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // 안내 글 하단에서 남기는 문의. 문의함으로 실제 전송된다.
+  const [inquiry, setInquiry] = useState('');
+  const [sendingInquiry, setSendingInquiry] = useState(false);
+
   const isPlanner = user?.global_role === 'PLANNER' || user?.global_role === 'ADMIN';
 
   const loadGuides = async () => {
@@ -144,6 +148,30 @@ const GuideCenter: React.FC = () => {
       toast.error('안내 글을 저장하지 못했습니다', err.message || '입력한 내용을 확인한 뒤 다시 시도해 주세요.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSendInquiry = async () => {
+    if (!selectedGuide || !inquiry.trim() || sendingInquiry) return;
+
+    setSendingInquiry(true);
+    try {
+      await apiFetch('/inbox', {
+        method: 'POST',
+        body: JSON.stringify({
+          subject: `[안내 문의] ${selectedGuide.title}`,
+          category: selectedGuide.category,
+          text: inquiry,
+          contextFull: selectedGuide.title,
+          contextHref: '/guide',
+        }),
+      });
+      setInquiry('');
+      toast.success('문의를 보냈습니다', '문의함에서 진행 상황을 확인할 수 있습니다.');
+    } catch (err: any) {
+      toast.error('문의를 보내지 못했습니다', err.message || '작성한 내용은 그대로 있습니다. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setSendingInquiry(false);
     }
   };
 
@@ -544,16 +572,42 @@ const GuideCenter: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '11px', padding: '12px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', background: 'var(--bg-page)' }}>
                     <span style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#FFD8C9', color: '#B7521F', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>김</span>
                     <div>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700 }}>{selectedGuide.author} 기획자</div>
-                      <div style={{ fontSize: '12px', color: 'var(--fg-3)' }}>jsy@iscream.co.kr · 내선 214</div>
+                      <div style={{ fontSize: '13.5px', fontWeight: 700 }}>{selectedGuide.author}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--fg-3)' }}>이 안내를 작성한 담당자입니다</div>
                     </div>
                   </div>
                   
                   <div style={{ flex: 1, minWidth: '280px' }}>
-                    <textarea placeholder="문의 내용을 남겨주세요. 담당 기획자에게 전달됩니다." rows={2} style={{ width: '100%', padding: '11px 13px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', fontSize: '13.5px', resize: 'vertical', outline: 'none', background: 'var(--bg-card)' }}></textarea>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
-                      <button type="button" onClick={() => toast.success('문의를 전송했습니다', '담당 기획자가 확인하면 알림으로 알려드립니다.')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 16px', border: 'none', borderRadius: 'var(--r-md)', background: 'var(--primary)', color: '#fff', fontSize: '13.5px', fontWeight: 700, cursor: 'pointer' }}>
-                        <Send size={15} /> 문의 보내기
+                    <textarea
+                      value={inquiry}
+                      onChange={(e) => setInquiry(e.target.value)}
+                      onKeyDown={(e) => {
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                          e.preventDefault();
+                          void handleSendInquiry();
+                        }
+                      }}
+                      placeholder="문의 내용을 남겨주세요. 담당 기획자에게 전달됩니다."
+                      rows={2}
+                      style={{ width: '100%', padding: '11px 13px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', fontSize: '13.5px', resize: 'vertical', outline: 'none', background: 'var(--bg-card)' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                      <span style={{ marginRight: 'auto', fontSize: '11.5px', color: 'var(--fg-4)' }}>
+                        보낸 문의는 [문의함]에서 이어서 대화할 수 있습니다
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleSendInquiry}
+                        disabled={sendingInquiry || !inquiry.trim()}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 16px',
+                          border: 'none', borderRadius: 'var(--r-md)',
+                          background: (sendingInquiry || !inquiry.trim()) ? 'var(--border-strong)' : 'var(--primary)',
+                          color: '#fff', fontSize: '13.5px', fontWeight: 700,
+                          cursor: (sendingInquiry || !inquiry.trim()) ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        <Send size={15} /> {sendingInquiry ? '보내는 중…' : '문의 보내기'}
                       </button>
                     </div>
                   </div>

@@ -49,6 +49,11 @@ model User {
   global_role   GlobalRole
   status        String     @default("ACTIVE") // ACTIVE, INACTIVE
 
+  // 설정 화면에서 본인이 고치는 값들
+  phone           String?
+  noti_muted      Boolean  @default(false)
+  noti_frequency  String   @default("realtime") // realtime | daily | weekly
+
   coursesCreated           Course[]           @relation("PlannerCourses")
   courseMembers            CourseMember[]
   fileVersionsUploaded     FileVersion[]

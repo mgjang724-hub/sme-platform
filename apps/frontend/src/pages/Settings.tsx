@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUi } from '../context/UiContext';
 import { 
@@ -9,18 +9,70 @@ import {
 } from 'lucide-react';
 
 const Settings: React.FC = () => {
-  const { user } = useAuth();
+  const { user, apiFetch } = useAuth();
   const { toast } = useUi();
 
   const [name, setName] = useState(user?.name || '');
   const [email] = useState(user?.email || '');
-  const [phone, setPhone] = useState('010-2314-5xxx');
+  const [phone, setPhone] = useState('');
   const [notiMute, setNotiMute] = useState(false);
   const [notiFrequency, setNotiFrequency] = useState('realtime');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  // 저장해 둔 설정을 불러온다. 예전에는 화면을 열 때마다 기본값이 보였다.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const me = await apiFetch('/auth/me');
+        if (cancelled) return;
+        setName(me.name || '');
+        setPhone(me.phone || '');
+        setNotiMute(Boolean(me.noti_muted));
+        setNotiFrequency(me.noti_frequency || 'realtime');
+      } catch {
+        // 못 불러와도 화면은 쓸 수 있게 둔다. 저장할 때 다시 알려 준다.
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [apiFetch]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('설정이 저장되었습니다.');
+    if (saving) return;
+
+    if (!name.trim()) {
+      toast.error('이름을 입력해 주세요.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const updated = await apiFetch('/auth/me', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          noti_muted: notiMute,
+          noti_frequency: notiFrequency,
+        }),
+      });
+
+      // 사이드바에 보이는 이름도 함께 맞춘다.
+      const saved = localStorage.getItem('sme_user');
+      if (saved) {
+        localStorage.setItem('sme_user', JSON.stringify({ ...JSON.parse(saved), name: updated.name }));
+      }
+
+      toast.success('설정을 저장했습니다.', '이름은 새로고침 후 사이드바에도 반영됩니다.');
+    } catch (err: any) {
+      toast.error('설정을 저장하지 못했습니다', err.message || '잠시 후 다시 시도해 주세요.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -134,7 +186,7 @@ const Settings: React.FC = () => {
 
                 <button 
                   type="button"
-                  onClick={() => toast.success('비밀번호 재설정 메일을 보냈습니다', `${email} 주소로 발송했습니다. 메일함을 확인해 주세요.`)}
+                  onClick={() => toast.info('비밀번호는 운영팀에서 변경해 드립니다', '문의함으로 요청을 남겨 주시면 담당자가 처리합니다.')}
                   style={{
                     padding: '9px 14px',
                     border: '1px solid var(--border-strong)',
@@ -161,13 +213,15 @@ const Settings: React.FC = () => {
                   gap: '6px',
                   padding: '10px 18px',
                   borderRadius: 'var(--r-md)',
-                  backgroundColor: 'var(--primary)',
+                  backgroundColor: (saving || loading) ? 'var(--border-strong)' : 'var(--primary)',
                   color: '#fff',
                   fontSize: '13.5px',
-                  fontWeight: 700
+                  fontWeight: 700,
+                  cursor: (saving || loading) ? 'not-allowed' : 'pointer'
                 }}
+                disabled={saving || loading}
               >
-                <Check size={16} /> 설정 저장
+                <Check size={16} /> {saving ? '저장 중…' : '설정 저장'}
               </button>
             </div>
 
